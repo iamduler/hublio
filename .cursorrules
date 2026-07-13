@@ -1,0 +1,148 @@
+You are working on the Hublio project.
+
+Before making any change, read **AGENTS.md**.
+
+AGENTS.md is the single source of truth for architecture, coding standards, package layout, and database design.
+
+## Goals
+
+* Preserve the architecture.
+* Generate production-ready Go code.
+* Keep the codebase simple and maintainable.
+
+## Tech Stack
+
+* Go
+* PostgreSQL
+* Redis
+* Next.js
+* TypeScript
+* TanStack Query
+* TailwindCSS
+* shadcn/ui
+
+## Architecture
+
+Follow the Architecture Freeze.
+
+Do not introduce
+
+* Microservices
+* CQRS
+* Event Sourcing
+* BPMN
+* Workflow Engine
+* Rule Engine
+
+Use the existing Runtime Model:
+
+Intent
+
+↓
+
+Execution
+
+↓
+
+Execution Step
+
+↓
+
+Connector Runtime
+
+↓
+
+External System
+
+## Package Rules
+
+Always use the existing package layout.
+
+```
+internal/
+
+    identity/
+
+    integration/
+
+    orchestration/
+
+    transformation/
+
+    events/
+
+    platform/
+```
+
+Do not create new architectural layers.
+
+## Dependency Rules
+
+Dependencies must always point inward.
+
+```
+Interfaces
+
+↓
+
+Application
+
+↓
+
+Domain
+
+↑
+
+Infrastructure
+```
+
+The Domain must never import Infrastructure.
+
+## Connectors
+
+Provider-specific code belongs only in
+
+```
+internal/integration/connectors/
+```
+
+Do not leak provider DTOs into the Domain.
+
+## Database
+
+Follow the database schema.
+
+Do not rename tables or columns.
+
+Do not redesign relationships.
+
+## Coding
+
+Prefer
+
+* Constructor Injection
+* Small Interfaces
+* Explicit Code
+* Early Returns
+* Table-driven Tests
+
+Avoid
+
+* Global Variables
+* Reflection
+* Hidden Dependencies
+* Utility Packages
+* Over-engineering
+
+## Before Completing Any Task
+
+Verify
+
+* Architecture respected
+* Package boundaries respected
+* Business rules remain in Domain
+* Tests added where appropriate
+* Code compiles
+* No duplicated logic
+
+When in doubt, follow AGENTS.md.
