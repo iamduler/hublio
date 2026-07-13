@@ -1,0 +1,15 @@
+#  ================= STAGE 1: BUILD GO BINARY =================
+FROM golang:1.25.5-alpine3.22 AS builder
+
+RUN apk update && apk add --no-cache git curl
+RUN go install github.com/air-verse/air@latest
+
+WORKDIR /app
+
+COPY go.mod ./
+COPY go.sum ./
+RUN go mod download && go mod verify
+
+COPY . .
+
+CMD ["air"]

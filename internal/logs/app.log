@@ -1,0 +1,13 @@
+{"level":"info","time":"2026-06-09T06:39:02Z","message":"Environment variables loaded successfully for api"}
+{"level":"info","time":"2026-06-09T06:39:02Z","message":"🏦 PostgreSQL: Connected"}
+{"level":"info","time":"2026-06-09T06:39:02Z","message":"🔄 Redis: Connected"}
+{"level":"info","time":"2026-06-09T06:39:02Z","message":"🚀 Starting server on :8080"}
+{"level":"info","time":"2026-06-09T07:18:52Z","message":"Environment variables loaded successfully for api"}
+{"level":"info","time":"2026-06-09T07:18:52Z","message":"🏦 PostgreSQL: Connected"}
+{"level":"info","time":"2026-06-09T07:18:52Z","message":"🔄 Redis: Connected"}
+{"level":"info","time":"2026-06-09T07:18:52Z","message":"🚀 Starting server on :8080"}
+{"level":"info","time":"2026-06-09T07:51:49Z","message":"Environment variables loaded successfully for api"}
+{"level":"info","time":"2026-06-09T07:51:49Z","message":"🏦 PostgreSQL: Connected"}
+{"level":"info","time":"2026-06-09T07:51:49Z","message":"🔄 Redis: Connected"}
+{"level":"info","time":"2026-06-09T07:51:49Z","message":"🚀 Starting server on :8080"}
+{"level":"info","time":"2026-06-09T07:54:19Z","message":"✅ Reset link: http://localhost:3000/reset-password?token=Q6OAS8OlePTGg3HwDmvXlw=="}
