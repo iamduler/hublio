@@ -301,3 +301,9 @@ Protect PostgreSQL.
 Treat Redis as disposable.
 
 Automate everything possible.
+
+The platform is maintained as a single Git repository.
+
+Each application is built independently.
+
+Each application produces its own container image.

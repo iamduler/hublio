@@ -2,187 +2,66 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"os/signal"
 	"path/filepath"
-	"shopping-cart/internal/config"
-	"shopping-cart/internal/utils"
-	"shopping-cart/pkg/logger"
-	"shopping-cart/pkg/mail"
-	"shopping-cart/pkg/rabbitmq"
-	"sync"
 	"syscall"
 	"time"
 
+	"hublio/internal/platform/config"
+	"hublio/internal/platform/env"
+	"hublio/internal/platform/logging"
+	"hublio/internal/platform/messaging"
+
 	"github.com/joho/godotenv"
-	"github.com/rs/zerolog"
 )
 
-type Worker struct {
-	rabbitMQService rabbitmq.RabbitMQService
-	mailService     mail.EmailProviderService
-	config          *config.Config
-	logger          *zerolog.Logger
-}
-
-func NewWorker(cfg *config.Config) *Worker {
-	// Initialize RabbitMQ
-	logger := utils.NewLoggerWithPath("rabbitmq.log", "info")
-	rabbitMQURL := utils.GetEnv("RABBITMQ_URL", "amqp://guest:guest@rabbitmq:5672/")
-	rabbitMQService, err := rabbitmq.NewRabbitMQService(rabbitMQURL, logger)
-
-	if err != nil {
-		logger.Error().Err(err).Msgf("❌ Failed to initialize RabbitMQ service: %v", err)
-		return nil
-	}
-
-	// Initialize mail service
-	factory, err := mail.NewProviderFactory(mail.ProviderMailtrap)
-	mailLogger := utils.NewLoggerWithPath("mail.log", "info")
-
-	if err != nil {
-		mailLogger.Error().Err(err).Msgf("❌ Failed to initialize mail provider factory: %v", err)
-		return nil
-	}
-
-	mailService, err := mail.NewMailService(cfg, mailLogger, factory)
-
-	if err != nil {
-		mailLogger.Error().Err(err).Msgf("❌ Failed to initialize mail service: %v", err)
-		return nil
-	}
-
-	return &Worker{
-		rabbitMQService: rabbitMQService,
-		mailService:     mailService,
-		config:          cfg,
-		logger:          logger,
-	}
-}
-
-func (w *Worker) Start(ctx context.Context) error {
-	const emailQueue = "auth_email_queue"
-
-	handler := func(body []byte) error {
-		w.logger.Debug().Msgf("Received email: %s", string(body))
-
-		var email mail.Email
-
-		// Unmarshal the email
-		if err := json.Unmarshal(body, &email); err != nil {
-			w.logger.Error().Err(err).Msgf("❌ Failed to unmarshal email: %v", err)
-			return err
-		}
-
-		// Send the email
-		if err := w.mailService.SendMail(ctx, &email); err != nil {
-			w.logger.Error().Err(err).Msgf("❌ Failed to send email: %v", err)
-			return utils.NewError("Failed to send email", utils.ErrCodeInternal)
-		}
-
-		w.logger.Info().Msgf("✅ Email sent successfully")
-
-		return nil
-	}
-
-	// Consume the email queue
-	err := w.rabbitMQService.Consume(ctx, emailQueue, handler)
-
-	if err != nil {
-		w.logger.Error().Err(err).Msgf("❌ Failed to consume email queue: %v", err)
-		return err
-	}
-
-	w.logger.Info().Msgf("✅ Email queue consumed successfully")
-
-	// Wait for the context to be done
-	<-ctx.Done()
-	w.logger.Info().Msgf("Worker stopped due to context done")
-
-	return ctx.Err()
-}
-
-func (w *Worker) Shutdown(ctx context.Context) error {
-	w.logger.Info().Msgf("🙋‍♂️ Shutting down worker...")
-	err := w.rabbitMQService.Close()
-
-	if err != nil {
-		w.logger.Error().Err(err).Msgf("❌ Failed to close RabbitMQ connection: %v", err)
-		return err
-	}
-
-	w.logger.Info().Msgf("✅ RabbitMQ connection closed successfully")
-
-	select {
-	case <-ctx.Done():
-		if ctx.Err() == context.DeadlineExceeded {
-			w.logger.Info().Msgf("Worker stopped due to context deadline exceeded")
-			return ctx.Err()
-		}
-	default:
-	}
-
-	w.logger.Info().Msgf("Worker stopped successfully")
-	return nil
-}
-
 func main() {
-	rootDir := utils.MustGetWorkingDir()
+	rootDir := env.MustGetWorkingDir()
+	logFilePath := filepath.Join(rootDir, "logs", "worker.log")
 
-	logFilePath := filepath.Join(rootDir, "internal", "logs", "worker.log")
-
-	logger.InitLogger(logger.LoggerConfig{
+	logging.InitLogger(logging.LoggerConfig{
 		LogLevel:   "info",
 		Filename:   logFilePath,
-		MaxSize:    10, // MB
-		MaxBackups: 3,  // backups
-		MaxAge:     30, // days
+		MaxSize:    10,
+		MaxBackups: 3,
+		MaxAge:     30,
 		Compress:   true,
-		LocalTime:  true, // Use local time instead of UTC
-		IsDev:      utils.GetEnv("DEVELOPMENT_MODE", "development"),
+		LocalTime:  true,
+		IsDev:      env.GetEnv("DEVELOPMENT_MODE", "development"),
 	})
 
 	if err := godotenv.Load(filepath.Join(rootDir, ".env")); err != nil {
-		logger.Log.Warn().Msgf("❌ Failed to load environment variables: %v", err)
+		logging.Log.Warn().Err(err).Msg("failed to load environment variables")
 	} else {
-		logger.Log.Info().Msg("Environment variables loaded successfully for worker")
+		logging.Log.Info().Msg("environment variables loaded for worker")
 	}
 
-	// Initialize config
-	config := config.NewConfig()
+	_ = config.NewConfig()
 
-	// Initialize worker
-	worker := NewWorker(config)
+	rabbitLogger := logging.NewLoggerWithPath("rabbitmq.log", "info")
+	rabbitMQURL := env.GetEnv("RABBITMQ_URL", "amqp://guest:guest@rabbitmq:5672/")
 
-	if worker == nil {
-		logger.Log.Error().Msgf("❌ Failed to initialize worker")
-		return
+	mq, err := messaging.NewRabbitMQService(rabbitMQURL, rabbitLogger)
+	if err != nil {
+		logging.Log.Fatal().Err(err).Msg("failed to initialize messaging")
 	}
-
-	// Wait for interrupt signal to gracefully shutdown the worker
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
-	defer stop()
-
-	var wg sync.WaitGroup
-	wg.Add(1)
-
-	go func() {
-		defer wg.Done()
-		if err := worker.Start(ctx); err != nil && err != context.Canceled {
-			logger.Log.Error().Err(err).Msgf("❌ Failed to start worker: %v", err)
+	defer func() {
+		if closeErr := mq.Close(); closeErr != nil {
+			logging.Log.Error().Err(closeErr).Msg("failed to close messaging connection")
 		}
 	}()
 
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+	defer stop()
+
+	logging.Log.Info().Msg("worker started; waiting for orchestration consumers")
+
 	<-ctx.Done()
-	logger.Log.Info().Msgf("🙋‍♂️ Shutting down worker...")
+	logging.Log.Info().Msg("shutting down worker")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
+	_ = shutdownCtx
 
-	if err := worker.Shutdown(ctx); err != nil {
-		logger.Log.Error().Err(err).Msgf("❌ Failed to stop worker: %v", err)
-	}
-
-	wg.Wait()
-	logger.Log.Info().Msgf("👋 Worker shutdown successfully")
+	logging.Log.Info().Msg("worker shutdown successfully")
 }

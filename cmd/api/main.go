@@ -2,49 +2,44 @@ package main
 
 import (
 	"path/filepath"
-	"shopping-cart/internal/app"
-	"shopping-cart/internal/config"
-	"shopping-cart/internal/utils"
-	"shopping-cart/pkg/logger"
+
+	"hublio/internal/platform/config"
+	"hublio/internal/platform/env"
+	"hublio/internal/platform/logging"
+	"hublio/internal/platform/server"
 
 	"github.com/joho/godotenv"
 )
 
 func main() {
-	rootDir := utils.MustGetWorkingDir()
+	rootDir := env.MustGetWorkingDir()
+	logFilePath := filepath.Join(rootDir, "logs", "app.log")
 
-	logFilePath := filepath.Join(rootDir, "internal", "logs", "app.log")
-
-	logger.InitLogger(logger.LoggerConfig{
+	logging.InitLogger(logging.LoggerConfig{
 		LogLevel:   "info",
 		Filename:   logFilePath,
-		MaxSize:    10, // MB
-		MaxBackups: 3,  // backups
-		MaxAge:     30, // days
+		MaxSize:    10,
+		MaxBackups: 3,
+		MaxAge:     30,
 		Compress:   true,
-		LocalTime:  true, // Use local time instead of UTC
-		IsDev:      utils.GetEnv("DEVELOPMENT_MODE", "development"),
+		LocalTime:  true,
+		IsDev:      env.GetEnv("DEVELOPMENT_MODE", "development"),
 	})
 
 	if err := godotenv.Load(filepath.Join(rootDir, ".env")); err != nil {
-		logger.Log.Warn().Msgf("❌ Failed to load environment variables: %v", err)
+		logging.Log.Warn().Err(err).Msg("failed to load environment variables")
 	} else {
-		logger.Log.Info().Msg("Environment variables loaded successfully for api")
+		logging.Log.Info().Msg("environment variables loaded for api")
 	}
 
-	// Initialize config
-	config := config.NewConfig()
+	cfg := config.NewConfig()
 
-	// Initialize application
-	app, err := app.NewApplication(config)
-
+	app, err := server.NewApplication(cfg)
 	if err != nil {
-		logger.Log.Fatal().Err(err).Msgf("❌ Failed to initialize application: %v", err)
-		return
+		logging.Log.Fatal().Err(err).Msg("failed to initialize application")
 	}
 
-	// Initialize server
 	if err := app.Run(); err != nil {
-		logger.Log.Fatal().Err(err).Msgf("❌ Failed to run application: %v", err)
+		logging.Log.Fatal().Err(err).Msg("failed to run application")
 	}
 }

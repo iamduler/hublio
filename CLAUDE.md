@@ -167,3 +167,11 @@ Before finishing any task, verify
 # Final Rule
 
 If you are uncertain, prefer consistency with the existing architecture over introducing a new abstraction.
+
+When working inside the monorepo:
+
+Identify the affected application.
+
+Only modify packages related to the requested feature.
+
+Avoid unnecessary cross-application changes.

@@ -31,35 +31,27 @@ Every deployment should be repeatable.
 # 3. Pipeline Overview
 
 ```text
-Developer
-
-↓
-
-Commit
-
-↓
-
 Pull Request
 
 ↓
 
-Continuous Integration
+Detect Changed Paths
 
 ↓
 
-Artifact Build
+Backend Pipeline
 
 ↓
 
-Staging
+Frontend Pipeline
 
 ↓
 
-Verification
+Shared Package Pipeline
 
 ↓
 
-Production
+Merge
 ```
 
 Every stage must succeed before progressing.

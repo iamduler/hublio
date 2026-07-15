@@ -1,16 +1,34 @@
-## Cài đặt Golang-Migrate
+# Hublio
 
-```curl
-go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+Business Orchestration Platform.
+
+## Architecture
+
+See `AGENTS.md` and `docs/`.
+
+High-level Go layout:
+
+```text
+cmd/
+  api/
+  worker/
+internal/
+  identity/
+  integration/
+  orchestration/
+  transformation/
+  events/
+  platform/
+migrations/
+docs/
 ```
 
-hoặc cài đặt theo tài liệu
+## Local commands
 
-```curl
-https://github.com/golang-migrate/migrate/tree/v4.18.3/cmd/migrate
-```
-
-kiểm tra version
-```curl
-migrate --version
+```bash
+make server
+make worker
+make migrate_up
+make sqlc
+make build
 ```

@@ -145,4 +145,8 @@ Verify
 * Code compiles
 * No duplicated logic
 
+Respect the monorepo layout.
+
+Prefer shared packages over duplicated code.
+
 When in doubt, follow AGENTS.md.

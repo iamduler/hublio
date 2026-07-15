@@ -514,3 +514,11 @@ Prefer explicit code over clever code.
 Prefer stable architecture over short-term convenience.
 
 Every contribution should make Hublio easier to understand, easier to test, and easier to evolve.
+
+Repository Strategy
+
+Hublio is maintained as a monorepo.
+
+AI must respect package boundaries.
+
+Do not move code between apps without explicit instruction.

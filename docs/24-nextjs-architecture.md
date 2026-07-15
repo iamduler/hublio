@@ -64,23 +64,20 @@ Business rules never belong to the frontend.
 # 4. Project Structure
 
 ```text
-src/
-
+apps/dashboard/src/
     app/
-
     features/
-
     components/
-
     lib/
-
     hooks/
-
     services/
-
     types/
-
     styles/
+	packages/
+		ui
+		api-client
+		config
+		types
 ```
 
 ---
