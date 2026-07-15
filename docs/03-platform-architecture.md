@@ -182,13 +182,17 @@ It never communicates directly with external providers.
 
 Responsibilities
 
-* Canonical Mapping
+* Canonical → Canonical Transformation
 * Validation
 * Normalization
+* Field Rename
 * Type Conversion
-* Data Enrichment
+* Currency / Timezone Normalization
+* Data Enrichment within Canonical Models
 
-The Transformation Engine translates between external models and Canonical Models.
+The Transformation Engine never maps Provider DTOs.
+
+Provider DTO mapping belongs exclusively to Connector Runtime.
 
 ---
 
@@ -198,12 +202,32 @@ Responsibilities
 
 * Provider Authentication
 * API Communication
-* Provider DTO Mapping
+* Canonical ↔ Provider DTO Mapping
 * Error Translation
 * Webhook Verification
 * Health Check
 
 Each Connector is an Adapter for one external system.
+
+Example
+
+Canonical Invoice
+
+↓
+
+Provider InvoiceRequest (for example MISA)
+
+↓
+
+HTTP Call
+
+↓
+
+Provider Response
+
+↓
+
+Canonical Response
 
 ---
 
@@ -241,11 +265,11 @@ Execution Steps
 
 ↓
 
-Transformation
+Canonical Transformation (if required)
 
 ↓
 
-Connector Runtime
+Connector Runtime (Canonical ↔ Provider DTO + HTTP)
 
 ↓
 
@@ -253,11 +277,11 @@ External System
 
 ↓
 
-Transformation
+Canonical Transformation (if required)
 
 ↓
 
-Execution Completed
+Execution Succeeded / Failed
 
 ↓
 
@@ -308,45 +332,39 @@ Each Step has one responsibility.
 
 # 9. Canonical Data Flow
 
-Every integration follows the same transformation pipeline.
+Every integration follows the same pipeline.
 
 ```text
-External Request
+Canonical Request
 
 ↓
 
-Provider DTO
+Transformation Engine (Canonical → Canonical)
 
 ↓
 
-Transformation Engine
+Connector Runtime (Canonical → Provider DTO)
 
 ↓
 
-Canonical Model
+External System
 
 ↓
 
-Business Processing
+Connector Runtime (Provider Response → Canonical Response)
 
 ↓
 
-Canonical Model
+Transformation Engine (Canonical → Canonical, if required)
 
 ↓
 
-Transformation Engine
-
-↓
-
-Provider DTO
-
-↓
-
-External Response
+Canonical Result
 ```
 
 Business logic only works with Canonical Models.
+
+Connector Runtime is the only component that understands Provider DTOs.
 
 ---
 
@@ -358,7 +376,7 @@ A Connector owns
 
 * Authentication
 * Provider APIs
-* Provider DTOs
+* Provider DTOs and Canonical ↔ Provider mapping
 * Error Translation
 * Webhook Verification
 
@@ -383,7 +401,6 @@ Examples
 * ExecutionCreated
 * ExecutionStarted
 * StepCompleted
-* ExecutionCompleted
 * ExecutionFailed
 * ConnectionActivated
 
@@ -476,7 +493,7 @@ The platform creates an Execution.
 
 The Orchestration Engine coordinates Execution Steps.
 
-The Transformation Engine translates data.
+The Transformation Engine transforms Canonical Models only.
 
 The Connector Runtime communicates with external systems.
 

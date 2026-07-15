@@ -45,7 +45,7 @@ Version 1 defines five capability domains.
 * Identity
 * Integration
 * Execution
-* Administration
+* Platform
 * Observability
 
 Each capability belongs to exactly one domain.
@@ -105,9 +105,9 @@ Execution capabilities coordinate business work across systems.
 
 ---
 
-# 7. Administration Capabilities
+# 7. Platform Capabilities
 
-The Administration domain manages platform configuration.
+The Platform domain manages cross-cutting platform configuration and operations.
 
 Capabilities
 
@@ -117,7 +117,7 @@ Capabilities
 * Environment Configuration
 * Audit Review
 
-Administration capabilities are intended for platform operators.
+Platform capabilities are intended for platform operators.
 
 ---
 
@@ -213,7 +213,7 @@ Execution never implements provider APIs.
 
 Observability never changes business state.
 
-Administration never bypasses platform security.
+Platform configuration never bypasses platform security.
 
 Every capability has a clear boundary.
 
@@ -234,7 +234,7 @@ Existing capabilities should remain backward compatible whenever practical.
 
 Version 1 intentionally excludes
 
-* Workflow Designer
+* Workflow Engine / BPMN
 * Rule Engine
 * BPMN
 * AI Assistance

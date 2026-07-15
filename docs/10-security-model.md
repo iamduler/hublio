@@ -2,7 +2,7 @@
 
 > Product: Hublio
 > Version: 1.0
-> Status: Draft
+> Status: Approved
 
 ---
 
@@ -199,15 +199,19 @@ Additional verification when appropriate.
 
 API Keys represent machine identities.
 
-Every key belongs to
+API Keys belong to a Workspace.
+
+Hierarchy
 
 Organization
 
+↓
+
 Workspace
 
-Environment
+↓
 
-Capabilities
+API Key
 
 API Keys should support
 

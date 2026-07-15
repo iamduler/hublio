@@ -95,8 +95,8 @@ Completed runtime records are immutable.
 
 | Aggregate    | Persistence Objects                                               |
 | ------------ | ----------------------------------------------------------------- |
-| Organization | Organization, User, API Key                                       |
-| Workspace    | Workspace                                                         |
+| Organization | Organization, User                                                |
+| Workspace    | Workspace, API Key                                                |
 | Connector    | Connector                                                         |
 | Connection   | Connection, Credential                                            |
 | Intent       | Intent                                                            |
@@ -251,7 +251,7 @@ Examples
 * Started
 * Step Completed
 * Retry Scheduled
-* Completed
+* Succeeded
 
 Timeline entries are append-only.
 
@@ -295,9 +295,9 @@ Audit Logs are immutable.
 Organization
 │
 ├── User
-├── API Key
 └── Workspace
       │
+      ├── API Key
       └── Connection
               │
               ├── Credential
@@ -322,11 +322,11 @@ Events and Audit Logs are independent persistence objects.
 Organization
 
 * Owns many Users
-* Owns many API Keys
 * Owns many Workspaces
 
 Workspace
 
+* Owns many API Keys
 * Owns many Connections
 
 Connector
@@ -365,7 +365,7 @@ Tenant boundaries are enforced by the application layer.
 The following objects are immutable after creation or completion.
 
 * Intent (after Accepted)
-* Execution (after Completed)
+* Execution (after terminal state)
 * Execution Snapshot
 * Execution Timeline
 * Event

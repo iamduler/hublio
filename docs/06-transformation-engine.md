@@ -2,52 +2,61 @@
 
 > Product: Hublio
 > Version: 1.0
-> Status: Draft
+> Status: Approved
 
 ---
 
 # 1. Purpose
 
-The Transformation Engine is responsible for translating data between external systems and Hublio Canonical Data Models.
+The Transformation Engine is responsible for Canonical → Canonical transformations inside Hublio.
 
-The Transformation Engine is the only component that understands how to transform data structures.
+It never maps Provider DTOs.
 
-Business logic must never contain mapping logic.
+Provider DTO mapping belongs exclusively to Connector Runtime.
+
+Business logic must never contain Canonical transformation logic.
 
 Connectors must never map directly to other connectors.
 
-Every transformation follows:
-
-External DTO
-
-↓
+Every platform transformation follows:
 
 Canonical Resource
 
 ↓
 
-Canonical Resource
+Transformation Engine (Canonical → Canonical)
 
 ↓
 
-External DTO
+Canonical Resource
+
+Examples
+
+* Currency normalization
+* Timezone normalization
+* Field rename within Canonical Models
+* Default values
+* Schema validation
+* Data enrichment within Canonical Models
 
 ---
 
 # 2. Core Philosophy
 
-The Transformation Engine translates data.
+The Transformation Engine transforms Canonical Models only.
 
-It never executes business logic.
+It never executes business rules.
 
 It never calls external APIs.
 
 It never persists business data.
 
+It never understands Provider DTOs.
+
 Its responsibility is limited to:
 
-- Mapping
-- Transformation
+- Canonical Field Rename
+- Type Conversion within Canonical Models
 - Normalization
 - Enrichment
 - Validation
@@ -58,52 +67,49 @@ Its responsibility is limited to:
 
 The Transformation Engine owns
 
-- Field Mapping
+- Canonical Field Rename
 - Type Conversion
-- Enum Translation
+- Enum Normalization within Canonical Models
 - Default Values
 - Data Normalization
-- Data Enrichment
-- Schema Validation
+- Data Enrichment within Canonical Models
+- Canonical Schema Validation
 
 The Transformation Engine does NOT own
 
+- Provider DTO Mapping
 - Business Rules
 - Authentication
 - Retry
-- Queue
-- Workflow
-- Connector Communication
+- Queue Management
+- Workflow Logic
+- Connector Communication / HTTP
 
 ---
 
 # 4. Mapping Flow
 
-External Payload
+Canonical Request
 
 ↓
 
-Provider Mapper
+Transformation Engine (Canonical → Canonical)
 
 ↓
 
-Canonical Resource
+Normalized Canonical Request
 
 ↓
 
-Business Processing
+Connector Runtime (Canonical → Provider DTO → HTTP → Provider Response → Canonical Response)
 
 ↓
 
-Canonical Resource
+Transformation Engine (Canonical → Canonical, if required)
 
 ↓
 
-Provider Mapper
-
-↓
-
-External Payload
+Normalized Canonical Response
 
 The platform never transforms
 
@@ -115,33 +121,31 @@ Provider B
 
 directly.
 
+All provider-specific mapping stays inside Connector Runtime.
+
 ---
 
-# 5. Mapping Layers
+# 5. Transformation Layers
 
-Every transformation passes through layers.
+Every Canonical transformation may pass through layers such as:
 
 Layer 1
 
-Raw Provider DTO
+Raw Canonical Resource
 
 ↓
 
 Layer 2
 
-Normalized Provider DTO
+Normalized Canonical Resource
 
 ↓
 
 Layer 3
 
-Canonical Resource
+Validated Canonical Resource
 
-↓
-
-Layer 4
-
-Target Provider DTO
+Provider DTOs never enter these layers.
 
 ---
 
@@ -667,31 +671,29 @@ Architecture should support these without breaking compatibility.
 
 # 29. Mapping Ownership
 
-Connector owns
+Connector Runtime owns
 
-Provider DTO
-
-Authentication
-
-Provider APIs
+* Provider DTO
+* Canonical ↔ Provider DTO Mapping
+* Authentication
+* Provider APIs
+* HTTP Communication
+* Error Translation
 
 Transformation Engine owns
 
-Canonical Transformation
-
-Field Mapping
-
-Type Conversion
-
-Validation
+* Canonical → Canonical Transformation
+* Field Rename
+* Type Conversion
+* Normalization
+* Validation
+* Enrichment within Canonical Models
 
 Business Layer owns
 
-Business Rules
-
-Business Decisions
-
-Business State
+* Business Rules
+* Business Decisions
+* Business State
 
 Responsibilities must never overlap.
 
@@ -701,9 +703,11 @@ Responsibilities must never overlap.
 
 Every provider speaks its own language.
 
-Hublio speaks one language.
+Hublio speaks one language: Canonical Data Models.
 
-The Transformation Engine is the universal translator.
+Connector Runtime translates between Canonical Models and Provider DTOs.
+
+Transformation Engine keeps Canonical Models consistent, validated, and normalized.
 
 Business logic should never know
 
@@ -717,4 +721,6 @@ Business logic only understands
 
 Canonical Data Models.
 
-The Transformation Engine protects the platform from vendor-specific implementations.
+Connectors protect the platform from vendor-specific APIs and DTOs.
+
+Transformation Engine protects Canonical consistency inside the platform.

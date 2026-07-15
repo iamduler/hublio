@@ -160,7 +160,7 @@ Typical entries
 * Step Started
 * Step Completed
 * Retry Scheduled
-* Completed
+* Succeeded
 * Failed
 * Cancelled
 
@@ -234,7 +234,7 @@ Execution Result
 
 ↓
 
-Completed
+Succeeded / Failed / Cancelled / Expired / Dead Letter
 ```
 
 The runtime flow is deterministic.
@@ -288,7 +288,6 @@ Examples
 * StepCompleted
 * ExecutionSucceeded
 * ExecutionFailed
-* ExecutionCompleted
 
 Runtime Events synchronize platform components.
 

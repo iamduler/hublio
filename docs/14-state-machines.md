@@ -115,10 +115,6 @@ Running
  ┌──┴───────────────┐
  ▼                  ▼
 Succeeded        Failed
- │                  │
- └──────┬───────────┘
-        ▼
-    Completed
 
 Alternative terminal states
 
@@ -143,15 +139,11 @@ Execution Steps are being processed.
 
 **Succeeded**
 
-All Execution Steps completed successfully.
+All Execution Steps completed successfully. This is the success terminal state.
 
 **Failed**
 
 Execution stopped because of an unrecoverable error.
-
-**Completed**
-
-Execution finished successfully.
 
 **Cancelled**
 
@@ -174,9 +166,9 @@ Execution exhausted all retry attempts.
 * Running → Cancelled
 * Running → Expired
 * Failed → Queued (Retry)
-* Succeeded → Completed
+* Failed → Dead Letter
 
-Completed, Cancelled, Expired and Dead Letter are terminal states.
+Succeeded, Cancelled, Expired and Dead Letter are terminal states.
 
 ---
 
@@ -306,7 +298,6 @@ Examples
 * IntentAccepted
 * ExecutionCreated
 * ExecutionStarted
-* ExecutionCompleted
 * ExecutionFailed
 * ConnectionActivated
 * ConnectionDisabled

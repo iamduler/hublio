@@ -153,30 +153,24 @@ Canonical Request
 
 ↓
 
-Transformation Engine
+Transformation Engine (Canonical → Canonical)
 
 ↓
 
-Provider Request
+Connector Runtime (Canonical → Provider DTO → HTTP → Canonical Response)
 
 ↓
 
-Connector Runtime
-
-↓
-
-Provider Response
-
-↓
-
-Transformation Engine
+Transformation Engine (Canonical → Canonical, if required)
 
 ↓
 
 Canonical Response
 ```
 
-Canonical Models are the only models shared across the platform.
+Canonical Models are the only models shared across the platform core.
+
+Provider DTOs exist only inside Connector Runtime.
 
 ---
 
@@ -193,18 +187,22 @@ Connector Runtime
 
 ↓
 
+Canonical → Provider DTO
+
+↓
+
 Provider API
 
 ↓
 
-Provider Response
+Provider Response → Canonical Response
 
 ↓
 
 Canonical Response
 ```
 
-The Connector Runtime is the only component allowed to communicate with external systems.
+The Connector Runtime is the only component allowed to communicate with external systems and to map Provider DTOs.
 
 ---
 
@@ -365,7 +363,7 @@ Webhook processing reuses the same runtime model as API requests.
 | Platform API          | Public API, authentication, validation        |
 | Intent Processor      | Accept business intent                        |
 | Orchestration Engine  | Manage execution lifecycle                    |
-| Transformation Engine | Convert between canonical and provider models |
+| Transformation Engine | Canonical → Canonical normalize / validate / rename |
 | Connector Runtime     | Communicate with external systems             |
 | Event Platform        | Publish and distribute events                 |
 
@@ -424,7 +422,7 @@ Provider-specific models remain inside the Connector Runtime.
 Version 1 intentionally excludes
 
 * Parallel execution
-* Workflow branching
+* Dynamic branching (deferred to Advanced Orchestration)
 * Human approval
 * BPMN
 * Dynamic routing

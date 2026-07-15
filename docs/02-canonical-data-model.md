@@ -1,9 +1,9 @@
 # Canonical Data Model (CDM)
 
 > Product: Hublio
-> Version: 0.1
-> Status: Draft
-> Last Updated: 2026-07-09
+> Version: 1.0
+> Status: Approved
+> Last Updated: 2026-07-15
 
 ---
 

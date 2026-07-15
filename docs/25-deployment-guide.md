@@ -117,7 +117,7 @@ Responsible for
 
 * Dashboard
 * Authentication UI
-* Platform Administration
+* Platform Configuration
 
 Business rules remain in the backend.
 

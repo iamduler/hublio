@@ -81,7 +81,6 @@ Organization
 ### Child Entities
 
 * User
-* API Key
 
 ---
 
@@ -123,7 +122,6 @@ Organization
 
 * Organization
 * Users
-* API Keys
 
 ---
 
@@ -132,6 +130,8 @@ Organization
 ## Responsibility
 
 Provides logical isolation within an Organization.
+
+Owns Workspace-scoped access credentials.
 
 ---
 
@@ -143,7 +143,7 @@ Workspace
 
 ### Child Entities
 
-None
+* API Key
 
 ---
 
@@ -158,6 +158,7 @@ None
 
 * Workspace belongs to exactly one Organization.
 * Disabled Workspaces cannot execute Intents.
+* API Keys belong to exactly one Workspace.
 
 ---
 
@@ -167,6 +168,9 @@ None
 * Update
 * Enable
 * Disable
+* Create API Key
+* Disable API Key
+* Rotate API Key
 
 ---
 
@@ -175,12 +179,16 @@ None
 * WorkspaceCreated
 * WorkspaceEnabled
 * WorkspaceDisabled
+* ApiKeyCreated
+* ApiKeyDisabled
+* ApiKeyRotated
 
 ---
 
 ### Persisted Data
 
 * Workspace
+* API Keys
 
 ---
 
@@ -405,7 +413,7 @@ Execution
 ### Invariants
 
 * Execution belongs to exactly one Intent.
-* Completed Executions are immutable.
+* Terminal Executions are immutable.
 * Steps execute sequentially.
 * Every Execution produces one Result.
 
@@ -417,7 +425,8 @@ Execution
 * Execute Step
 * Retry
 * Cancel
-* Complete
+* Succeed
+* Fail
 * Replay
 
 ---
@@ -430,7 +439,6 @@ Execution
 * StepCompleted
 * ExecutionSucceeded
 * ExecutionFailed
-* ExecutionCompleted
 
 ---
 

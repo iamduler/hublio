@@ -22,7 +22,7 @@ If generated code conflicts with this document, the generated code must be rejec
 
 # Product
 
-Hublio is a Business Orchestration Platform.
+Hublio is a Business Integration Platform and a Business Orchestration Platform.
 
 Hublio is **NOT**
 
@@ -33,7 +33,7 @@ Hublio is **NOT**
 * Low-code Platform
 * iPaaS Marketplace
 
-The product focuses on orchestrating business operations between external systems through a stable Canonical Model.
+The product focuses on integrating business systems and orchestrating business operations between external systems through a stable Canonical Model.
 
 ---
 
@@ -196,7 +196,7 @@ Execution Steps
 
 ↓
 
-Completed
+Succeeded / Failed / Terminal State
 
 Do not introduce
 

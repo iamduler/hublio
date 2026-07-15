@@ -1,17 +1,17 @@
 # Product Definition
 
 > Product: Hublio
-> Version: 0.1
-> Status: Draft
-> Last Updated: 2026-07-09
+> Version: 1.0
+> Status: Approved
+> Last Updated: 2026-07-15
 
 ---
 
 # 1. Vision
 
-Build the leading Integration Platform as a Service (iPaaS) for business software in Vietnam.
+Build the leading Business Integration Platform and Business Orchestration Platform for business software in Vietnam.
 
-The platform provides a unified integration hub that allows software vendors and enterprises to connect multiple business systems through standardized APIs, eliminating point-to-point integrations.
+Hublio connects business systems and orchestrates business operations between them through a unified, Canonical-first runtime model.
 
 Invoice integration is the first supported business domain, not the final product.
 
@@ -19,9 +19,9 @@ Invoice integration is the first supported business domain, not the final produc
 
 # 2. Mission
 
-Provide a reliable, scalable, and developer-friendly integration platform that enables businesses to connect their software ecosystem with minimal engineering effort.
+Provide a reliable, scalable, and developer-friendly platform that enables businesses to connect their software ecosystem with minimal engineering effort.
 
-The platform should become the central integration layer between:
+The platform should become the central integration and orchestration layer between:
 
 - ERP
 - POS
@@ -37,17 +37,20 @@ The platform should become the central integration layer between:
 
 # 3. Elevator Pitch
 
-Our platform acts as a central integration hub between business software systems.
+Hublio is both a Business Integration Platform and a Business Orchestration Platform.
 
-Instead of building individual integrations between every pair of systems, software vendors integrate only once with our platform.
+Instead of building point-to-point integrations between every pair of systems, software vendors integrate once with Hublio.
+
+Clients submit Business Intents. The platform orchestrates Executions, transforms Canonical data, and communicates with external systems through Connectors.
 
 The platform handles:
 
 - Authentication
 - Credential Management
-- Data Mapping
-- Data Transformation
+- Canonical Data Model
+- Canonical Transformation
 - Validation
+- Connector Mapping
 - Retry
 - Monitoring
 - Logging
@@ -63,13 +66,15 @@ The platform is NOT an invoice software.
 
 The platform is NOT an ERP.
 
-The platform is NOT a workflow automation tool.
+The platform is NOT a Workflow Engine.
 
-The platform is an Integration Hub.
+The platform is NOT a BPMN or low-code automation tool.
+
+Hublio is a Business Integration Platform + Business Orchestration Platform.
 
 Everything should be designed around one principle:
 
-> Connect Once. Integrate Everywhere.
+> Connect Once. Orchestrate Everywhere.
 
 ---
 
@@ -108,7 +113,7 @@ Problems:
 
 # 6. Solution
 
-Introduce a centralized Integration Hub.
+Introduce a centralized Business Integration and Orchestration Platform.
 
 Instead of integrating directly:
 
@@ -118,16 +123,16 @@ POS
 
 Invoice Provider
 
-Software systems connect only to the Integration Hub.
+Software systems connect only to Hublio.
 
-The Integration Hub becomes responsible for:
+Hublio becomes responsible for:
 
 - Authentication
 - Connector Lifecycle
 - Canonical Data Model
-- Mapping
+- Canonical Transformation
 - Validation
-- Transformation
+- Provider Mapping (inside Connectors)
 - Execution
 - Retry
 - Monitoring
@@ -145,9 +150,9 @@ The Integration Hub becomes responsible for:
 - Connector Framework
 - Invoice Integration
 - Authentication
-- Organization Management
+- Organization / Workspace / API Key hierarchy
 - Credential Management
-- Transformation Engine
+- Transformation Engine (Canonical → Canonical)
 - Orchestration Engine
 - Retry
 - Replay
@@ -166,8 +171,10 @@ The Integration Hub becomes responsible for:
 - Payment Integration
 - Inventory Integration
 - Government Services
-- Workflow Builder
+- Advanced Orchestration
 - Connector Marketplace
+- Webhook Engine
+- Event Automation
 - Public SDK
 - Billing Platform
 
@@ -181,8 +188,10 @@ The platform will NOT:
 - Replace Accounting software
 - Replace POS software
 - Replace Invoice Providers
-- Store business transactions permanently
-- Become a workflow automation platform like Zapier
+- Become a Workflow Engine
+- Become a BPMN engine
+- Become a low-code automation platform like Zapier
+- Store customer business transactions as a System of Record
 
 ---
 
@@ -214,7 +223,7 @@ Future
 
 Software vendors integrate once.
 
-Our platform manages all downstream integrations.
+Hublio manages integrations and orchestrates business operations across downstream systems.
 
 Benefits:
 
@@ -249,13 +258,21 @@ The platform itself should remain connector-agnostic.
 
 Every external system communicates through the platform's internal data model.
 
-Never expose provider-specific models to the core platform.
+Never expose provider-specific models to the platform core.
+
+---
+
+## Intent Driven
+
+Clients express what they want to accomplish.
+
+The platform determines how the request is executed.
 
 ---
 
 ## Event Driven
 
-Internal communication should be event-driven whenever possible.
+Internal communication should be event-driven whenever appropriate.
 
 ---
 
@@ -315,7 +332,7 @@ Business
 
 Phase 1
 
-Integration Platform Foundation
+Integration & Orchestration Foundation
 
 Phase 2
 
@@ -323,13 +340,21 @@ Invoice Hub
 
 Phase 3
 
-Workflow Engine
+Advanced Orchestration
 
 Phase 4
 
 Connector Marketplace
 
 Phase 5
+
+Webhook Engine
+
+Phase 6
+
+Event Automation
+
+Phase 7
 
 Developer Platform
 
@@ -390,6 +415,6 @@ Everything must communicate through standardized interfaces.
 
 Invoice providers, ERP systems, POS systems, CRM systems, and future integrations are all treated as connectors.
 
-The platform owns the orchestration.
+The platform owns integration contracts and orchestration.
 
-Connectors own the implementation.
+Connectors own provider-specific implementation.

@@ -116,11 +116,12 @@ Responsibilities
 
 ---
 
-## Administration
+## Platform
 
 Responsibilities
 
 * Platform Configuration
+* Cross-cutting Concerns
 * Monitoring
 * Dashboard
 * Maintenance
@@ -288,7 +289,6 @@ Examples
 
 * IntentAccepted
 * ExecutionStarted
-* ExecutionCompleted
 * ConnectionActivated
 
 Domain Events represent facts.

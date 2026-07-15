@@ -18,9 +18,9 @@ If any future document conflicts with this document, this document takes precede
 
 # 2. Product Vision
 
-Hublio is a Business Orchestration Platform.
+Hublio is a Business Integration Platform and a Business Orchestration Platform.
 
-Its purpose is to orchestrate business operations between software systems using a unified execution model.
+Its purpose is to integrate business systems and orchestrate business operations between them using a unified execution model.
 
 Hublio is not
 

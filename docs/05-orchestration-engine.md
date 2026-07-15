@@ -78,10 +78,6 @@ Running
     ├──────────────┐
     ▼              ▼
 Succeeded       Failed
-    │              │
-    └──────┬───────┘
-           ▼
-      Completed
 ```
 
 Alternative terminal states
@@ -214,7 +210,7 @@ An Execution may be cancelled before completion.
 
 Cancellation is cooperative.
 
-Completed Executions cannot be cancelled.
+Terminal Executions cannot be cancelled.
 
 Cancelled Executions remain available for auditing.
 
@@ -234,7 +230,6 @@ Examples
 * ExecutionSucceeded
 * ExecutionFailed
 * ExecutionCancelled
-* ExecutionCompleted
 
 Runtime Events synchronize other platform components.
 

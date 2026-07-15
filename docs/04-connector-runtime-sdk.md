@@ -41,10 +41,14 @@ A Connector is responsible for
 * Provider Authentication
 * API Communication
 * Webhook Verification
-* Provider Request Mapping
-* Provider Response Mapping
+* Canonical → Provider DTO Mapping
+* Provider Response → Canonical Mapping
 * Provider Error Translation
 * Health Check
+
+Connectors own all Provider DTO mapping.
+
+Transformation Engine never maps Provider DTOs.
 
 A Connector is NOT responsible for
 
@@ -389,7 +393,7 @@ The Connector owns
 
 * Provider Authentication
 * Provider Communication
-* Provider DTO Mapping
+* Canonical ↔ Provider DTO Mapping
 * Provider Error Translation
 * Webhook Verification
 

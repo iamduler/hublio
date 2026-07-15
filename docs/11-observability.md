@@ -131,7 +131,7 @@ Waiting
 
 Retry
 
-Completed
+Succeeded
 
 Failed
 
@@ -329,7 +329,7 @@ Processing Rate
 
 Worker Utilization
 
-Queue monitoring belongs to the platform.
+Queue monitoring belongs to Platform Infrastructure (for example Redis Queue → Worker), not the Event Platform.
 
 ---
 

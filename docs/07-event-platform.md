@@ -32,9 +32,18 @@ The Event Platform does NOT own
 
 * Business Rules
 * Execution Lifecycle
-* Queue Management
-* Workflow
+* Work Queues / Worker Scheduling
 * Provider Communication
+
+Work queues belong to Platform Infrastructure.
+
+Example
+
+Redis Queue → Worker
+
+The Event Platform publishes and delivers events.
+
+It does not own the execution work queue used by Orchestration Workers.
 
 ---
 
@@ -73,7 +82,6 @@ Examples
 * ExecutionSucceeded
 * ExecutionFailed
 * ExecutionCancelled
-* ExecutionCompleted
 
 Runtime Events describe execution progress.
 
@@ -109,7 +117,7 @@ Examples
 * ApiKeyCreated
 * UserInvited
 
-System Events describe platform administration.
+System Events describe platform operations.
 
 ---
 
@@ -323,6 +331,7 @@ The Event Platform does not own
 * Provider Communication
 * Execution State
 * Business Validation
+* Work Queues / Worker Infrastructure
 
 Responsibilities remain clearly separated.
 

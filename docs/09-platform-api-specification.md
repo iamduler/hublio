@@ -210,7 +210,7 @@ Execution Created
 
 ↓
 
-Execution Completed
+Execution Succeeded
 
 ↓
 
@@ -334,7 +334,7 @@ Version 1 intentionally excludes
 * gRPC
 * Public Event Streaming API
 * Bulk Execution API
-* Workflow API
+* Advanced Orchestration APIs (future)
 
 REST is the only public API protocol in Version 1.
 
