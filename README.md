@@ -80,6 +80,7 @@ Biến quan trọng:
 | `API_KEY` | Bootstrap API key cho machine routes `/api/v1/health`, queue, … |
 | `JWT_SECRET_KEY` / `JWT_ENCRYPT_KEY` | JWT (32-byte key cho encrypt) |
 | `ENABLE_API_DOCS` | Bật/tắt Scalar UI tại `/docs` (mặc định bật khi `DEVELOPMENT_MODE=development`) |
+| `CREDENTIAL_ENCRYPTION_KEY` | Đúng 32 bytes — mã hóa credential Connection (AES-GCM) |
 | `SERVER_PORT` | HTTP port (default `8080`) |
 
 ### Ghi chú WSL + Navicat

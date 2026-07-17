@@ -27,6 +27,65 @@ type ApiKey struct {
 	DeletedAt         pgtype.Timestamptz `json:"deleted_at"`
 }
 
+type Connection struct {
+	ID                 uuid.UUID          `json:"id"`
+	ActiveCredentialID pgtype.UUID        `json:"active_credential_id"`
+	WorkspaceID        uuid.UUID          `json:"workspace_id"`
+	ConnectorID        uuid.UUID          `json:"connector_id"`
+	Name               string             `json:"name"`
+	IsDefault          bool               `json:"is_default"`
+	Description        *string            `json:"description"`
+	Environment        string             `json:"environment"`
+	Status             string             `json:"status"`
+	Config             []byte             `json:"config"`
+	RetryPolicy        []byte             `json:"retry_policy"`
+	TimeoutSeconds     int32              `json:"timeout_seconds"`
+	CreatedAt          pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt          pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt          pgtype.Timestamptz `json:"deleted_at"`
+}
+
+type Connector struct {
+	ID               uuid.UUID          `json:"id"`
+	Code             string             `json:"code"`
+	Name             string             `json:"name"`
+	Vendor           string             `json:"vendor"`
+	Category         string             `json:"category"`
+	Version          string             `json:"version"`
+	Status           string             `json:"status"`
+	Description      *string            `json:"description"`
+	Homepage         *string            `json:"homepage"`
+	DocumentationUrl *string            `json:"documentation_url"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt        pgtype.Timestamptz `json:"deleted_at"`
+}
+
+type ConnectorCapability struct {
+	ID             uuid.UUID          `json:"id"`
+	ConnectorID    uuid.UUID          `json:"connector_id"`
+	CapabilityCode string             `json:"capability_code"`
+	DisplayName    string             `json:"display_name"`
+	Status         string             `json:"status"`
+	IsAsync        bool               `json:"is_async"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
+}
+
+type Credential struct {
+	ID              uuid.UUID          `json:"id"`
+	ConnectionID    uuid.UUID          `json:"connection_id"`
+	Type            string             `json:"type"`
+	Status          string             `json:"status"`
+	Version         int32              `json:"version"`
+	EncryptedSecret []byte             `json:"encrypted_secret"`
+	ExpiresAt       pgtype.Timestamptz `json:"expires_at"`
+	RotatedAt       pgtype.Timestamptz `json:"rotated_at"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+	CreatedBy       uuid.UUID          `json:"created_by"`
+}
+
 type Organization struct {
 	ID        uuid.UUID          `json:"id"`
 	Name      string             `json:"name"`

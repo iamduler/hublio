@@ -16,6 +16,7 @@ tags:
   - name: System
   - name: Auth
   - name: Identity
+  - name: Integration
   - name: Machine
 
 paths:
@@ -325,6 +326,224 @@ paths:
         "200":
           description: Rotated
 
+  /api/v1/integration/connectors:
+    get:
+      tags: [Integration]
+      summary: List Connectors
+      operationId: listConnectors
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Connector list
+    post:
+      tags: [Integration]
+      summary: Register a Connector (platform admin / seed)
+      operationId: registerConnector
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterConnectorRequest"
+      responses:
+        "201":
+          description: Connector registered
+        "400":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/integration/connectors/{connectorId}:
+    get:
+      tags: [Integration]
+      summary: Get Connector
+      operationId: getConnector
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/connectorId"
+      responses:
+        "200":
+          description: Connector
+        "404":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/integration/connectors/{connectorId}/enable:
+    post:
+      tags: [Integration]
+      summary: Enable Connector
+      operationId: enableConnector
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/connectorId"
+      responses:
+        "200":
+          description: Enabled
+        "409":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/integration/connectors/{connectorId}/disable:
+    post:
+      tags: [Integration]
+      summary: Disable Connector
+      operationId: disableConnector
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/connectorId"
+      responses:
+        "200":
+          description: Disabled
+        "409":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/integration/connectors/{connectorId}/remove:
+    post:
+      tags: [Integration]
+      summary: Remove Connector (terminal)
+      operationId: removeConnector
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/connectorId"
+      responses:
+        "200":
+          description: Removed
+        "409":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/integration/workspaces/{workspaceId}/connections:
+    get:
+      tags: [Integration]
+      summary: List Connections in a Workspace
+      operationId: listConnections
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/workspaceId"
+      responses:
+        "200":
+          description: Connection list
+        "403":
+          $ref: "#/components/responses/Error"
+    post:
+      tags: [Integration]
+      summary: Create Connection (Draft) with initial Credential
+      operationId: createConnection
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/workspaceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateConnectionRequest"
+      responses:
+        "201":
+          description: Connection created; credential never includes plaintext/ciphertext
+        "400":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/integration/workspaces/{workspaceId}/connections/{connectionId}:
+    get:
+      tags: [Integration]
+      summary: Get Connection
+      operationId: getConnection
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/workspaceId"
+        - $ref: "#/components/parameters/connectionId"
+      responses:
+        "200":
+          description: Connection
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/integration/workspaces/{workspaceId}/connections/{connectionId}/verify:
+    post:
+      tags: [Integration]
+      summary: Verify Connection (Draft/VerificationFailed -> Verifying -> Active|VerificationFailed)
+      operationId: verifyConnection
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/workspaceId"
+        - $ref: "#/components/parameters/connectionId"
+      responses:
+        "200":
+          description: Verification finished (inspect status; active or verification_failed)
+        "403":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/integration/workspaces/{workspaceId}/connections/{connectionId}/disable:
+    post:
+      tags: [Integration]
+      summary: Disable Connection
+      operationId: disableConnection
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/workspaceId"
+        - $ref: "#/components/parameters/connectionId"
+      responses:
+        "200":
+          description: Disabled
+        "409":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/integration/workspaces/{workspaceId}/connections/{connectionId}/enable:
+    post:
+      tags: [Integration]
+      summary: Enable Connection (must have been previously verified)
+      operationId: enableConnection
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/workspaceId"
+        - $ref: "#/components/parameters/connectionId"
+      responses:
+        "200":
+          description: Enabled
+        "409":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/integration/workspaces/{workspaceId}/connections/{connectionId}/credentials/rotate:
+    post:
+      tags: [Integration]
+      summary: Rotate Credential (revokes previous, never returns secret)
+      operationId: rotateCredential
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/workspaceId"
+        - $ref: "#/components/parameters/connectionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RotateCredentialRequest"
+      responses:
+        "201":
+          description: Rotated; response never includes plaintext or ciphertext
+        "400":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+
   /api/v1/health:
     get:
       tags: [Machine]
@@ -381,6 +600,20 @@ components:
         format: uuid
     apiKeyId:
       name: apiKeyId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    connectorId:
+      name: connectorId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    connectionId:
+      name: connectionId
       in: path
       required: true
       schema:
@@ -448,3 +681,89 @@ components:
           format: email
         password:
           type: string
+
+    RegisterConnectorRequest:
+      type: object
+      required: [code, name, vendor, category, version]
+      properties:
+        code:
+          type: string
+          example: fake
+        name:
+          type: string
+        vendor:
+          type: string
+        category:
+          type: string
+          enum: [source, destination, bidirectional, utility]
+        version:
+          type: string
+          example: 1.0.0
+        description:
+          type: string
+        homepage:
+          type: string
+        documentation_url:
+          type: string
+        capabilities:
+          type: array
+          items:
+            type: object
+            required: [code, display_name]
+            properties:
+              code:
+                type: string
+              display_name:
+                type: string
+              is_async:
+                type: boolean
+                default: false
+
+    CreateConnectionRequest:
+      type: object
+      required: [connector_id, name, environment, credential_type, secret]
+      properties:
+        connector_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        is_default:
+          type: boolean
+          default: false
+        description:
+          type: string
+        environment:
+          type: string
+          example: production
+        config:
+          type: object
+          description: Canonical-ish, provider-agnostic Connection config (JSONB)
+        retry_policy:
+          type: object
+        timeout_seconds:
+          type: integer
+          default: 30
+        credential_type:
+          type: string
+          enum: [api_key, oauth2, bearer_token, basic_auth, jwt]
+        secret:
+          type: object
+          description: Plaintext credential fields; encrypted at rest, never echoed back
+        credential_expires_at:
+          type: string
+          format: date-time
+
+    RotateCredentialRequest:
+      type: object
+      required: [credential_type, secret]
+      properties:
+        credential_type:
+          type: string
+          enum: [api_key, oauth2, bearer_token, basic_auth, jwt]
+        secret:
+          type: object
+          description: Plaintext credential fields; encrypted at rest, never echoed back
+        expires_at:
+          type: string
+          format: date-time

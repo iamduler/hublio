@@ -13,6 +13,11 @@ import (
 type Querier interface {
 	GetAPIKeyByID(ctx context.Context, id uuid.UUID) (ApiKey, error)
 	GetAPIKeyByPrefix(ctx context.Context, prefix string) (ApiKey, error)
+	GetActiveCredentialByConnection(ctx context.Context, connectionID uuid.UUID) (Credential, error)
+	GetConnectionByID(ctx context.Context, id uuid.UUID) (Connection, error)
+	GetConnectorByCode(ctx context.Context, code string) (Connector, error)
+	GetConnectorByID(ctx context.Context, id uuid.UUID) (Connector, error)
+	GetCredentialByID(ctx context.Context, id uuid.UUID) (Credential, error)
 	GetOrganizationByID(ctx context.Context, id uuid.UUID) (Organization, error)
 	GetOrganizationByName(ctx context.Context, name string) (Organization, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
@@ -20,17 +25,28 @@ type Querier interface {
 	GetWorkspaceByID(ctx context.Context, id uuid.UUID) (Workspace, error)
 	GetWorkspaceUser(ctx context.Context, arg GetWorkspaceUserParams) (WorkspaceUser, error)
 	InsertAPIKey(ctx context.Context, arg InsertAPIKeyParams) error
+	InsertConnection(ctx context.Context, arg InsertConnectionParams) error
+	InsertConnector(ctx context.Context, arg InsertConnectorParams) error
+	InsertConnectorCapability(ctx context.Context, arg InsertConnectorCapabilityParams) error
+	InsertCredential(ctx context.Context, arg InsertCredentialParams) error
 	InsertOrganization(ctx context.Context, arg InsertOrganizationParams) error
 	InsertUser(ctx context.Context, arg InsertUserParams) error
 	InsertWorkspace(ctx context.Context, arg InsertWorkspaceParams) error
 	InsertWorkspaceUser(ctx context.Context, arg InsertWorkspaceUserParams) error
 	ListAPIKeysByWorkspace(ctx context.Context, workspaceID uuid.UUID) ([]ApiKey, error)
+	ListCapabilitiesByConnector(ctx context.Context, connectorID uuid.UUID) ([]ConnectorCapability, error)
+	ListConnectionsByWorkspace(ctx context.Context, workspaceID uuid.UUID) ([]Connection, error)
+	ListConnectors(ctx context.Context) ([]Connector, error)
+	ListCredentialsByConnection(ctx context.Context, connectionID uuid.UUID) ([]Credential, error)
 	ListWorkspaceUsersByUser(ctx context.Context, userID uuid.UUID) ([]WorkspaceUser, error)
 	ListWorkspaceUsersByWorkspace(ctx context.Context, workspaceID uuid.UUID) ([]WorkspaceUser, error)
 	ListWorkspacesByOrganization(ctx context.Context, organizationID uuid.UUID) ([]Workspace, error)
 	Ping(ctx context.Context) (int32, error)
 	TouchAPIKeyLastUsed(ctx context.Context, arg TouchAPIKeyLastUsedParams) error
 	UpdateAPIKey(ctx context.Context, arg UpdateAPIKeyParams) error
+	UpdateConnection(ctx context.Context, arg UpdateConnectionParams) error
+	UpdateConnector(ctx context.Context, arg UpdateConnectorParams) error
+	UpdateCredential(ctx context.Context, arg UpdateCredentialParams) error
 	UpdateOrganization(ctx context.Context, arg UpdateOrganizationParams) error
 	UpdateUser(ctx context.Context, arg UpdateUserParams) error
 	UpdateWorkspace(ctx context.Context, arg UpdateWorkspaceParams) error

@@ -192,46 +192,53 @@ Thứ tự Aggregate: **Organization → Workspace → User/Membership → API K
 
 ## C1. Domain — Connector
 
-* [ ] Connector aggregate metadata (code, vendor, category, version, status SM)
-* [ ] States: Registered → Enabled → Disabled → Removed
-* [ ] Behaviors + events theo `docs/14` / `docs/18`
-* [ ] Unit tests SM
+* [x] Connector aggregate metadata (code, vendor, category, version, status SM)
+* [x] States: Registered → Enabled ↔ Disabled → Removed (terminal)
+* [x] Behaviors + events (`internal/integration/domain/connector.go`, `events.go`)
+* [x] Unit tests SM (`internal/integration/domain/connector_test.go`)
 
 ## C2. Domain — Connection + Credential
 
-* [ ] Connection belongs to Workspace + references Connector
-* [ ] SM: Draft → Verifying → Active | VerificationFailed → Disabled
-* [ ] Credential child; rotate credentials
-* [ ] Invariants: only Active connection usable for Intent
-* [ ] Unit tests
+* [x] Connection belongs to Workspace + references Connector
+* [x] SM: Draft → Verifying → Active | VerificationFailed → Verifying; Active ↔ Disabled
+* [x] Credential child; `domain.RotateCredential` revokes old + increments version
+* [x] Invariants: only Active connection usable for Intent (`CanExecuteIntents`)
+* [x] Unit tests (`connection_test.go`, `credential_test.go`)
 
 ## C3. Application
 
-* [ ] RegisterConnector (platform admin / seed)
-* [ ] CreateConnection / VerifyConnection / Activate / Disable
-* [ ] RotateCredential
-* [ ] Never store secrets plaintext
+* [x] RegisterConnector (platform admin / seed) + SeedFakeConnector
+* [x] CreateConnection / VerifyConnection / EnableConnection / DisableConnection
+* [x] RotateCredential
+* [x] Never store secrets plaintext (Application encrypts via `SecretEncryptor` port before Save)
 
 ## C4. Infrastructure
 
-* [ ] Migrations: connectors, connector_capabilities, connections, credentials (từ DBML)
-* [ ] Repositories + sqlc
-* [ ] Encryption for credential payload at rest
+* [x] Migrations: connectors, connector_capabilities, connections, credentials (`migrations/000002_integration.up.sql`)
+* [x] Repositories + sqlc (`internal/integration/infrastructure/*_repository.go`, `queries/integration.sql`)
+* [x] Encryption for credential payload at rest (`AESSecretEncryptor`, `CREDENTIAL_ENCRYPTION_KEY`, JSONB `{"ciphertext": "..."}`)
 
 ## C5. Connector Runtime contract (skeleton)
 
-* [ ] Interface trong Integration: Auth / Invoke / Health / VerifyWebhook
-* [ ] Input/Output = **Canonical DTOs only** ở boundary platform
-* [ ] Provider DTO chỉ trong `internal/integration/connectors/<vendor>/`
-* [ ] Fake/Noop connector cho test Orchestration
+* [x] Interface trong Integration Domain: `Runtime` (Verify / Health / Invoke) + `RuntimeRegistry`
+* [x] Input/Output = canonical-ish `map[string]any` only ở boundary platform (no provider DTOs)
+* [x] Provider DTO chỉ trong `internal/integration/connectors/<vendor>/` (none yet — Fake only)
+* [x] Fake/Noop connector cho test Orchestration (`internal/integration/connectors/fake`)
 
 ## C6. Management API
 
-* [ ] Connectors list/get
-* [ ] Connections CRUD + verify + disable
-* [ ] Credentials rotate (no secret in responses)
+* [x] Connectors list/get + register/enable/disable/remove (`/api/v1/integration/connectors...`)
+* [x] Connections create/list/get + verify + enable/disable (`/api/v1/integration/workspaces/:workspaceId/connections...`)
+* [x] Credentials rotate (no secret in responses)
 
 **Exit criteria Phase C:** Active Connection + Fake Connector ready for Orchestration.
+
+> Phase C completed 2026-07-17: Domain (Connector/Connection/Credential state machines + table-driven
+> unit tests, all passing without DB), Application use cases, Fake Connector Runtime + Registry,
+> Postgres migration/sqlc/repositories, AES-GCM credential encryption, Management HTTP API wired in
+> `internal/platform/server/server.go`, OpenAPI paths added under `Integration` tag. Individual
+> Capability enable/disable HTTP endpoints and SyncRoute are intentionally deferred (not in Phase C
+> scope). `go build ./...` and `go test ./...` pass.
 
 ---
 
