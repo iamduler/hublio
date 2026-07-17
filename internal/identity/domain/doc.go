@@ -1,2 +1,2 @@
-// Package domain belongs to the identity bounded context.
+// Package domain contains Identity bounded-context business rules.
 package domain

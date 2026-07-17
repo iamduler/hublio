@@ -421,14 +421,16 @@ Provider-specific models remain inside the Connector Runtime.
 
 Version 1 intentionally excludes
 
-* Parallel execution
-* Dynamic branching (deferred to Advanced Orchestration)
+* Parallel Steps inside a single Execution
+* Dynamic branching graphs / BPMN (deferred to Advanced Orchestration)
 * Human approval
 * BPMN
-* Dynamic routing
+* Dynamic routing as a Rule Engine
 * Rule Engine
 
-Every business request follows a single deterministic execution path.
+Clarification: SyncRoute may fan out one Intent to multiple Executions (sequential or parallel enqueue). Each Execution path remains deterministic sequential Steps.
+
+Every business request still maps to Intent → Execution(s) → Steps — not a Workflow Engine.
 
 ---
 
@@ -436,7 +438,7 @@ Every business request follows a single deterministic execution path.
 
 Every client submits a Business Intent.
 
-The platform creates an Execution.
+The platform creates one or more Executions.
 
 The Orchestration Engine coordinates Execution Steps.
 

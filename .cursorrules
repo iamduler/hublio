@@ -40,7 +40,7 @@ Intent
 
 ↓
 
-Execution
+Execution(s)
 
 ↓
 
@@ -53,6 +53,8 @@ Connector Runtime
 ↓
 
 External System
+
+One Intent may fan out to multiple Executions (sequential or parallel enqueue). Steps inside one Execution stay sequential. Do not introduce BPMN / Workflow Engine / Rule Engine.
 
 ## Package Rules
 
@@ -134,6 +136,13 @@ Avoid
 * Utility Packages
 * Over-engineering
 
+## OpenAPI
+
+Public HTTP API docs live in `api/openapi/openapi.yaml` (Scalar at `/docs`).
+
+When adding/changing/removing routes: update that YAML in the same change.
+Do not add OpenAPI codegen unless explicitly requested.
+
 ## Before Completing Any Task
 
 Verify
@@ -144,6 +153,7 @@ Verify
 * Tests added where appropriate
 * Code compiles
 * No duplicated logic
+* HTTP route changes synced to `api/openapi/openapi.yaml`
 
 Respect the monorepo layout.
 

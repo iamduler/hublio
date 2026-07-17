@@ -89,6 +89,5 @@ func GetTraceID(ctx context.Context) string {
 	if traceID, ok := ctx.Value(TraceIDKey).(string); ok {
 		return traceID
 	}
-
 	return ""
 }

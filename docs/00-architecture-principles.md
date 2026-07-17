@@ -149,7 +149,7 @@ The platform owns
 
 Clients submit Business Intents.
 
-The platform creates an Execution.
+The platform creates one or more Executions.
 
 The Orchestration Engine coordinates Execution Steps.
 
@@ -226,10 +226,15 @@ The following capabilities are intentionally excluded.
 * Rule Engine
 * AI Planning
 * Dynamic Execution Planning
-* Parallel Execution
+* Parallel Steps inside a single Execution
 * Connector Marketplace
 
-These features may be introduced in future versions without changing the core architecture.
+Clarification (in scope for v1 fan-out):
+
+* One Intent may create multiple Executions (sequential or parallel enqueue) via SyncRoute configuration.
+* This is **not** parallel Step graphs, BPMN, or dynamic planning.
+
+These excluded features may be introduced in future versions without changing the core architecture.
 
 ---
 

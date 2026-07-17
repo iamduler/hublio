@@ -29,15 +29,16 @@ Every business request follows the same runtime model.
 Business Intent
         │
         ▼
-    Execution
+ Execution(s)   ← one or more (SyncRoute fan-out)
         │
         ▼
- Execution Step(s)
+ Execution Step(s)   ← sequential inside each Execution
         │
         ▼
 Execution Result
 ```
 
+A simple request creates one Execution. Fan-out creates multiple Executions under the same Intent.
 The runtime model is intentionally simple.
 
 Every business capability is executed through the same lifecycle.
@@ -351,7 +352,7 @@ Customer business data remains owned by external systems.
 
 Version 1 intentionally excludes
 
-* Parallel Execution
+* Parallel Steps inside a single Execution
 * Workflow Engine
 * BPMN
 * Dynamic Planning
@@ -359,7 +360,11 @@ Version 1 intentionally excludes
 * Saga
 * AI Planning
 
-The runtime remains deterministic and sequential.
+Clarification:
+
+* One Intent may fan out to multiple Executions (sequential or parallel enqueue) according to SyncRoute configuration.
+* Each Execution remains deterministic and sequential at the Step level.
+* Fan-out is not a Workflow Engine.
 
 ---
 
@@ -382,7 +387,7 @@ These guarantees apply to every business operation.
 
 Clients express Business Intent.
 
-The platform creates an Execution.
+The platform creates one or more Executions.
 
 The Orchestration Engine coordinates Execution Steps.
 

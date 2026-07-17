@@ -1,0 +1,450 @@
+openapi: 3.1.0
+info:
+  title: Hublio API
+  version: 1.0.0
+  description: |
+    Business Integration + Orchestration Platform API.
+
+    Interactive docs (Scalar) are served at `/docs` in development.
+servers:
+  - url: http://localhost:8080
+    description: Local
+  - url: /api/v1
+    description: Relative (when browsing via /docs)
+
+tags:
+  - name: System
+  - name: Auth
+  - name: Identity
+  - name: Machine
+
+paths:
+  /health:
+    get:
+      tags: [System]
+      summary: Liveness probe
+      operationId: getHealth
+      security: []
+      responses:
+        "200":
+          description: Process is up
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  service:
+                    type: string
+                    example: hublio-api
+
+  /ready:
+    get:
+      tags: [System]
+      summary: Readiness probe
+      operationId: getReady
+      security: []
+      responses:
+        "200":
+          description: Dependencies OK
+        "503":
+          description: Degraded (Postgres/Redis)
+
+  /api/v1/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register organization + owner + default workspace
+      operationId: authRegister
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "400":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/auth/login:
+    post:
+      tags: [Auth]
+      summary: Login and issue JWT + refresh token
+      operationId: authLogin
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "401":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Revoke refresh token
+      operationId: authLogout
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        "200":
+          description: Logged out
+        "400":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/identity/organizations/{organizationId}:
+    get:
+      tags: [Identity]
+      summary: Get organization
+      operationId: getOrganization
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+      responses:
+        "200":
+          description: Organization
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/identity/organizations/{organizationId}/suspend:
+    post:
+      tags: [Identity]
+      summary: Suspend organization
+      operationId: suspendOrganization
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+      responses:
+        "200":
+          description: Suspended
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/identity/organizations/{organizationId}/activate:
+    post:
+      tags: [Identity]
+      summary: Activate suspended organization
+      operationId: activateOrganization
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+      responses:
+        "200":
+          description: Activated
+
+  /api/v1/identity/organizations/{organizationId}/workspaces:
+    get:
+      tags: [Identity]
+      summary: List workspaces
+      operationId: listWorkspaces
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+      responses:
+        "200":
+          description: Workspace list
+    post:
+      tags: [Identity]
+      summary: Create workspace
+      operationId: createWorkspace
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, environment]
+              properties:
+                name:
+                  type: string
+                environment:
+                  type: string
+                  example: production
+      responses:
+        "201":
+          description: Workspace created
+
+  /api/v1/identity/workspaces/{workspaceId}/enable:
+    post:
+      tags: [Identity]
+      summary: Enable workspace
+      operationId: enableWorkspace
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/workspaceId"
+      responses:
+        "200":
+          description: Enabled
+
+  /api/v1/identity/workspaces/{workspaceId}/disable:
+    post:
+      tags: [Identity]
+      summary: Disable workspace
+      operationId: disableWorkspace
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/workspaceId"
+      responses:
+        "200":
+          description: Disabled
+
+  /api/v1/identity/workspaces/{workspaceId}/members:
+    post:
+      tags: [Identity]
+      summary: Add user to workspace
+      operationId: addWorkspaceMember
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/workspaceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, role]
+              properties:
+                email:
+                  type: string
+                  format: email
+                role:
+                  type: string
+                  enum: [owner, admin, member]
+      responses:
+        "201":
+          description: Member added
+
+  /api/v1/identity/workspaces/{workspaceId}/api-keys:
+    get:
+      tags: [Identity]
+      summary: List API keys
+      operationId: listAPIKeys
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/workspaceId"
+      responses:
+        "200":
+          description: API keys (never includes plaintext)
+    post:
+      tags: [Identity]
+      summary: Create API key (plaintext returned once)
+      operationId: createAPIKey
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/workspaceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+      responses:
+        "201":
+          description: Created; includes plaintext once
+
+  /api/v1/identity/workspaces/{workspaceId}/api-keys/{apiKeyId}/disable:
+    post:
+      tags: [Identity]
+      summary: Disable API key
+      operationId: disableAPIKey
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/workspaceId"
+        - $ref: "#/components/parameters/apiKeyId"
+      responses:
+        "200":
+          description: Disabled
+
+  /api/v1/identity/workspaces/{workspaceId}/api-keys/{apiKeyId}/rotate:
+    post:
+      tags: [Identity]
+      summary: Rotate API key (new plaintext once)
+      operationId: rotateAPIKey
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/workspaceId"
+        - $ref: "#/components/parameters/apiKeyId"
+      responses:
+        "200":
+          description: Rotated
+
+  /api/v1/health:
+    get:
+      tags: [Machine]
+      summary: Machine health (API key)
+      operationId: machineHealth
+      security:
+        - apiKeyAuth: []
+      responses:
+        "200":
+          description: OK
+        "401":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/platform/queue/health:
+    post:
+      tags: [Machine]
+      summary: Enqueue platform.health job
+      operationId: enqueuePlatformHealth
+      security:
+        - apiKeyAuth: []
+      responses:
+        "202":
+          description: Accepted
+        "401":
+          $ref: "#/components/responses/Error"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Access token from POST /api/v1/auth/login
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-KEY
+      description: Workspace API key plaintext (prefix.secret)
+
+  parameters:
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    workspaceId:
+      name: workspaceId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    apiKeyId:
+      name: apiKeyId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    Error:
+      description: Error envelope
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+
+  schemas:
+    SuccessEnvelope:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+        data:
+          description: Payload varies by endpoint
+
+    ErrorEnvelope:
+      type: object
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+          example: BAD_REQUEST
+        detail:
+          type: string
+
+    RegisterRequest:
+      type: object
+      required: [organization_name, email, password, full_name]
+      properties:
+        organization_name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        full_name:
+          type: string
+        workspace_name:
+          type: string
+          default: default
+        environment:
+          type: string
+          default: production
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string

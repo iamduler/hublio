@@ -333,13 +333,15 @@ Horizontal scaling must not affect execution correctness.
 
 Version 1 intentionally excludes
 
-* Parallel Execution
+* Parallel Steps inside a single Execution
 * Workflow Engine
 * BPMN
 * Saga
 * Human Approval
 * Dynamic Planning
 * AI Planning
+
+Clarification: the Orchestration Engine may create multiple Executions from one Intent for SyncRoute fan-out (sequential or parallel enqueue). Each Execution runs sequential Steps.
 
 The execution model remains intentionally simple.
 
@@ -349,7 +351,7 @@ The execution model remains intentionally simple.
 
 The client submits a Business Intent.
 
-The platform creates an Execution.
+The platform creates one or more Executions.
 
 The Orchestration Engine coordinates Execution Steps.
 

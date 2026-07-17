@@ -10,7 +10,7 @@ import (
 	"hublio/internal/platform/config"
 	"hublio/internal/platform/env"
 	"hublio/internal/platform/logging"
-	"hublio/internal/platform/messaging"
+	"hublio/internal/platform/queue"
 
 	"github.com/joho/godotenv"
 )
@@ -37,30 +37,50 @@ func main() {
 	}
 
 	_ = config.NewConfig()
+	redisClient := config.NewRedisClient()
 
-	rabbitLogger := logging.NewLoggerWithPath("rabbitmq.log", "info")
-	rabbitMQURL := env.GetEnv("RABBITMQ_URL", "amqp://guest:guest@rabbitmq:5672/")
-
-	mq, err := messaging.NewRabbitMQService(rabbitMQURL, rabbitLogger)
-	if err != nil {
-		logging.Log.Fatal().Err(err).Msg("failed to initialize messaging")
-	}
-	defer func() {
-		if closeErr := mq.Close(); closeErr != nil {
-			logging.Log.Error().Err(closeErr).Msg("failed to close messaging connection")
-		}
-	}()
+	queueLogger := logging.NewLoggerWithPath("queue.log", "info")
+	workQueue := queue.NewRedisQueue(redisClient, queueLogger)
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	defer stop()
 
-	logging.Log.Info().Msg("worker started; waiting for orchestration consumers")
+	logging.Log.Info().Msg("worker started; consuming platform work queue")
 
-	<-ctx.Done()
-	logging.Log.Info().Msg("shutting down worker")
+	handler := func(ctx context.Context, job queue.Job) error {
+		switch job.Type {
+		case queue.TypeHealth:
+			logging.Log.Info().
+				Str("job_id", job.ID).
+				Str("job_type", job.Type).
+				Msg("platform.health job processed")
+			return nil
+		default:
+			logging.Log.Warn().
+				Str("job_id", job.ID).
+				Str("job_type", job.Type).
+				Msg("unknown job type ignored")
+			return nil
+		}
+	}
+
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- workQueue.Consume(ctx, handler)
+	}()
+
+	select {
+	case <-ctx.Done():
+		logging.Log.Info().Msg("shutting down worker")
+	case err := <-errCh:
+		if err != nil && err != context.Canceled {
+			logging.Log.Error().Err(err).Msg("worker consume stopped")
+		}
+	}
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
+	_ = redisClient.Close()
 	_ = shutdownCtx
 
 	logging.Log.Info().Msg("worker shutdown successfully")

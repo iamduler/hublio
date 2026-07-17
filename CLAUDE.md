@@ -161,6 +161,7 @@ Before finishing any task, verify
 * No duplicated logic
 * No business logic inside handlers
 * No infrastructure leakage into Domain
+* HTTP route changes update `api/openapi/openapi.yaml` in the same change (manual OpenAPI; no codegen unless requested)
 
 ---
 

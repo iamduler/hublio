@@ -1,2 +1,2 @@
-// Package interfaces belongs to the identity bounded context.
+// Package interfaces exposes Identity Management HTTP handlers.
 package interfaces

@@ -1,2 +1,2 @@
-// Package application belongs to the identity bounded context.
+// Package application coordinates Identity use cases.
 package application

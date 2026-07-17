@@ -17,9 +17,10 @@ import (
 // TokenSubject is the platform-level identity carried in access tokens.
 // Domain-specific user models must not leak into this package.
 type TokenSubject struct {
-	UserID string
-	Email  string
-	Role   string
+	UserID         string
+	Email          string
+	Role           string
+	OrganizationID string
 }
 
 type JWTService struct {
@@ -27,9 +28,10 @@ type JWTService struct {
 }
 
 type EncryptedPayload struct {
-	UserID string `json:"user_id"`
-	Email  string `json:"email"`
-	Role   string `json:"role"`
+	UserID         string `json:"user_id"`
+	Email          string `json:"email"`
+	Role           string `json:"role"`
+	OrganizationID string `json:"organization_id"`
 }
 
 type RefreshToken struct {
@@ -57,9 +59,10 @@ func NewJWTService(cacheService cache.RedisCacheService) TokenService {
 
 func (s *JWTService) GenerateAccessToken(subject TokenSubject) (string, error) {
 	payload := EncryptedPayload{
-		UserID: subject.UserID,
-		Email:  subject.Email,
-		Role:   subject.Role,
+		UserID:         subject.UserID,
+		Email:          subject.Email,
+		Role:           subject.Role,
+		OrganizationID: subject.OrganizationID,
 	}
 
 	rawData, err := json.Marshal(payload)

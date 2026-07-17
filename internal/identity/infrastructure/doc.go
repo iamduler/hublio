@@ -1,2 +1,2 @@
-// Package infrastructure belongs to the identity bounded context.
+// Package infrastructure implements Identity persistence and crypto adapters.
 package infrastructure

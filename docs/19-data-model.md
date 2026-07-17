@@ -186,7 +186,9 @@ Contains
 * Payload
 * Status
 
-Every accepted Intent creates one Execution.
+Every accepted Intent creates one or more Executions.
+
+Simple sync creates one Execution. SyncRoute fan-out creates multiple Executions under the same Intent.
 
 ---
 
@@ -340,7 +342,7 @@ Connection
 
 Intent
 
-* Creates exactly one Execution
+* Creates one or more Executions (exactly one unless SyncRoute fan-out)
 
 Execution
 

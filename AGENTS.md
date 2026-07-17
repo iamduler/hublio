@@ -4,7 +4,7 @@
 
 Version: 1.0
 
-Status: Architecture Freeze v1
+Status: Architecture Freeze v1 (fan-out clarification: multi-Execution under one Intent)
 
 ---
 
@@ -176,7 +176,9 @@ Current Aggregates
 * Intent
 * Execution
 
-Do not introduce additional Aggregates.
+Do not introduce additional Aggregates without approval.
+
+Integration **configuration** entities (not Runtime Aggregates) may exist, e.g. **SyncRoute** (Workspace-scoped origin → destination fan-out). SyncRoute is not a Workflow.
 
 ---
 
@@ -188,7 +190,7 @@ Intent
 
 ↓
 
-Execution
+Execution(s)
 
 ↓
 
@@ -198,15 +200,29 @@ Execution Steps
 
 Succeeded / Failed / Terminal State
 
-Do not introduce
+One Intent may spawn **one or more Executions** (fan-out).
+
+Fan-out groups may be:
+
+* sequential — start the next Execution after the previous reaches a terminal success (or stop per policy on failure)
+* parallel — enqueue multiple Executions at once
+
+Each Execution remains **internally sequential** (ordered Steps). Do not add parallel Steps inside a single Execution.
+
+Fan-out is configuration-driven (e.g. SyncRoute destinations), not a Workflow Engine.
+
+Do not introduce as Runtime concepts
 
 * Workflow
 * Task
-* Activity
+* Activity (as a Runtime Aggregate / graph node)
 * Pipeline
 * Job Graph
+* BPMN
 
-The Runtime Model is frozen.
+Configuration may describe destination actions as “activities” on a SyncRoute without introducing an Activity Aggregate.
+
+The Runtime Model is frozen with this fan-out clarification.
 
 ---
 
@@ -229,6 +245,16 @@ A Connector must never
 * publish events
 * retry requests
 * own business rules
+
+---
+
+# Inbound Webhooks and Polling
+
+Allowed Integration concerns (not Workflow):
+
+* Hublio may **generate and store** webhook secrets and validate them from request headers (constant-time compare). Never log secrets.
+* Polling may persist a **watermark / cursor** (last poll trace) per SyncRoute and resource type in PostgreSQL.
+* Redis is not the source of truth for watermarks or webhook secrets.
 
 ---
 
@@ -298,6 +324,30 @@ only
 * return responses
 
 Handlers must not contain business logic.
+
+---
+
+# OpenAPI / API Docs
+
+Source of truth for machine-readable HTTP API docs:
+
+```text
+api/openapi/openapi.yaml
+```
+
+Interactive UI (Scalar, Scramble-like) is served at `/docs` when docs are enabled
+(`DEVELOPMENT_MODE=development` or `ENABLE_API_DOCS=true`). Spec URL: `/docs/openapi.yaml`.
+
+**Convention (no codegen for now):**
+
+* Whenever you **add, change, rename, or remove** a public HTTP route, request/response
+  body, path/query parameter, auth scheme, or status code → **update `api/openapi/openapi.yaml`
+  in the same change**.
+* Do not introduce Swagger/swag annotations, OpenAPI codegen, or a second competing spec
+  file unless explicitly requested.
+* Keep Scalar / docs wiring in `internal/platform/docsui` only — no business logic there.
+
+Agents and developers must apply this without being reminded.
 
 ---
 
@@ -477,10 +527,17 @@ Avoid over-engineering.
 The following concepts are frozen.
 
 * Canonical Model
-* Runtime Model
+* Runtime Model (including controlled fan-out: multi-Execution under one Intent)
 * Aggregate Model
 * Database Model
 * Package Layout
+
+Controlled clarifications (still Freeze-compatible):
+
+* Parallel **Executions** under one Intent — allowed for SyncRoute fan-out
+* Parallel **Steps** inside one Execution — forbidden
+* SyncRoute as Integration configuration — allowed; Workflow Engine — forbidden
+* Webhook shared-secret validation and poll watermarks — allowed Integration/Platform concerns
 
 Do not redesign these concepts.
 
@@ -500,6 +557,7 @@ Before proposing code, verify
 * No duplicated logic
 * Tests are included
 * Public APIs remain backward compatible
+* HTTP route changes include an update to `api/openapi/openapi.yaml`
 
 If any rule is violated, stop and refactor before submitting.
 

@@ -6,6 +6,7 @@ import (
 
 	"hublio/internal/platform/auth"
 	"hublio/internal/platform/cache"
+	"hublio/internal/platform/requestctx"
 
 	"github.com/gin-gonic/gin"
 )
@@ -53,7 +54,13 @@ func AuthMiddleware() gin.HandlerFunc {
 		c.Set("user_id", payload.UserID)
 		c.Set("user_email", payload.Email)
 		c.Set("user_role", payload.Role)
+		c.Set("organization_id", payload.OrganizationID)
 		c.Set("access_token", tokenString)
+
+		ctx := c.Request.Context()
+		ctx = requestctx.With(ctx, requestctx.KeyUserID, payload.UserID)
+		ctx = requestctx.With(ctx, requestctx.KeyOrganizationID, payload.OrganizationID)
+		c.Request = c.Request.WithContext(ctx)
 
 		c.Next()
 	}

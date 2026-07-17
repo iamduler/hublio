@@ -351,7 +351,7 @@ None
 
 * Accepted Intents are immutable.
 * Rejected Intents never create Executions.
-* Every accepted Intent creates exactly one Execution.
+* Every accepted Intent creates one or more Executions (one by default; multiple when SyncRoute fan-out applies).
 
 ---
 

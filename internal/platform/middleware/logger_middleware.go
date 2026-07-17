@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/url"
-	"hublio/internal/platform/logging"
+	"hublio/internal/platform/requestctx"
 	"strings"
 	"time"
 
@@ -132,7 +132,11 @@ func LoggerMiddleware(httpLogger *zerolog.Logger) gin.HandlerFunc {
 		}
 
 		logEvent.Str("method", c.Request.Method).
-			Str("trace-id", logging.GetTraceID(c.Request.Context())).
+			Str("trace_id", requestctx.TraceID(c.Request.Context())).
+			Str("correlation_id", requestctx.CorrelationID(c.Request.Context())).
+			Str("request_id", requestctx.RequestID(c.Request.Context())).
+			Str("organization_id", requestctx.OrganizationID(c.Request.Context())).
+			Str("workspace_id", requestctx.WorkspaceID(c.Request.Context())).
 			Str("path", c.Request.URL.Path).
 			Str("ip", c.ClientIP()).
 			Str("query", c.Request.URL.RawQuery).

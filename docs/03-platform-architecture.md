@@ -479,7 +479,9 @@ Version 1 intentionally excludes
 * Rule Engine
 * AI Planning
 * Dynamic Execution Planning
-* Parallel Execution
+* Parallel Steps inside a single Execution
+
+Clarification: SyncRoute fan-out may enqueue multiple Executions for one Intent (sequential or parallel). That is allowed. Parallel Step graphs inside one Execution are not.
 
 The platform focuses on reliable business orchestration with a simple execution model.
 
@@ -489,7 +491,7 @@ The platform focuses on reliable business orchestration with a simple execution 
 
 Clients express Business Intent.
 
-The platform creates an Execution.
+The platform creates one or more Executions.
 
 The Orchestration Engine coordinates Execution Steps.
 

@@ -7,13 +7,15 @@ import (
 
 	"hublio/internal/platform/config"
 	"hublio/internal/platform/logging"
+	"hublio/internal/platform/persistence/sqlc"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/tracelog"
 )
 
 type Database struct {
-	Pool *pgxpool.Pool
+	Pool    *pgxpool.Pool
+	Queries *sqlc.Queries
 }
 
 func NewDatabase(cfg *config.Config) (*Database, error) {
@@ -56,11 +58,30 @@ func NewDatabase(cfg *config.Config) (*Database, error) {
 		logging.Log.Info().Msg("PostgreSQL connected")
 	}
 
-	return &Database{Pool: pool}, nil
+	return &Database{
+		Pool:    pool,
+		Queries: sqlc.New(pool),
+	}, nil
 }
 
 func (d *Database) Close() {
 	if d != nil && d.Pool != nil {
 		d.Pool.Close()
 	}
+}
+
+// Querier returns sqlc queries bound to the active transaction when present.
+func (d *Database) Querier(ctx context.Context) *sqlc.Queries {
+	if tx, ok := TxFromContext(ctx); ok {
+		return d.Queries.WithTx(tx)
+	}
+	return d.Queries
+}
+
+// Ping verifies the database connection.
+func (d *Database) Ping(ctx context.Context) error {
+	if d == nil || d.Pool == nil {
+		return fmt.Errorf("persistence: database not initialized")
+	}
+	return d.Pool.Ping(ctx)
 }

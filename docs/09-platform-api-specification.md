@@ -346,7 +346,7 @@ Clients express business intent.
 
 The Platform API accepts the request.
 
-The platform creates an Execution.
+The platform creates one or more Executions.
 
 The Orchestration Engine coordinates execution.
 

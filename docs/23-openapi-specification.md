@@ -327,33 +327,31 @@ Minor additions remain within the current version.
 
 # 19. Documentation Strategy
 
-The OpenAPI specification is split into multiple files.
+## Source of truth
 
 ```text
-openapi/
-
-    auth.yaml
-
-    organizations.yaml
-
-    users.yaml
-
-    workspaces.yaml
-
-    api_keys.yaml
-
-    connectors.yaml
-
-    connections.yaml
-
-    credentials.yaml
-
-    intents.yaml
-
-    executions.yaml
+api/openapi/openapi.yaml
 ```
 
-Each file owns one resource group.
+Interactive docs: Scalar UI at `/docs` (dev by default). Raw spec: `/docs/openapi.yaml`.
+
+See also `AGENTS.md` → OpenAPI / API Docs.
+
+## Manual sync (current)
+
+OpenAPI is **maintained by hand**. There is **no** codegen / annotation generator in v1.
+
+Whenever a PR adds, changes, or removes a public HTTP endpoint (path, method, body,
+params, auth, status codes), update `api/openapi/openapi.yaml` **in the same PR**.
+
+Do not:
+
+* Skip the OpenAPI update “to follow up later”
+* Invent a parallel swagger.json / annotations-only source of truth
+* Add swag/apispec codegen unless product explicitly requests it
+
+Split into multiple YAML files (auth, organizations, intents, …) is optional later
+when the single file becomes hard to navigate — not required now.
 
 ---
 
