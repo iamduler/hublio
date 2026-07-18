@@ -125,3 +125,11 @@ func EnqueueHealth(ctx context.Context, q Queue) error {
 		Payload: map[string]any{"source": "platform"},
 	})
 }
+
+// EnqueueExecution enqueues an orchestration.execution job for the worker to run.
+func EnqueueExecution(ctx context.Context, q Queue, payload map[string]any) error {
+	return q.Enqueue(ctx, Job{
+		Type:    TypeExecution,
+		Payload: payload,
+	})
+}

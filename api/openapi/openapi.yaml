@@ -17,6 +17,7 @@ tags:
   - name: Auth
   - name: Identity
   - name: Integration
+  - name: Orchestration
   - name: Machine
 
 paths:
@@ -544,6 +545,123 @@ paths:
         "403":
           $ref: "#/components/responses/Error"
 
+  /api/v1/intents:
+    post:
+      tags: [Orchestration]
+      summary: Submit a Business Intent (Workspace-scoped, API Key)
+      description: |
+        Resolves the Connection (must be Active), creates the Intent (Submitted), then
+        Accepts or Rejects it based on payload/capability validity. On Accept, creates and
+        Queues the (v1: unique per Intent) Execution and enqueues the `orchestration.execution`
+        worker job. Idempotency-Key is required; replays return the original Intent/Execution.
+      operationId: submitIntent
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitIntentRequest"
+      responses:
+        "201":
+          description: Intent submitted (created)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "200":
+          description: Idempotency-Key replay of a previously submitted Intent
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/intents/{intentId}:
+    get:
+      tags: [Orchestration]
+      summary: Get Intent (tenant-scoped)
+      operationId: getIntent
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - $ref: "#/components/parameters/intentId"
+      responses:
+        "200":
+          description: Intent
+        "401":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/executions/{executionId}:
+    get:
+      tags: [Orchestration]
+      summary: Get Execution (with Steps/Timeline; tenant-scoped)
+      operationId: getExecution
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - $ref: "#/components/parameters/executionId"
+      responses:
+        "200":
+          description: Execution
+        "401":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/executions/{executionId}/cancel:
+    post:
+      tags: [Orchestration]
+      summary: Cancel a Queued/Running Execution (terminal)
+      operationId: cancelExecution
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - $ref: "#/components/parameters/executionId"
+      responses:
+        "200":
+          description: Cancelled
+        "401":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/executions/{executionId}/retry:
+    post:
+      tags: [Orchestration]
+      summary: Manually retry a Failed Execution (Failed -> Queued)
+      description: |
+        Replay (new Execution for the same Intent) is deferred in v1: executions.intent_id is
+        UNIQUE, so retry re-runs the same Execution row instead of creating a new one.
+      operationId: retryExecution
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - $ref: "#/components/parameters/executionId"
+      responses:
+        "200":
+          description: Retry scheduled (re-enqueued)
+        "401":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+
   /api/v1/health:
     get:
       tags: [Machine]
@@ -614,6 +732,20 @@ components:
         format: uuid
     connectionId:
       name: connectionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    intentId:
+      name: intentId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    executionId:
+      name: executionId
       in: path
       required: true
       schema:
@@ -753,6 +885,23 @@ components:
         credential_expires_at:
           type: string
           format: date-time
+
+    SubmitIntentRequest:
+      type: object
+      required: [connection_id, capability]
+      properties:
+        connection_id:
+          type: string
+          format: uuid
+        capability:
+          type: string
+          example: invoice.create
+        payload:
+          type: object
+          description: Canonical-ish, provider-agnostic business payload (JSONB)
+        correlation_id:
+          type: string
+          description: Defaults to the request's correlation id when omitted
 
     RotateCredentialRequest:
       type: object

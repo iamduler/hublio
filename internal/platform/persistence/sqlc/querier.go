@@ -18,6 +18,10 @@ type Querier interface {
 	GetConnectorByCode(ctx context.Context, code string) (Connector, error)
 	GetConnectorByID(ctx context.Context, id uuid.UUID) (Connector, error)
 	GetCredentialByID(ctx context.Context, id uuid.UUID) (Credential, error)
+	GetExecutionByID(ctx context.Context, id uuid.UUID) (Execution, error)
+	GetExecutionByIntentID(ctx context.Context, intentID uuid.UUID) (Execution, error)
+	GetIdempotencyKeyByOrgWorkspaceKey(ctx context.Context, arg GetIdempotencyKeyByOrgWorkspaceKeyParams) (IdempotencyKey, error)
+	GetIntentByID(ctx context.Context, id uuid.UUID) (Intent, error)
 	GetOrganizationByID(ctx context.Context, id uuid.UUID) (Organization, error)
 	GetOrganizationByName(ctx context.Context, name string) (Organization, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
@@ -29,6 +33,12 @@ type Querier interface {
 	InsertConnector(ctx context.Context, arg InsertConnectorParams) error
 	InsertConnectorCapability(ctx context.Context, arg InsertConnectorCapabilityParams) error
 	InsertCredential(ctx context.Context, arg InsertCredentialParams) error
+	InsertExecution(ctx context.Context, arg InsertExecutionParams) error
+	InsertExecutionSnapshot(ctx context.Context, arg InsertExecutionSnapshotParams) error
+	InsertExecutionStep(ctx context.Context, arg InsertExecutionStepParams) error
+	InsertExecutionTimeline(ctx context.Context, arg InsertExecutionTimelineParams) error
+	InsertIdempotencyKey(ctx context.Context, arg InsertIdempotencyKeyParams) error
+	InsertIntent(ctx context.Context, arg InsertIntentParams) error
 	InsertOrganization(ctx context.Context, arg InsertOrganizationParams) error
 	InsertUser(ctx context.Context, arg InsertUserParams) error
 	InsertWorkspace(ctx context.Context, arg InsertWorkspaceParams) error
@@ -38,6 +48,9 @@ type Querier interface {
 	ListConnectionsByWorkspace(ctx context.Context, workspaceID uuid.UUID) ([]Connection, error)
 	ListConnectors(ctx context.Context) ([]Connector, error)
 	ListCredentialsByConnection(ctx context.Context, connectionID uuid.UUID) ([]Credential, error)
+	ListExecutionSnapshotsByExecution(ctx context.Context, executionID uuid.UUID) ([]ExecutionSnapshot, error)
+	ListExecutionStepsByExecution(ctx context.Context, executionID uuid.UUID) ([]ExecutionStep, error)
+	ListExecutionTimelinesByExecution(ctx context.Context, executionID uuid.UUID) ([]ExecutionTimeline, error)
 	ListWorkspaceUsersByUser(ctx context.Context, userID uuid.UUID) ([]WorkspaceUser, error)
 	ListWorkspaceUsersByWorkspace(ctx context.Context, workspaceID uuid.UUID) ([]WorkspaceUser, error)
 	ListWorkspacesByOrganization(ctx context.Context, organizationID uuid.UUID) ([]Workspace, error)
@@ -47,6 +60,9 @@ type Querier interface {
 	UpdateConnection(ctx context.Context, arg UpdateConnectionParams) error
 	UpdateConnector(ctx context.Context, arg UpdateConnectorParams) error
 	UpdateCredential(ctx context.Context, arg UpdateCredentialParams) error
+	UpdateExecution(ctx context.Context, arg UpdateExecutionParams) error
+	UpdateExecutionStep(ctx context.Context, arg UpdateExecutionStepParams) error
+	UpdateIntent(ctx context.Context, arg UpdateIntentParams) error
 	UpdateOrganization(ctx context.Context, arg UpdateOrganizationParams) error
 	UpdateUser(ctx context.Context, arg UpdateUserParams) error
 	UpdateWorkspace(ctx context.Context, arg UpdateWorkspaceParams) error

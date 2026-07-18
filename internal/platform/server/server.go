@@ -17,6 +17,9 @@ import (
 	"hublio/internal/integration/connectors/fake"
 	integrationinfra "hublio/internal/integration/infrastructure"
 	integrationhttp "hublio/internal/integration/interfaces"
+	orchestrationapp "hublio/internal/orchestration/application"
+	orchestrationinfra "hublio/internal/orchestration/infrastructure"
+	orchestrationhttp "hublio/internal/orchestration/interfaces"
 	"hublio/internal/platform/apikey"
 	"hublio/internal/platform/apperr"
 	"hublio/internal/platform/auth"
@@ -39,16 +42,17 @@ import (
 )
 
 type Application struct {
-	config      *config.Config
-	router      *gin.Engine
-	db          *persistence.Database
-	redis       *redis.Client
-	tokens      auth.TokenService
-	cacheSvc    cache.RedisCacheService
-	workQueue   queue.Queue
-	apiKeyAuth  apikey.Authenticator
-	identity    *identityapp.Services
-	integration *integrationapp.Services
+	config        *config.Config
+	router        *gin.Engine
+	db            *persistence.Database
+	redis         *redis.Client
+	tokens        auth.TokenService
+	cacheSvc      cache.RedisCacheService
+	workQueue     queue.Queue
+	apiKeyAuth    apikey.Authenticator
+	identity      *identityapp.Services
+	integration   *integrationapp.Services
+	orchestration *orchestrationapp.Services
 }
 
 func NewApplication(cfg *config.Config) (*Application, error) {
@@ -93,16 +97,19 @@ func NewApplication(cfg *config.Config) (*Application, error) {
 	}
 	seedIntegrationConnectors(db.Pool, integrationSvc)
 
+	orchestrationSvc := newOrchestrationServices(db.Pool, workQueue, integrationSvc, identitySvc)
+
 	app := &Application{
-		config:      cfg,
-		db:          db,
-		redis:       redisClient,
-		tokens:      tokenSvc,
-		cacheSvc:    cacheSvc,
-		workQueue:   workQueue,
-		apiKeyAuth:  apiKeyAuth,
-		identity:    identitySvc,
-		integration: integrationSvc,
+		config:        cfg,
+		db:            db,
+		redis:         redisClient,
+		tokens:        tokenSvc,
+		cacheSvc:      cacheSvc,
+		workQueue:     workQueue,
+		apiKeyAuth:    apiKeyAuth,
+		identity:      identitySvc,
+		integration:   integrationSvc,
+		orchestration: orchestrationSvc,
 	}
 
 	router := gin.New()
@@ -158,6 +165,36 @@ func newIntegrationServices(pool *pgxpool.Pool) (*integrationapp.Services, error
 		Secrets:     encryptor,
 		Events:      integrationapp.NoopPublisher{},
 	}, nil
+}
+
+// newOrchestrationServices wires the Orchestration Application layer. ConnectionGateway and
+// ConnectorGateway adapt Integration + Identity Domain repositories (Infrastructure-level
+// composition) so Orchestration's own Domain/Application never import Integration/Identity.
+func newOrchestrationServices(
+	pool *pgxpool.Pool,
+	workQueue queue.Queue,
+	integrationSvc *integrationapp.Services,
+	identitySvc *identityapp.Services,
+) *orchestrationapp.Services {
+	connectionGateway := orchestrationinfra.NewConnectionGateway(
+		integrationSvc.Connections,
+		integrationSvc.Connectors,
+		integrationSvc.Credentials,
+		identitySvc.Workspaces,
+		identitySvc.Orgs,
+		integrationSvc.Secrets,
+	)
+	connectorGateway := orchestrationinfra.NewConnectorGateway(integrationSvc.Runtimes)
+
+	return &orchestrationapp.Services{
+		Intents:     orchestrationinfra.NewIntentRepository(pool),
+		Executions:  orchestrationinfra.NewExecutionRepository(pool),
+		Idempotency: orchestrationinfra.NewIdempotencyRepository(pool),
+		Connections: connectionGateway,
+		Connectors:  connectorGateway,
+		Jobs:        orchestrationinfra.NewQueueJobEnqueuer(workQueue),
+		Events:      orchestrationapp.NoopPublisher{},
+	}
 }
 
 // seedIntegrationConnectors registers the built-in "fake" Connector on startup so Orchestration
@@ -231,6 +268,9 @@ func (a *Application) registerRoutes(router *gin.Engine) {
 	membershipChecker := &identityMembershipChecker{memberships: a.identity.Memberships}
 	integrationHandler := integrationhttp.NewHandler(a.integration, a.db.Pool, membershipChecker)
 	integrationHandler.RegisterRoutes(api, middleware.AuthMiddleware())
+
+	orchestrationHandler := orchestrationhttp.NewHandler(a.orchestration, a.db.Pool)
+	orchestrationHandler.RegisterRoutes(api, middleware.APIKeyMiddleware(a.apiKeyAuth))
 
 	machine := api.Group("")
 	machine.Use(middleware.APIKeyMiddleware(a.apiKeyAuth))

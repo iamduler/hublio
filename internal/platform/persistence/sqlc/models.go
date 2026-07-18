@@ -86,6 +86,77 @@ type Credential struct {
 	CreatedBy       uuid.UUID          `json:"created_by"`
 }
 
+type Execution struct {
+	ID            uuid.UUID          `json:"id"`
+	IntentID      uuid.UUID          `json:"intent_id"`
+	Status        string             `json:"status"`
+	Result        interface{}        `json:"result"`
+	RetryAttempt  int32              `json:"retry_attempt"`
+	CurrentStepNo int32              `json:"current_step_no"`
+	Context       []byte             `json:"context"`
+	FailureReason *string            `json:"failure_reason"`
+	StartedAt     pgtype.Timestamptz `json:"started_at"`
+	CompletedAt   pgtype.Timestamptz `json:"completed_at"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+}
+
+type ExecutionSnapshot struct {
+	ID           uuid.UUID          `json:"id"`
+	ExecutionID  uuid.UUID          `json:"execution_id"`
+	StepID       pgtype.UUID        `json:"step_id"`
+	SnapshotType string             `json:"snapshot_type"`
+	Snapshot     []byte             `json:"snapshot"`
+	ContentType  *string            `json:"content_type"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+}
+
+type ExecutionStep struct {
+	ID           uuid.UUID          `json:"id"`
+	ExecutionID  uuid.UUID          `json:"execution_id"`
+	StepNo       int32              `json:"step_no"`
+	StepType     string             `json:"step_type"`
+	Status       string             `json:"status"`
+	RetryAttempt int32              `json:"retry_attempt"`
+	DurationMs   *int32             `json:"duration_ms"`
+	ErrorMessage *string            `json:"error_message"`
+	ErrorCode    *string            `json:"error_code"`
+	StartedAt    pgtype.Timestamptz `json:"started_at"`
+	CompletedAt  pgtype.Timestamptz `json:"completed_at"`
+}
+
+type ExecutionTimeline struct {
+	ID          uuid.UUID          `json:"id"`
+	ExecutionID uuid.UUID          `json:"execution_id"`
+	Event       string             `json:"event"`
+	Message     *string            `json:"message"`
+	Metadata    []byte             `json:"metadata"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+}
+
+type IdempotencyKey struct {
+	ID             uuid.UUID          `json:"id"`
+	OrganizationID uuid.UUID          `json:"organization_id"`
+	WorkspaceID    uuid.UUID          `json:"workspace_id"`
+	IdempotencyKey string             `json:"idempotency_key"`
+	IntentID       pgtype.UUID        `json:"intent_id"`
+	ExpiresAt      pgtype.Timestamptz `json:"expires_at"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+}
+
+type Intent struct {
+	ID             uuid.UUID          `json:"id"`
+	OrganizationID uuid.UUID          `json:"organization_id"`
+	WorkspaceID    uuid.UUID          `json:"workspace_id"`
+	ConnectionID   uuid.UUID          `json:"connection_id"`
+	Capability     string             `json:"capability"`
+	Payload        []byte             `json:"payload"`
+	Status         string             `json:"status"`
+	CorrelationID  *string            `json:"correlation_id"`
+	IdempotencyKey *string            `json:"idempotency_key"`
+	SubmittedAt    pgtype.Timestamptz `json:"submitted_at"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+}
+
 type Organization struct {
 	ID        uuid.UUID          `json:"id"`
 	Name      string             `json:"name"`

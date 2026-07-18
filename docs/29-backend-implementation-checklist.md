@@ -43,7 +43,7 @@ Trạng thái hiện tại (scaffold):
 * [x] Domain logic thực tế — Phase B Identity (Phase C+)
 * [x] sqlc queries (identity select stubs + generate)
 * [x] Management / Platform API — Phase B Identity auth + management
-* [x] Worker consume work queue (`platform.health`; Execution jobs Phase D)
+* [x] Worker consume work queue (`platform.health`; `orchestration.execution` — Phase D done)
 
 Gate Preflight (review trước Phase A):
 
@@ -246,49 +246,92 @@ Thứ tự Aggregate: **Organization → Workspace → User/Membership → API K
 
 ## D1. Migrations Runtime
 
-* [ ] intents, executions, execution_steps, execution_snapshots, execution_timelines, idempotency_keys
-* [ ] Enums khớp Freeze (execution_status **không** có `completed`)
-* [ ] Indexes theo DBML
+* [x] intents, executions, execution_steps, execution_snapshots, execution_timelines, idempotency_keys
+* [x] Enums khớp Freeze (execution_status **không** có `completed`)
+* [x] Indexes theo DBML
 
 ## D2. Domain — Intent
 
-* [ ] Intent aggregate + SM: Submitted → Accepted | Rejected | Expired
-* [ ] Value objects: resource, operation, connection, payload, status
-* [ ] Accepted Intent immutable
-* [ ] Unit tests
+* [x] Intent aggregate + SM: Submitted → Accepted | Rejected | Expired
+* [x] Value objects: resource, operation, connection, payload, status
+* [x] Accepted Intent immutable
+* [x] Unit tests
 
 ## D3. Domain — Execution
 
-* [ ] Execution aggregate + SM: Created → Queued → Running → Succeeded | Failed | Cancelled | Expired | DeadLetter
-* [ ] Failed → Queued (retry) | DeadLetter
-* [ ] Steps sequential v1: validate → transform_request → invoke_connector → transform_response → publish_event
-* [ ] Context, Timeline, Snapshot, Result
-* [ ] Unit tests mọi transition bất hợp lệ bị từ chối
+* [x] Execution aggregate + SM: Created → Queued → Running → Succeeded | Failed | Cancelled | Expired | DeadLetter
+* [x] Failed → Queued (retry) | DeadLetter
+* [x] Steps sequential v1: validate → transform_request → invoke_connector → transform_response → publish_event
+* [x] Context, Timeline, Snapshot, Result
+* [x] Unit tests mọi transition bất hợp lệ bị từ chối
 
 ## D4. Application — Intent Processor + Orchestration
 
-* [ ] SubmitIntent (idempotency key)
-* [ ] Validate + resolve Connection/Capability
-* [ ] Create Execution (không expose Execution create API)
-* [ ] Enqueue execution job (Platform Infrastructure queue)
-* [ ] Worker: claim job → run steps → update state → publish runtime events
-* [ ] Retry / Timeout / Cancel / Replay use cases
-* [ ] Replay = new Execution, reuse Intent/context/snapshots rules
+* [x] SubmitIntent (idempotency key)
+* [x] Validate + resolve Connection/Capability
+* [x] Create Execution (không expose Execution create API)
+* [x] Enqueue execution job (Platform Infrastructure queue)
+* [x] Worker: claim job → run steps → update state → publish runtime events
+* [x] Retry / Cancel use cases
+* [ ] Timeout use case (deferred — no scheduler/deadline sweep yet)
+* [ ] Replay use case (**deferred**: `executions.intent_id` is UNIQUE in v1 schema, so a
+  second Execution for the same Intent is not representable; Replay needs either a schema
+  change or a new Intent. `RetryExecution` covers the "run it again" need for Phase D by
+  re-running the same Execution row: Failed → Queued → re-enqueued.)
 
 ## D5. Infrastructure
 
-* [ ] Repositories runtime tables
-* [ ] Snapshot storage (JSONB) immutable
-* [ ] Queue job payload: execution_id, correlation_id, tenant ids
+* [x] Repositories runtime tables (`internal/orchestration/infrastructure`)
+* [x] Snapshot storage (JSONB) immutable (append-only, `ON CONFLICT (id) DO NOTHING`)
+* [x] Queue job payload: execution_id, intent_id, organization_id, workspace_id, correlation_id
 
 ## D6. Platform API (Intent)
 
-* [ ] `POST` Intent (business entry)
-* [ ] `GET` Intent / Execution status (tracking; client không tạo Execution)
-* [ ] Idempotency headers
-* [ ] Auth: API Key (Workspace) / JWT with workspace context
+* [x] `POST` Intent (business entry) — `/api/v1/intents`
+* [x] `GET` Intent / Execution status (tracking; client không tạo Execution)
+* [x] Idempotency headers (`Idempotency-Key`, Postgres `idempotency_keys` source of truth)
+* [x] Auth: API Key (Workspace-scoped) — simplest option meeting exit criteria; a JWT +
+  workspace-membership variant for the same routes is deferred
 
 **Exit criteria Phase D:** Submit Intent → Execution Succeeded với Fake Connector end-to-end.
+
+> Phase D completed 2026-07-17: Migration `000003_orchestration` (intents, executions,
+> execution_steps, execution_snapshots, execution_timelines, idempotency_keys) + sqlc queries;
+> Domain (`Intent`, `Execution` aggregates with state machines, `DefaultStepTypes` 5-step
+> pipeline, table-driven unit tests, all pass without DB); Application (`SubmitIntent`,
+> `RunExecution`, `GetIntent`, `GetExecution`, `CancelExecution`, `RetryExecution`,
+> `ConnectionGateway`/`ConnectorGateway` ports); Infrastructure (Postgres repositories,
+> `ConnectionGateway`/`ConnectorGateway` adapters wrapping Integration + Identity,
+> `JobEnqueuer` on the Platform Redis queue); Interfaces (`POST /api/v1/intents`,
+> `GET /api/v1/intents/:intentId`, `GET /api/v1/executions/:executionId`,
+> `POST /api/v1/executions/:executionId/cancel`, `POST /api/v1/executions/:executionId/retry`,
+> all API-Key/Workspace-scoped) wired in `internal/platform/server/server.go`;
+> `cmd/worker/main.go` now consumes `orchestration.execution` jobs (own composition root,
+> independent from the server package) alongside the existing `platform.health` no-op.
+> `transform_request`/`transform_response` steps are intentionally passthrough — real
+> Canonical↔Canonical mapping lands in Phase E. `go build ./...`, `go vet ./...`, and
+> `go test ./...` all pass. OpenAPI updated under a new `Orchestration` tag. Timeout and
+> Replay use cases are deferred (see D4 notes).
+>
+> **Enqueue-after-commit:** queue jobs are enqueued only after the DB transaction commits
+> (HTTP handler / worker), avoiding a race where the worker reads uncommitted rows.
+>
+> **Smoke verified 2026-07-17:** register → Fake Connection verify → API key →
+> `POST /api/v1/intents` → worker → Execution `succeeded`.
+
+**Smoke steps (Postgres + Redis required):**
+
+```text
+1. migrate up (migrations/000001..000003)
+2. POST /api/v1/auth/register, POST /api/v1/auth/login -> JWT
+3. POST /api/v1/workspaces/:workspaceId/api-keys (JWT) -> capture plaintext key once
+4. POST /api/v1/integration/workspaces/:workspaceId/connections against the Fake connector,
+   then verify it (-> Active)
+5. POST /api/v1/intents  with header  X-API-KEY: <key>  and  Idempotency-Key: <uuid>
+   body: {"connection_id": "<connection-id>", "capability": "fake.echo", "payload": {"foo": "bar"}}
+6. go run ./cmd/worker   (consumes orchestration.execution)
+7. GET /api/v1/executions/:executionId with X-API-KEY -> poll until status = "succeeded"
+```
 
 ---
 

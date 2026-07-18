@@ -21,6 +21,8 @@ type Job struct {
 const (
 	// TypeHealth is a no-op job used to verify worker connectivity.
 	TypeHealth = "platform.health"
+	// TypeExecution schedules Orchestration's RunExecution use case for one Execution.
+	TypeExecution = "orchestration.execution"
 )
 
 // Handler processes a single job. Return nil to ack/remove; non-nil may requeue depending on impl.
