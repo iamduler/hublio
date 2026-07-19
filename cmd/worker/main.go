@@ -8,15 +8,20 @@ import (
 	"syscall"
 	"time"
 
+	eventsapp "hublio/internal/events/application"
+	eventsdomain "hublio/internal/events/domain"
+	eventsinfra "hublio/internal/events/infrastructure"
 	identityinfra "hublio/internal/identity/infrastructure"
 	"hublio/internal/integration/connectors"
 	"hublio/internal/integration/connectors/fake"
 	integrationinfra "hublio/internal/integration/infrastructure"
 	orchestrationapp "hublio/internal/orchestration/application"
+	orchestrationdomain "hublio/internal/orchestration/domain"
 	orchestrationinfra "hublio/internal/orchestration/infrastructure"
 	"hublio/internal/platform/config"
 	"hublio/internal/platform/env"
 	"hublio/internal/platform/logging"
+	"hublio/internal/platform/metrics"
 	"hublio/internal/platform/persistence"
 	"hublio/internal/platform/queue"
 	transformationapp "hublio/internal/transformation/application"
@@ -62,6 +67,11 @@ func main() {
 	if err != nil {
 		logging.Log.Fatal().Err(err).Msg("failed to initialize orchestration services")
 	}
+
+	metricsCounters := metrics.New()
+	eventsSvc := newEventsServices(db.Pool, metricsCounters)
+	orchestrationSvc.Events = eventsinfra.NewOrchestrationEventBridge(eventsSvc)
+	orchestrationSvc.Audit = eventsinfra.NewOrchestrationAuditBridge(eventsSvc)
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	defer stop()
@@ -144,8 +154,35 @@ func newOrchestrationServices(pool *pgxpool.Pool, workQueue queue.Queue) (*orche
 		Connectors:  connectorGateway,
 		Transformer: transformer,
 		Jobs:        orchestrationinfra.NewQueueJobEnqueuer(workQueue),
-		Events:      orchestrationapp.NoopPublisher{},
 	}, nil
+}
+
+// newEventsServices mirrors internal/platform/server's Events BC wiring (see that package's
+// doc comment): the worker binary has no HTTP surface, so it composes its own Events
+// Services rather than depending on internal/platform/server.
+func newEventsServices(pool *pgxpool.Pool, counters *metrics.Counters) *eventsapp.Services {
+	eventRepo := eventsinfra.NewEventRepository(pool)
+	svc := &eventsapp.Services{
+		Events:  eventRepo,
+		Reader:  eventRepo,
+		Audit:   eventsinfra.NewAuditRepository(pool),
+		Metrics: counters,
+		OnSubscriberError: func(event *eventsdomain.PlatformEvent, err error) {
+			logging.Log.Warn().Err(err).
+				Str("event_name", event.EventName()).
+				Str("event_id", event.ID().String()).
+				Msg("events: in-process subscriber failed")
+		},
+	}
+	svc.Subscribe(orchestrationdomain.EventExecutionSucceeded, func(_ context.Context, _ *eventsdomain.PlatformEvent) error {
+		counters.IncExecutionsSucceeded()
+		return nil
+	})
+	svc.Subscribe(orchestrationdomain.EventExecutionFailed, func(_ context.Context, _ *eventsdomain.PlatformEvent) error {
+		counters.IncExecutionsFailed()
+		return nil
+	})
+	return svc
 }
 
 // handleExecutionJob runs RunExecution inside a single transaction (the use case's
@@ -167,11 +204,20 @@ func handleExecutionJob(ctx context.Context, pool *pgxpool.Pool, svc *orchestrat
 	if err != nil {
 		return err
 	}
-	svc.PublishAfterCommit(ctx, result.Execution.PullEvents()...)
+	organizationID, _ := uuid.Parse(stringField(job.Payload, "organization_id"))
+	workspaceID, _ := uuid.Parse(stringField(job.Payload, "workspace_id"))
+	correlationID := stringField(job.Payload, "correlation_id")
+	events := orchestrationapp.EnrichEvents(result.Execution.PullEvents(), organizationID, workspaceID, correlationID)
+	svc.PublishAfterCommit(ctx, events...)
 	if result.RequeueJob != nil && svc.Jobs != nil {
 		if err := svc.Jobs.EnqueueExecution(ctx, *result.RequeueJob); err != nil {
 			return fmt.Errorf("worker: failed to re-enqueue execution after commit: %w", err)
 		}
 	}
 	return nil
+}
+
+func stringField(payload map[string]any, key string) string {
+	s, _ := payload[key].(string)
+	return s
 }

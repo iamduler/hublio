@@ -35,6 +35,7 @@ func (h *Handler) RegisterRoutes(api *gin.RouterGroup, apiKeyAuth gin.HandlerFun
 		machine.POST("/intents", h.submitIntent)
 		machine.GET("/intents/:intentId", h.getIntent)
 		machine.GET("/executions/:executionId", h.getExecution)
+		machine.GET("/executions/:executionId/timeline", h.getExecutionTimeline)
 		machine.POST("/executions/:executionId/cancel", h.cancelExecution)
 		machine.POST("/executions/:executionId/retry", h.retryExecution)
 	}
@@ -102,6 +103,7 @@ func (h *Handler) submitIntent(c *gin.Context) {
 	if result.Execution != nil {
 		events = append(events, result.Execution.PullEvents()...)
 	}
+	events = application.EnrichEvents(events, orgID, workspaceID, correlationID)
 	h.svc.PublishAfterCommit(c.Request.Context(), events...)
 
 	if result.Job != nil && h.svc.Jobs != nil {
@@ -155,7 +157,45 @@ func (h *Handler) getExecution(c *gin.Context) {
 	httpx.ResponseSuccess(c, http.StatusOK, "execution", executionDTO(execution))
 }
 
+// getExecutionTimeline backs GET /api/v1/executions/:executionId/timeline (F3 Observability):
+// a focused view of the same execution_timelines rows already returned by getExecution,
+// tenant-scoped via API-Key workspace.
+func (h *Handler) getExecutionTimeline(c *gin.Context) {
+	workspaceID, ok := workspaceIDFromPrincipal(c)
+	if !ok {
+		return
+	}
+	executionID, ok := parseUUIDParam(c, "executionId")
+	if !ok {
+		return
+	}
+	execution, _, err := h.svc.GetExecution(c.Request.Context(), workspaceID, executionID)
+	if err != nil {
+		httpx.ResponseError(c, err)
+		return
+	}
+	timeline := make([]gin.H, 0, len(execution.Timeline()))
+	for _, entry := range execution.Timeline() {
+		timeline = append(timeline, gin.H{
+			"id":         entry.ID().String(),
+			"event":      entry.Event(),
+			"message":    entry.Message(),
+			"metadata":   entry.Metadata(),
+			"created_at": entry.CreatedAt(),
+		})
+	}
+	httpx.ResponseSuccess(c, http.StatusOK, "execution timeline", gin.H{
+		"execution_id": execution.ID().String(),
+		"status":       string(execution.Status()),
+		"timeline":     timeline,
+	})
+}
+
 func (h *Handler) cancelExecution(c *gin.Context) {
+	orgID, ok := organizationIDFromPrincipal(c)
+	if !ok {
+		return
+	}
 	workspaceID, ok := workspaceIDFromPrincipal(c)
 	if !ok {
 		return
@@ -174,11 +214,16 @@ func (h *Handler) cancelExecution(c *gin.Context) {
 		httpx.ResponseError(c, err)
 		return
 	}
-	h.svc.PublishAfterCommit(c.Request.Context(), execution.PullEvents()...)
+	events := application.EnrichEvents(execution.PullEvents(), orgID, workspaceID, requestctx.CorrelationID(c.Request.Context()))
+	h.svc.PublishAfterCommit(c.Request.Context(), events...)
 	httpx.ResponseSuccess(c, http.StatusOK, "execution cancelled", executionDTO(execution))
 }
 
 func (h *Handler) retryExecution(c *gin.Context) {
+	orgID, ok := organizationIDFromPrincipal(c)
+	if !ok {
+		return
+	}
 	workspaceID, ok := workspaceIDFromPrincipal(c)
 	if !ok {
 		return
@@ -197,7 +242,16 @@ func (h *Handler) retryExecution(c *gin.Context) {
 		httpx.ResponseError(c, err)
 		return
 	}
-	h.svc.PublishAfterCommit(c.Request.Context(), result.Execution.PullEvents()...)
+	events := application.EnrichEvents(result.Execution.PullEvents(), orgID, workspaceID, requestctx.CorrelationID(c.Request.Context()))
+	h.svc.PublishAfterCommit(c.Request.Context(), events...)
+	apiKeyID, _ := uuid.Parse(requestctx.APIKeyID(c.Request.Context()))
+	h.svc.RecordAudit(c.Request.Context(), application.AuditEvent{
+		ActorType:    "api_key",
+		ActorID:      apiKeyID,
+		Action:       "execution.retry",
+		ResourceType: "execution",
+		ResourceID:   executionID,
+	})
 	if result.Job != nil && h.svc.Jobs != nil {
 		if err := h.svc.Jobs.EnqueueExecution(c.Request.Context(), *result.Job); err != nil {
 			httpx.ResponseError(c, apperr.Wrap(err, "retry scheduled but failed to enqueue execution", apperr.ErrCodeInternal))

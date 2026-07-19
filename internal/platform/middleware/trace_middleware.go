@@ -32,6 +32,8 @@ func TraceMiddleware() gin.HandlerFunc {
 		ctx = requestctx.With(ctx, requestctx.KeyTraceID, traceID)
 		ctx = requestctx.With(ctx, requestctx.KeyCorrelationID, correlationID)
 		ctx = requestctx.With(ctx, requestctx.KeyRequestID, requestID)
+		ctx = requestctx.With(ctx, requestctx.KeyIP, c.ClientIP())
+		ctx = requestctx.With(ctx, requestctx.KeyUserAgent, c.Request.UserAgent())
 		ctx = context.WithValue(ctx, logging.TraceIDKey, traceID)
 		c.Request = c.Request.WithContext(ctx)
 

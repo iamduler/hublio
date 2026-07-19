@@ -375,24 +375,69 @@ Thứ tự Aggregate: **Organization → Workspace → User/Membership → API K
 
 ## F1. Event Platform (internal)
 
-* [ ] Event model: runtime / business / system
-* [ ] Persist append-only `events`
-* [ ] Publish after commit
-* [ ] Delivery at-least-once; subscribers idempotent
-* [ ] **Không** dùng Event Platform làm work queue Execution
+* [x] Event model: runtime / business / system
+* [x] Persist append-only `events`
+* [x] Publish after commit
+* [x] Delivery at-least-once; subscribers idempotent
+* [x] **Không** dùng Event Platform làm work queue Execution
 
 ## F2. Audit
 
-* [ ] `audit_logs` cho API key create, connection changes, replay, login
-* [ ] Không ghi secrets
+* [x] `audit_logs` cho API key create, connection changes, replay, login
+* [x] Không ghi secrets
 
 ## F3. Observability
 
-* [ ] Metrics: execution success/fail, queue depth, latency
-* [ ] Traces: request → intent → execution → step → connector
-* [ ] Timeline API / query cho dashboard sau
+* [x] Metrics: execution success/fail, queue depth, latency
+* [x] Traces: request → intent → execution → step → connector
+* [x] Timeline API / query cho dashboard sau
 
 **Exit criteria Phase F:** ExecutionSucceeded/Failed event persisted; audit basic works.
+
+> Implementation note (Phase F): migration `000004_events_audit` adds `event_category` /
+> `aggregate_type` / `actor_type` enums + the frozen `events` / `audit_logs` tables (sqlc
+> queries in `internal/platform/persistence/queries/events.sql`). New BC
+> `internal/events/{domain,application,infrastructure,interfaces}`: `PlatformEvent` /
+> `AuditEntry` entities (Save-only repositories, append-only); `Services.Publish` persists
+> then notifies in-process `Subscribe(match, handler)` subscribers (at-least-once, errors
+> never fail Publish — only `OnSubscriberError`); `Services.Record` redacts
+> `secret|password|plaintext|token|key_hash`-like Metadata keys before persisting. Identity /
+> Integration / Orchestration each keep their own local `EventPublisher` + `AuditRecorder`
+> ports (BC-local `Event`/`AuditEvent` shapes, no Events BC import in Domain/Application) —
+> `internal/events/infrastructure/{identity,integration,orchestration}_bridge.go` adapt them
+> to `eventsapp.Publisher`/`Auditor`, mapping event names to `aggregate_type`/`category`
+> (Orchestration Intent/Execution → `runtime`; Identity/Integration lifecycle → `system`) and
+> pulling organization_id/workspace_id/correlation_id from the event Payload map. Because
+> Execution/Intent domain events don't carry tenant context themselves (Domain purity), each
+> call site (`orchestration/interfaces/handler.go`, `cmd/worker/main.go` after
+> `RunExecution`) enriches the pulled events via `orchestrationapp.EnrichEvents(...)` /
+> `identityapp.EnrichEvents(...)` / `integrationapp.EnrichEvents(...)` before
+> `PublishAfterCommit`, so persisted `events` rows have organization_id/workspace_id/
+> correlation_id populated. Audit best-effort calls wired at: Identity (API key
+> create/disable/rotate, login), Integration (connection create/verify/enable/disable,
+> credential rotate), Orchestration (execution retry) — actor from `requestctx`
+> (user_id/api_key_id), never fails the calling use case. Metrics:
+> `internal/platform/metrics` atomic counters (`executions_succeeded/failed_total`,
+> `events_published_total`, `audit_records_total`), incremented via a composition-root
+> subscription on `ExecutionSucceeded`/`ExecutionFailed` plus directly inside
+> Publish/Record; exposed as JSON on unauthenticated `GET /metrics` and API-Key-scoped
+> `GET /api/v1/platform/metrics` (both include best-effort Redis `queue_depth` via the new
+> `queue.Queue.Depth`). New tenant-scoped APIs: `GET /api/v1/executions/:executionId/timeline`
+> (Orchestration, reuses `GetExecution`) and `GET /api/v1/events?execution_id=&limit=`
+> (Events BC `EventReader`/`ListByWorkspace`). `trace_middleware` now also sets
+> `requestctx.KeyIP`/`KeyUserAgent` for audit rows. OpenAPI updated for all four new routes.
+> Unit tests: `internal/events/domain/{platform_event,audit}_test.go` (validation),
+> `internal/events/application/{publisher,auditor}_test.go` (fake repos: persist-before-notify
+> ordering, subscriber errors never fail Publish, metadata redaction, repository-failure
+> surfacing). `go build ./...`, `go vet ./...`, `go test ./...` all pass.
+>
+> Smoke test: `POST /api/v1/intents` (with a valid Connection) → worker runs the Execution →
+> `SELECT * FROM events WHERE event_name = 'ExecutionSucceeded' ORDER BY created_at DESC
+> LIMIT 1` should show one row with `organization_id`/`workspace_id`/`correlation_id`
+> populated and `category = 'runtime'`. `POST
+> /api/v1/identity/workspaces/:workspaceId/api-keys` → `SELECT * FROM audit_logs WHERE action
+> = 'api_key.create' ORDER BY created_at DESC LIMIT 1` should show one row with
+> `actor_type = 'user'` and no `plaintext`/`secret` key in `metadata`.
 
 ---
 

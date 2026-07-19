@@ -33,4 +33,7 @@ type Queue interface {
 	Enqueue(ctx context.Context, job Job) error
 	// Consume blocks until ctx is cancelled. handler is called for each job.
 	Consume(ctx context.Context, handler Handler) error
+	// Depth reports the current number of pending (not yet claimed) jobs. Used for basic
+	// Observability (F3); not a source of truth for anything business-related.
+	Depth(ctx context.Context) (int64, error)
 }

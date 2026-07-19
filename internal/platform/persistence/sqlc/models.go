@@ -27,6 +27,23 @@ type ApiKey struct {
 	DeletedAt         pgtype.Timestamptz `json:"deleted_at"`
 }
 
+type AuditLog struct {
+	ID             uuid.UUID          `json:"id"`
+	OrganizationID pgtype.UUID        `json:"organization_id"`
+	WorkspaceID    pgtype.UUID        `json:"workspace_id"`
+	ActorType      string             `json:"actor_type"`
+	ActorID        pgtype.UUID        `json:"actor_id"`
+	Action         string             `json:"action"`
+	ResourceType   string             `json:"resource_type"`
+	ResourceID     pgtype.UUID        `json:"resource_id"`
+	RequestID      *string            `json:"request_id"`
+	CorrelationID  *string            `json:"correlation_id"`
+	Ip             *netip.Addr        `json:"ip"`
+	UserAgent      *string            `json:"user_agent"`
+	Metadata       []byte             `json:"metadata"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+}
+
 type Connection struct {
 	ID                 uuid.UUID          `json:"id"`
 	ActiveCredentialID pgtype.UUID        `json:"active_credential_id"`
@@ -84,6 +101,22 @@ type Credential struct {
 	CreatedAt       pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
 	CreatedBy       uuid.UUID          `json:"created_by"`
+}
+
+type Event struct {
+	ID             uuid.UUID          `json:"id"`
+	OrganizationID pgtype.UUID        `json:"organization_id"`
+	WorkspaceID    pgtype.UUID        `json:"workspace_id"`
+	AggregateType  string             `json:"aggregate_type"`
+	AggregateID    uuid.UUID          `json:"aggregate_id"`
+	ExecutionID    pgtype.UUID        `json:"execution_id"`
+	Category       string             `json:"category"`
+	EventName      string             `json:"event_name"`
+	CorrelationID  *string            `json:"correlation_id"`
+	Payload        []byte             `json:"payload"`
+	Metadata       []byte             `json:"metadata"`
+	PublishedBy    *string            `json:"published_by"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
 }
 
 type Execution struct {

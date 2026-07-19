@@ -118,6 +118,15 @@ func (q *RedisQueue) Consume(ctx context.Context, handler Handler) error {
 	}
 }
 
+// Depth returns the number of jobs currently waiting in the Redis list (LLEN).
+func (q *RedisQueue) Depth(ctx context.Context) (int64, error) {
+	depth, err := q.rdb.LLen(ctx, q.key).Result()
+	if err != nil {
+		return 0, fmt.Errorf("queue: llen: %w", err)
+	}
+	return depth, nil
+}
+
 // EnqueueHealth enqueues a platform.health no-op job.
 func EnqueueHealth(ctx context.Context, q Queue) error {
 	return q.Enqueue(ctx, Job{

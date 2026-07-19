@@ -11,6 +11,7 @@ import (
 	"hublio/internal/platform/auth"
 	"hublio/internal/platform/httpx"
 	"hublio/internal/platform/persistence"
+	"hublio/internal/platform/requestctx"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -131,6 +132,15 @@ func (h *Handler) login(c *gin.Context) {
 		httpx.ResponseError(c, err)
 		return
 	}
+
+	auditCtx := requestctx.With(c.Request.Context(), requestctx.KeyOrganizationID, result.User.OrganizationID().String())
+	h.svc.RecordAudit(auditCtx, application.AuditEvent{
+		ActorType:    "user",
+		ActorID:      result.User.ID(),
+		Action:       "user.login",
+		ResourceType: "user",
+		ResourceID:   result.User.ID(),
+	})
 
 	httpx.ResponseSuccess(c, http.StatusOK, "logged in", gin.H{
 		"access_token":  result.AccessToken,
@@ -372,7 +382,17 @@ func (h *Handler) createAPIKey(c *gin.Context) {
 		httpx.ResponseError(c, err)
 		return
 	}
-	h.svc.PublishAfterCommit(c.Request.Context(), result.APIKey.PullEvents()...)
+	orgID, _ := uuid.Parse(requestctx.OrganizationID(c.Request.Context()))
+	events := application.EnrichEvents(result.APIKey.PullEvents(), orgID, wsID)
+	h.svc.PublishAfterCommit(c.Request.Context(), events...)
+	h.svc.RecordAudit(c.Request.Context(), application.AuditEvent{
+		ActorType:    "user",
+		ActorID:      actorID,
+		Action:       "api_key.create",
+		ResourceType: "api_key",
+		ResourceID:   result.APIKey.ID(),
+		Metadata:     map[string]any{"name": req.Name, "workspace_id": wsID.String()},
+	})
 	httpx.ResponseSuccess(c, http.StatusCreated, "api key created", gin.H{
 		"api_key":   apiKeyDTO(result.APIKey),
 		"plaintext": result.Plaintext,
@@ -424,7 +444,17 @@ func (h *Handler) disableAPIKey(c *gin.Context) {
 		httpx.ResponseError(c, err)
 		return
 	}
-	h.svc.PublishAfterCommit(c.Request.Context(), key.PullEvents()...)
+	orgID, _ := uuid.Parse(requestctx.OrganizationID(c.Request.Context()))
+	events := application.EnrichEvents(key.PullEvents(), orgID, wsID)
+	h.svc.PublishAfterCommit(c.Request.Context(), events...)
+	h.svc.RecordAudit(c.Request.Context(), application.AuditEvent{
+		ActorType:    "user",
+		ActorID:      actorID,
+		Action:       "api_key.disable",
+		ResourceType: "api_key",
+		ResourceID:   keyID,
+		Metadata:     map[string]any{"workspace_id": wsID.String()},
+	})
 	httpx.ResponseSuccess(c, http.StatusOK, "api key disabled", apiKeyDTO(key))
 }
 
@@ -451,7 +481,17 @@ func (h *Handler) rotateAPIKey(c *gin.Context) {
 		httpx.ResponseError(c, err)
 		return
 	}
-	h.svc.PublishAfterCommit(c.Request.Context(), result.APIKey.PullEvents()...)
+	orgID, _ := uuid.Parse(requestctx.OrganizationID(c.Request.Context()))
+	events := application.EnrichEvents(result.APIKey.PullEvents(), orgID, wsID)
+	h.svc.PublishAfterCommit(c.Request.Context(), events...)
+	h.svc.RecordAudit(c.Request.Context(), application.AuditEvent{
+		ActorType:    "user",
+		ActorID:      actorID,
+		Action:       "api_key.rotate",
+		ResourceType: "api_key",
+		ResourceID:   result.APIKey.ID(),
+		Metadata:     map[string]any{"workspace_id": wsID.String()},
+	})
 	httpx.ResponseSuccess(c, http.StatusOK, "api key rotated", gin.H{
 		"api_key":   apiKeyDTO(result.APIKey),
 		"plaintext": result.Plaintext,

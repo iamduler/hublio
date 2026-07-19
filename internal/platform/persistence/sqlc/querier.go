@@ -29,10 +29,12 @@ type Querier interface {
 	GetWorkspaceByID(ctx context.Context, id uuid.UUID) (Workspace, error)
 	GetWorkspaceUser(ctx context.Context, arg GetWorkspaceUserParams) (WorkspaceUser, error)
 	InsertAPIKey(ctx context.Context, arg InsertAPIKeyParams) error
+	InsertAuditLog(ctx context.Context, arg InsertAuditLogParams) error
 	InsertConnection(ctx context.Context, arg InsertConnectionParams) error
 	InsertConnector(ctx context.Context, arg InsertConnectorParams) error
 	InsertConnectorCapability(ctx context.Context, arg InsertConnectorCapabilityParams) error
 	InsertCredential(ctx context.Context, arg InsertCredentialParams) error
+	InsertEvent(ctx context.Context, arg InsertEventParams) error
 	InsertExecution(ctx context.Context, arg InsertExecutionParams) error
 	InsertExecutionSnapshot(ctx context.Context, arg InsertExecutionSnapshotParams) error
 	InsertExecutionStep(ctx context.Context, arg InsertExecutionStepParams) error
@@ -48,6 +50,8 @@ type Querier interface {
 	ListConnectionsByWorkspace(ctx context.Context, workspaceID uuid.UUID) ([]Connection, error)
 	ListConnectors(ctx context.Context) ([]Connector, error)
 	ListCredentialsByConnection(ctx context.Context, connectionID uuid.UUID) ([]Credential, error)
+	ListEventsByWorkspace(ctx context.Context, arg ListEventsByWorkspaceParams) ([]Event, error)
+	ListEventsByWorkspaceAndExecution(ctx context.Context, arg ListEventsByWorkspaceAndExecutionParams) ([]Event, error)
 	ListExecutionSnapshotsByExecution(ctx context.Context, executionID uuid.UUID) ([]ExecutionSnapshot, error)
 	ListExecutionStepsByExecution(ctx context.Context, executionID uuid.UUID) ([]ExecutionStep, error)
 	ListExecutionTimelinesByExecution(ctx context.Context, executionID uuid.UUID) ([]ExecutionTimeline, error)

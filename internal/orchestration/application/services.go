@@ -112,6 +112,32 @@ type JobEnqueuer interface {
 	EnqueueExecution(ctx context.Context, job ExecutionJob) error
 }
 
+// AuditRecorder records best-effort audit facts after a successful commit (F2). Never fails
+// the calling use case: implementations (a bridge over the Events BC Auditor, wired in the
+// composition root) log their own failures.
+type AuditRecorder interface {
+	Record(ctx context.Context, rec AuditEvent) error
+}
+
+// AuditEvent is the minimal, BC-local shape passed to AuditRecorder. Tenant/request context
+// is filled in by the bridge from context, so Orchestration never needs to know about it.
+type AuditEvent struct {
+	ActorType    string // "user" | "api_key" | "system"
+	ActorID      uuid.UUID
+	Action       string
+	ResourceType string
+	ResourceID   uuid.UUID
+	Metadata     map[string]any
+}
+
+// NoopAuditor discards audit records (wiring default until Events BC is composed).
+type NoopAuditor struct{}
+
+func (NoopAuditor) Record(ctx context.Context, rec AuditEvent) error {
+	_, _ = ctx, rec
+	return nil
+}
+
 // Services wires the Orchestration use cases. MaxRetries defaults to 3 when <= 0.
 type Services struct {
 	Intents     domain.IntentRepository
@@ -122,6 +148,7 @@ type Services struct {
 	Transformer Transformer
 	Jobs        JobEnqueuer
 	Events      EventPublisher
+	Audit       AuditRecorder
 	Clock       Clock
 	MaxRetries  int
 }
@@ -159,4 +186,49 @@ func (s *Services) PublishAfterCommit(ctx context.Context, events ...domain.Even
 		return
 	}
 	_ = s.events().Publish(ctx, events...)
+}
+
+// EnrichEvents stamps organization_id/workspace_id/correlation_id onto every Event's Payload
+// when not already present, so the Events BC bridge (internal/events/infrastructure) can
+// populate the events table's tenant/correlation columns without Orchestration's Domain
+// having to carry that context on every Execution/Intent event itself. Call sites (the
+// Interfaces handler and the worker) own this because they are the ones with the
+// request/job-scoped tenant context; Domain stays free of it. Never overwrites an existing
+// key (e.g. IntentSubmitted already sets organization_id/workspace_id itself).
+func EnrichEvents(events []domain.Event, organizationID, workspaceID uuid.UUID, correlationID string) []domain.Event {
+	for i := range events {
+		payload := events[i].Payload
+		if payload == nil {
+			payload = map[string]any{}
+		} else {
+			cloned := make(map[string]any, len(payload)+3)
+			for k, v := range payload {
+				cloned[k] = v
+			}
+			payload = cloned
+		}
+		if _, ok := payload["organization_id"]; !ok && organizationID != uuid.Nil {
+			payload["organization_id"] = organizationID.String()
+		}
+		if _, ok := payload["workspace_id"]; !ok && workspaceID != uuid.Nil {
+			payload["workspace_id"] = workspaceID.String()
+		}
+		if _, ok := payload["correlation_id"]; !ok && correlationID != "" {
+			payload["correlation_id"] = correlationID
+		}
+		events[i].Payload = payload
+	}
+	return events
+}
+
+func (s *Services) audit() AuditRecorder {
+	if s.Audit != nil {
+		return s.Audit
+	}
+	return NoopAuditor{}
+}
+
+// RecordAudit is best-effort: it never fails the caller (see AuditRecorder).
+func (s *Services) RecordAudit(ctx context.Context, rec AuditEvent) {
+	_ = s.audit().Record(ctx, rec)
 }

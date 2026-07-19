@@ -247,9 +247,19 @@ func (h *Handler) createConnection(c *gin.Context) {
 		httpx.ResponseError(c, err)
 		return
 	}
-	h.svc.PublishAfterCommit(c.Request.Context(),
-		appendMany(result.Connection.PullEvents(), result.Credential.PullEvents())...,
+	events := application.EnrichEvents(
+		appendMany(result.Connection.PullEvents(), result.Credential.PullEvents()),
+		workspaceID,
 	)
+	h.svc.PublishAfterCommit(c.Request.Context(), events...)
+	h.svc.RecordAudit(c.Request.Context(), application.AuditEvent{
+		ActorType:    "user",
+		ActorID:      actorID,
+		Action:       "connection.create",
+		ResourceType: "connection",
+		ResourceID:   result.Connection.ID(),
+		Metadata:     map[string]any{"workspace_id": workspaceID.String(), "connector_id": connectorID.String()},
+	})
 	httpx.ResponseSuccess(c, http.StatusCreated, "connection created", gin.H{
 		"connection": connectionDTO(result.Connection),
 		"credential": credentialDTO(result.Credential),
@@ -299,27 +309,28 @@ func (h *Handler) getConnection(c *gin.Context) {
 func (h *Handler) verifyConnection(c *gin.Context) {
 	h.connectionLifecycle(c, func(ctx context.Context, workspaceID, connectionID uuid.UUID) (*domain.Connection, error) {
 		return h.svc.VerifyConnection(ctx, workspaceID, connectionID)
-	}, "connection verification finished")
+	}, "connection verification finished", "connection.verify")
 }
 
 func (h *Handler) disableConnection(c *gin.Context) {
-	h.connectionLifecycle(c, h.svc.DisableConnection, "connection disabled")
+	h.connectionLifecycle(c, h.svc.DisableConnection, "connection disabled", "connection.disable")
 }
 
 func (h *Handler) enableConnection(c *gin.Context) {
-	h.connectionLifecycle(c, h.svc.EnableConnection, "connection enabled")
+	h.connectionLifecycle(c, h.svc.EnableConnection, "connection enabled", "connection.enable")
 }
 
 func (h *Handler) connectionLifecycle(
 	c *gin.Context,
 	fn func(context.Context, uuid.UUID, uuid.UUID) (*domain.Connection, error),
-	message string,
+	message, auditAction string,
 ) {
 	workspaceID, ok := parseUUIDParam(c, "workspaceId")
 	if !ok {
 		return
 	}
-	if _, ok := h.requireWorkspaceMember(c, workspaceID); !ok {
+	actorID, ok := h.requireWorkspaceMember(c, workspaceID)
+	if !ok {
 		return
 	}
 	connectionID, ok := parseUUIDParam(c, "connectionId")
@@ -336,7 +347,16 @@ func (h *Handler) connectionLifecycle(
 		httpx.ResponseError(c, err)
 		return
 	}
-	h.svc.PublishAfterCommit(c.Request.Context(), conn.PullEvents()...)
+	events := application.EnrichEvents(conn.PullEvents(), workspaceID)
+	h.svc.PublishAfterCommit(c.Request.Context(), events...)
+	h.svc.RecordAudit(c.Request.Context(), application.AuditEvent{
+		ActorType:    "user",
+		ActorID:      actorID,
+		Action:       auditAction,
+		ResourceType: "connection",
+		ResourceID:   connectionID,
+		Metadata:     map[string]any{"workspace_id": workspaceID.String()},
+	})
 	httpx.ResponseSuccess(c, http.StatusOK, message, connectionDTO(conn))
 }
 
@@ -387,7 +407,16 @@ func (h *Handler) rotateCredential(c *gin.Context) {
 		httpx.ResponseError(c, err)
 		return
 	}
-	h.svc.PublishAfterCommit(c.Request.Context(), cred.PullEvents()...)
+	events := application.EnrichEvents(cred.PullEvents(), workspaceID)
+	h.svc.PublishAfterCommit(c.Request.Context(), events...)
+	h.svc.RecordAudit(c.Request.Context(), application.AuditEvent{
+		ActorType:    "user",
+		ActorID:      actorID,
+		Action:       "credential.rotate",
+		ResourceType: "credential",
+		ResourceID:   cred.ID(),
+		Metadata:     map[string]any{"workspace_id": workspaceID.String(), "connection_id": connectionID.String()},
+	})
 	httpx.ResponseSuccess(c, http.StatusCreated, "credential rotated", credentialDTO(cred))
 }
 

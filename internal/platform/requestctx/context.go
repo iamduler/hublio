@@ -12,6 +12,8 @@ const (
 	KeyWorkspaceID    contextKey = "workspace_id"
 	KeyUserID         contextKey = "user_id"
 	KeyAPIKeyID       contextKey = "api_key_id"
+	KeyIP             contextKey = "ip"
+	KeyUserAgent      contextKey = "user_agent"
 )
 
 func With(ctx context.Context, key contextKey, value string) context.Context {
@@ -35,3 +37,5 @@ func OrganizationID(ctx context.Context) string { return Get(ctx, KeyOrganizatio
 func WorkspaceID(ctx context.Context) string    { return Get(ctx, KeyWorkspaceID) }
 func UserID(ctx context.Context) string         { return Get(ctx, KeyUserID) }
 func APIKeyID(ctx context.Context) string       { return Get(ctx, KeyAPIKeyID) }
+func IP(ctx context.Context) string             { return Get(ctx, KeyIP) }
+func UserAgent(ctx context.Context) string      { return Get(ctx, KeyUserAgent) }

@@ -8,6 +8,10 @@ import (
 	"syscall"
 	"time"
 
+	eventsapp "hublio/internal/events/application"
+	eventsdomain "hublio/internal/events/domain"
+	eventsinfra "hublio/internal/events/infrastructure"
+	eventshttp "hublio/internal/events/interfaces"
 	identityapp "hublio/internal/identity/application"
 	identitydomain "hublio/internal/identity/domain"
 	identityinfra "hublio/internal/identity/infrastructure"
@@ -18,6 +22,7 @@ import (
 	integrationinfra "hublio/internal/integration/infrastructure"
 	integrationhttp "hublio/internal/integration/interfaces"
 	orchestrationapp "hublio/internal/orchestration/application"
+	orchestrationdomain "hublio/internal/orchestration/domain"
 	orchestrationinfra "hublio/internal/orchestration/infrastructure"
 	orchestrationhttp "hublio/internal/orchestration/interfaces"
 	"hublio/internal/platform/apikey"
@@ -28,6 +33,7 @@ import (
 	"hublio/internal/platform/docsui"
 	"hublio/internal/platform/env"
 	"hublio/internal/platform/logging"
+	"hublio/internal/platform/metrics"
 	"hublio/internal/platform/middleware"
 	"hublio/internal/platform/persistence"
 	"hublio/internal/platform/queue"
@@ -54,6 +60,8 @@ type Application struct {
 	identity      *identityapp.Services
 	integration   *integrationapp.Services
 	orchestration *orchestrationapp.Services
+	events        *eventsapp.Services
+	metrics       *metrics.Counters
 }
 
 func NewApplication(cfg *config.Config) (*Application, error) {
@@ -86,7 +94,6 @@ func NewApplication(cfg *config.Config) (*Application, error) {
 		Memberships: memRepo,
 		APIKeys:     keyRepo,
 		Passwords:   identityinfra.NewBcryptPasswordHasher(),
-		Events:      identityapp.NoopPublisher{},
 	}
 
 	dbAuth := identityinfra.NewDBAuthenticator(keyRepo, wsRepo, orgRepo)
@@ -96,9 +103,14 @@ func NewApplication(cfg *config.Config) (*Application, error) {
 	if err != nil {
 		return nil, err
 	}
-	seedIntegrationConnectors(db.Pool, integrationSvc)
 
 	orchestrationSvc := newOrchestrationServices(db.Pool, workQueue, integrationSvc, identitySvc)
+
+	metricsCounters := metrics.New()
+	eventsSvc := newEventsServices(db.Pool, metricsCounters)
+	wireEventsBridges(eventsSvc, identitySvc, integrationSvc, orchestrationSvc)
+
+	seedIntegrationConnectors(db.Pool, integrationSvc)
 
 	app := &Application{
 		config:        cfg,
@@ -111,6 +123,8 @@ func NewApplication(cfg *config.Config) (*Application, error) {
 		identity:      identitySvc,
 		integration:   integrationSvc,
 		orchestration: orchestrationSvc,
+		events:        eventsSvc,
+		metrics:       metricsCounters,
 	}
 
 	router := gin.New()
@@ -164,7 +178,6 @@ func newIntegrationServices(pool *pgxpool.Pool) (*integrationapp.Services, error
 		Credentials: integrationinfra.NewCredentialRepository(pool),
 		Runtimes:    runtimeRegistry,
 		Secrets:     encryptor,
-		Events:      integrationapp.NoopPublisher{},
 	}, nil
 }
 
@@ -196,8 +209,59 @@ func newOrchestrationServices(
 		Connectors:  connectorGateway,
 		Transformer: transformer,
 		Jobs:        orchestrationinfra.NewQueueJobEnqueuer(workQueue),
-		Events:      orchestrationapp.NoopPublisher{},
 	}
+}
+
+// newEventsServices wires the Events BC application layer (F1/F2/F3): Postgres-backed
+// EventRepository/EventReader/AuditRepository, in-memory metrics counters, and a logging
+// hook for best-effort in-process subscriber failures. It also subscribes the metrics
+// counters to the two Runtime facts the Phase F exit criteria care about
+// (ExecutionSucceeded/ExecutionFailed).
+func newEventsServices(pool *pgxpool.Pool, counters *metrics.Counters) *eventsapp.Services {
+	eventRepo := eventsinfra.NewEventRepository(pool)
+	svc := &eventsapp.Services{
+		Events:  eventRepo,
+		Reader:  eventRepo,
+		Audit:   eventsinfra.NewAuditRepository(pool),
+		Metrics: counters,
+		OnSubscriberError: func(event *eventsdomain.PlatformEvent, err error) {
+			if logging.Log != nil {
+				logging.Log.Warn().Err(err).
+					Str("event_name", event.EventName()).
+					Str("event_id", event.ID().String()).
+					Msg("events: in-process subscriber failed")
+			}
+		},
+	}
+	svc.Subscribe(orchestrationdomain.EventExecutionSucceeded, func(_ context.Context, _ *eventsdomain.PlatformEvent) error {
+		counters.IncExecutionsSucceeded()
+		return nil
+	})
+	svc.Subscribe(orchestrationdomain.EventExecutionFailed, func(_ context.Context, _ *eventsdomain.PlatformEvent) error {
+		counters.IncExecutionsFailed()
+		return nil
+	})
+	return svc
+}
+
+// wireEventsBridges replaces every BC's default (nil -> Noop) EventPublisher/AuditRecorder
+// with a thin bridge over the Events BC Services (internal/events/infrastructure), so
+// Identity/Integration/Orchestration never import the Events BC directly (AGENTS.md package
+// boundaries). Must run after every *app.Services value has been constructed.
+func wireEventsBridges(
+	eventsSvc *eventsapp.Services,
+	identitySvc *identityapp.Services,
+	integrationSvc *integrationapp.Services,
+	orchestrationSvc *orchestrationapp.Services,
+) {
+	identitySvc.Events = eventsinfra.NewIdentityEventBridge(eventsSvc)
+	identitySvc.Audit = eventsinfra.NewIdentityAuditBridge(eventsSvc)
+
+	integrationSvc.Events = eventsinfra.NewIntegrationEventBridge(eventsSvc)
+	integrationSvc.Audit = eventsinfra.NewIntegrationAuditBridge(eventsSvc)
+
+	orchestrationSvc.Events = eventsinfra.NewOrchestrationEventBridge(eventsSvc)
+	orchestrationSvc.Audit = eventsinfra.NewOrchestrationAuditBridge(eventsSvc)
 }
 
 // seedIntegrationConnectors registers the built-in "fake" Connector on startup so Orchestration
@@ -275,6 +339,9 @@ func (a *Application) registerRoutes(router *gin.Engine) {
 	orchestrationHandler := orchestrationhttp.NewHandler(a.orchestration, a.db.Pool)
 	orchestrationHandler.RegisterRoutes(api, middleware.APIKeyMiddleware(a.apiKeyAuth))
 
+	eventsHandler := eventshttp.NewHandler(a.events)
+	eventsHandler.RegisterRoutes(api, middleware.APIKeyMiddleware(a.apiKeyAuth))
+
 	machine := api.Group("")
 	machine.Use(middleware.APIKeyMiddleware(a.apiKeyAuth))
 	{
@@ -282,7 +349,10 @@ func (a *Application) registerRoutes(router *gin.Engine) {
 			c.JSON(http.StatusOK, gin.H{"status": "ok"})
 		})
 		machine.POST("/platform/queue/health", a.enqueueHealthHandler)
+		machine.GET("/platform/metrics", a.metricsHandler)
 	}
+
+	router.GET("/metrics", a.metricsHandler)
 
 	router.NoRoute(func(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Not found", "path": c.Request.URL.Path})
@@ -315,6 +385,26 @@ func (a *Application) readyHandler(c *gin.Context) {
 	}
 
 	c.JSON(code, status)
+}
+
+// metricsHandler exposes the in-memory Phase F Observability counters as plain JSON
+// (AGENTS.md/checklist: avoid a new Prometheus client dependency for now) plus, best-effort,
+// the current Redis work-queue depth. Unauthenticated on /metrics (no business data, only
+// aggregate counts) and duplicated at /api/v1/platform/metrics behind API-Key auth.
+func (a *Application) metricsHandler(c *gin.Context) {
+	snapshot := a.metrics.Snapshot()
+	body := gin.H{
+		"executions_succeeded_total": snapshot.ExecutionsSucceeded,
+		"executions_failed_total":    snapshot.ExecutionsFailed,
+		"events_published_total":     snapshot.EventsPublished,
+		"audit_records_total":        snapshot.AuditRecords,
+	}
+	if a.workQueue != nil {
+		if depth, err := a.workQueue.Depth(c.Request.Context()); err == nil {
+			body["queue_depth"] = depth
+		}
+	}
+	c.JSON(http.StatusOK, body)
 }
 
 func (a *Application) enqueueHealthHandler(c *gin.Context) {

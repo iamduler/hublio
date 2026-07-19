@@ -18,6 +18,7 @@ tags:
   - name: Identity
   - name: Integration
   - name: Orchestration
+  - name: Events
   - name: Machine
 
 paths:
@@ -662,6 +663,59 @@ paths:
         "409":
           $ref: "#/components/responses/Error"
 
+  /api/v1/executions/{executionId}/timeline:
+    get:
+      tags: [Orchestration]
+      summary: Get Execution timeline (Observability, F3; tenant-scoped)
+      description: |
+        Focused view of the same execution_timelines rows already returned inline by
+        GET /api/v1/executions/{executionId}.
+      operationId: getExecutionTimeline
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - $ref: "#/components/parameters/executionId"
+      responses:
+        "200":
+          description: Execution timeline
+        "401":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/events:
+    get:
+      tags: [Events]
+      summary: List persisted Platform Events (Observability, F3; Workspace-scoped)
+      description: |
+        Append-only PlatformEvent facts (`events` table) published after a successful
+        Identity/Integration/Orchestration commit. Never used to schedule work (Event
+        Platform is not a work queue).
+      operationId: listEvents
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - name: execution_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
+            maximum: 200
+      responses:
+        "200":
+          description: Events
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+
   /api/v1/health:
     get:
       tags: [Machine]
@@ -687,6 +741,32 @@ paths:
           description: Accepted
         "401":
           $ref: "#/components/responses/Error"
+
+  /api/v1/platform/metrics:
+    get:
+      tags: [Machine]
+      summary: Observability counters (Phase F, JSON; API key)
+      description: |
+        In-memory, per-process counters: executions_succeeded_total, executions_failed_total,
+        events_published_total, audit_records_total, plus best-effort queue_depth (Redis LLEN).
+        Same payload as GET /metrics (unauthenticated) for scrapers that expect that path.
+      operationId: platformMetrics
+      security:
+        - apiKeyAuth: []
+      responses:
+        "200":
+          description: Metrics snapshot
+        "401":
+          $ref: "#/components/responses/Error"
+
+  /metrics:
+    get:
+      tags: [Machine]
+      summary: Observability counters (Phase F, JSON; unauthenticated)
+      operationId: metrics
+      responses:
+        "200":
+          description: Metrics snapshot
 
 components:
   securitySchemes:
