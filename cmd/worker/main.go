@@ -19,6 +19,7 @@ import (
 	"hublio/internal/platform/logging"
 	"hublio/internal/platform/persistence"
 	"hublio/internal/platform/queue"
+	transformationapp "hublio/internal/transformation/application"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -133,6 +134,7 @@ func newOrchestrationServices(pool *pgxpool.Pool, workQueue queue.Queue) (*orche
 		encryptor,
 	)
 	connectorGateway := orchestrationinfra.NewConnectorGateway(runtimeRegistry)
+	transformer := orchestrationinfra.NewTransformerAdapter(transformationapp.NewServices())
 
 	return &orchestrationapp.Services{
 		Intents:     orchestrationinfra.NewIntentRepository(pool),
@@ -140,6 +142,7 @@ func newOrchestrationServices(pool *pgxpool.Pool, workQueue queue.Queue) (*orche
 		Idempotency: orchestrationinfra.NewIdempotencyRepository(pool),
 		Connections: connectionGateway,
 		Connectors:  connectorGateway,
+		Transformer: transformer,
 		Jobs:        orchestrationinfra.NewQueueJobEnqueuer(workQueue),
 		Events:      orchestrationapp.NoopPublisher{},
 	}, nil

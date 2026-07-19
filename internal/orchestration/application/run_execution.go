@@ -146,18 +146,26 @@ func (s *Services) runStep(ctx context.Context, execution *domain.Execution, int
 		return nil
 
 	case domain.StepTypeTransformRequest:
-		// Phase E replaces this passthrough with real canonical transform capabilities.
-		execution.MergeContext(map[string]any{"request": intent.Payload()})
+		transformed, err := s.transformer().TransformRequest(ctx, intent.Capability(), intent.Payload())
+		if err != nil {
+			return err
+		}
+		execution.MergeContext(map[string]any{"request": transformed})
 		return nil
 
 	case domain.StepTypeInvokeConnector:
 		return s.invokeConnectorStep(ctx, execution, intent, step, resolved)
 
 	case domain.StepTypeTransformResponse:
-		// Phase E replaces this passthrough with real canonical transform capabilities.
-		if resp, ok := execution.Context()["invoke_response"]; ok {
-			execution.MergeContext(map[string]any{"response": resp})
+		resp, ok := execution.Context()["invoke_response"].(map[string]any)
+		if !ok {
+			return nil
 		}
+		transformed, err := s.transformer().TransformResponse(ctx, intent.Capability(), resp)
+		if err != nil {
+			return err
+		}
+		execution.MergeContext(map[string]any{"response": transformed})
 		return nil
 
 	case domain.StepTypePublishEvent:

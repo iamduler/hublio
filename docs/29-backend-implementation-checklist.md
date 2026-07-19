@@ -339,16 +339,35 @@ Thứ tự Aggregate: **Organization → Workspace → User/Membership → API K
 
 ## E1. Domain / Application
 
-* [ ] Transform pipeline Canonical → Canonical only
-* [ ] Capabilities: field rename, type convert, timezone, currency normalize, defaults, validation
-* [ ] **Cấm** Provider DTO trong package này
+* [x] Transform pipeline Canonical → Canonical only (`internal/transformation/domain`: `Document`, `Operation`, `Pipeline`)
+* [x] Capabilities: field rename, type convert, timezone, currency normalize, defaults, validation (`RenameField`, `ConvertType`, `NormalizeTimezone`, `NormalizeCurrency`, `SetDefault`, `ValidateRequired`)
+* [x] **Cấm** Provider DTO trong package này (verified: no `internal/integration` import in `internal/transformation`)
+* [x] `OperationSpec` + `BuildPipeline` factory so callers (Orchestration) can describe a Pipeline as data, without Domain knowing HTTP/DB
+* [x] `Services.Transform` (`internal/transformation/application`) — no repositories; in-memory engine only
 
 ## E2. Integration with Orchestration steps
 
-* [ ] Step `transform_request` / `transform_response` gọi Transformation use cases
-* [ ] Tests: normalize invoice-like canonical fixture (không MISA DTO)
+* [x] Step `transform_request` / `transform_response` gọi Transformation use cases (`run_execution.go` calls `Services.transformer()` instead of passthrough)
+* [x] `Transformer` port on Orchestration Application + `TransformerAdapter` in Orchestration Infrastructure (wraps `transformationapp.Services`, never leaks Transformation types into Orchestration Domain/Application)
+* [x] Wired in both composition roots: `internal/platform/server/server.go` and `cmd/worker/main.go` (worker runs the steps)
+* [x] Tests: normalize invoice-like canonical fixture (không MISA DTO) — table-driven Domain tests per operation + full fixture (`internal/transformation/domain/pipeline_test.go`), Application-level fixture test (`internal/transformation/application/transform_test.go`), adapter capability-routing test (`internal/orchestration/infrastructure/transformer_adapter_test.go`)
 
 **Exit criteria Phase E:** Step transform chạy trong Execution path, không đụng Provider DTO.
+
+> Phase E completed 2026-07-18: Domain pipeline (`Document`/`Operation`/`Pipeline` +
+> `RenameField`/`ConvertType`/`NormalizeTimezone`/`NormalizeCurrency`/`SetDefault`/`ValidateRequired`,
+> all table-driven unit tests, no DB/HTTP dependency); `OperationSpec`/`BuildPipeline` factory;
+> built-in `DefaultRequestPipelineSpec()`/`DefaultResponsePipelineSpec()` invoice normalization;
+> Application `Services.Transform` (no repositories — pure in-memory engine); Orchestration
+> `Transformer` port + `TransformerAdapter` (Infrastructure) applies the default invoice
+> pipeline only when `capability` looks invoice-like (`strings.Contains(lower(capability),
+> "invoice")`), otherwise an empty/identity spec — so the Fake connector's `fake.echo`
+> capability still passes its payload through unchanged end-to-end. `run_execution.go`'s
+> `transform_request`/`transform_response` steps now call the Transformer instead of the
+> Phase D passthrough. Wired in `internal/platform/server/server.go` and `cmd/worker/main.go`
+> (the worker is what actually runs Execution steps). No new HTTP routes, no OpenAPI change,
+> no new migrations/tables (Transformation stays a pure in-memory engine per docs/06). `go
+> build ./...`, `go vet ./...`, and `go test ./...` all pass.
 
 ---
 

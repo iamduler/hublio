@@ -74,6 +74,30 @@ type ConnectorGateway interface {
 	Invoke(ctx context.Context, connectorCode string, in InvokeRequest) (InvokeResponse, error)
 }
 
+// Transformer runs Canonical → Canonical normalization for a Step (Transformation BC). It is
+// implemented in internal/orchestration/infrastructure, wrapping the Transformation
+// Application; capability is passed only so the adapter can pick which built-in
+// normalization spec applies (e.g. invoice-like capabilities) — Orchestration itself never
+// inspects Provider DTOs or Transformation internals.
+type Transformer interface {
+	TransformRequest(ctx context.Context, capability string, doc map[string]any) (map[string]any, error)
+	TransformResponse(ctx context.Context, capability string, doc map[string]any) (map[string]any, error)
+}
+
+// passthroughTransformer is the safe default when Services.Transformer is not wired (e.g. in
+// unit tests): it returns the Document unchanged, exactly like an identity Pipeline.
+type passthroughTransformer struct{}
+
+func (passthroughTransformer) TransformRequest(ctx context.Context, capability string, doc map[string]any) (map[string]any, error) {
+	_, _ = ctx, capability
+	return doc, nil
+}
+
+func (passthroughTransformer) TransformResponse(ctx context.Context, capability string, doc map[string]any) (map[string]any, error) {
+	_, _ = ctx, capability
+	return doc, nil
+}
+
 // ExecutionJob is the Platform work-queue payload for the orchestration.execution job type.
 type ExecutionJob struct {
 	ExecutionID    uuid.UUID
@@ -95,6 +119,7 @@ type Services struct {
 	Idempotency domain.IdempotencyRepository
 	Connections ConnectionGateway
 	Connectors  ConnectorGateway
+	Transformer Transformer
 	Jobs        JobEnqueuer
 	Events      EventPublisher
 	Clock       Clock
@@ -113,6 +138,13 @@ func (s *Services) events() EventPublisher {
 		return s.Events
 	}
 	return NoopPublisher{}
+}
+
+func (s *Services) transformer() Transformer {
+	if s.Transformer != nil {
+		return s.Transformer
+	}
+	return passthroughTransformer{}
 }
 
 func (s *Services) maxRetries() int {

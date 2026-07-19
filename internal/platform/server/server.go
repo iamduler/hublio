@@ -33,6 +33,7 @@ import (
 	"hublio/internal/platform/queue"
 	"hublio/internal/platform/requestctx"
 	"hublio/internal/platform/validation"
+	transformationapp "hublio/internal/transformation/application"
 
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
@@ -185,6 +186,7 @@ func newOrchestrationServices(
 		integrationSvc.Secrets,
 	)
 	connectorGateway := orchestrationinfra.NewConnectorGateway(integrationSvc.Runtimes)
+	transformer := orchestrationinfra.NewTransformerAdapter(transformationapp.NewServices())
 
 	return &orchestrationapp.Services{
 		Intents:     orchestrationinfra.NewIntentRepository(pool),
@@ -192,6 +194,7 @@ func newOrchestrationServices(
 		Idempotency: orchestrationinfra.NewIdempotencyRepository(pool),
 		Connections: connectionGateway,
 		Connectors:  connectorGateway,
+		Transformer: transformer,
 		Jobs:        orchestrationinfra.NewQueueJobEnqueuer(workQueue),
 		Events:      orchestrationapp.NoopPublisher{},
 	}
