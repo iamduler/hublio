@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strings"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 // Credentials extracted from decrypted Connection secret + config. Never logged.
@@ -176,9 +174,11 @@ func toProviderInvoice(payload map[string]any, settings connectionSettings) (inv
 		taxes = append(taxes, *b)
 	}
 
+	// Prefer explicit provider/canonical ids; fall back to invoice_number so the business
+	// key survives into meInvoice RefID (idempotent retries reuse the same RefID).
 	refID := stringField(payload, "id", "ref_id", "refId")
 	if refID == "" {
-		refID = uuid.NewString()
+		refID = invoiceNumber
 	}
 
 	series := settings.InvSeries

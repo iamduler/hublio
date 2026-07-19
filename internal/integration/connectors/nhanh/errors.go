@@ -1,17 +1,18 @@
 package nhanh
 
 import (
-	"errors"
 	"fmt"
+
+	"hublio/internal/integration/domain"
 )
 
 var (
-	ErrMissingCredentials = errors.New("nhanh: missing credentials (access_token) or config (app_id, business_id)")
-	ErrAuthFailed         = errors.New("nhanh: authentication failed")
-	ErrUnsupportedCap     = errors.New("nhanh: unsupported capability")
-	ErrProviderRejected   = errors.New("nhanh: provider rejected request")
-	ErrInvalidPayload     = errors.New("nhanh: invalid canonical payload")
-	ErrNotFound           = errors.New("nhanh: resource not found")
+	ErrMissingCredentials = domain.ErrRuntimeMissingCredentials
+	ErrAuthFailed         = domain.ErrRuntimeAuthFailed
+	ErrUnsupportedCap     = domain.ErrRuntimeUnsupportedCapability
+	ErrProviderRejected   = domain.ErrRuntimeProviderRejected
+	ErrInvalidPayload     = domain.ErrRuntimeInvalidPayload
+	ErrNotFound           = domain.ErrRuntimeNotFound
 )
 
 func providerError(code string) error {

@@ -48,8 +48,12 @@ func (c *Connector) Verify(ctx context.Context, in domain.VerifyInput) error {
 	}
 	settings := parseSettings(in.Config)
 	client := NewClient(settings.BaseURL, c.httpClient)
-	_, err = client.GetToken(ctx, cred.AppID, cred.TaxCode, cred.Username, cred.Password)
-	return err
+	token, err := client.GetToken(ctx, cred.AppID, cred.TaxCode, cred.Username, cred.Password)
+	if err != nil {
+		return err
+	}
+	// Authenticated templates call proves the token works beyond login (stronger than token-only).
+	return client.ListTemplates(ctx, token, cred.TaxCode)
 }
 
 func (c *Connector) Health(ctx context.Context, in domain.HealthInput) error {

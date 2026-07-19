@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"context"
+	"errors"
 
 	integrationdomain "hublio/internal/integration/domain"
 	orchestrationapp "hublio/internal/orchestration/application"
@@ -33,7 +34,27 @@ func (g *ConnectorGateway) Invoke(ctx context.Context, connectorCode string, in 
 		Payload:      in.Payload,
 	})
 	if err != nil {
-		return orchestrationapp.InvokeResponse{}, apperr.Wrap(err, "connector invoke failed", apperr.ErrCodeBadGateway)
+		return orchestrationapp.InvokeResponse{}, mapInvokeErr(err)
 	}
 	return orchestrationapp.InvokeResponse{Payload: out.Payload, Metadata: out.Metadata}, nil
+}
+
+// mapInvokeErr translates Domain Runtime sentinels (wrapped by vendor connectors) into
+// platform AppError codes so auth/payload failures are not all BadGateway.
+func mapInvokeErr(err error) error {
+	switch {
+	case errors.Is(err, integrationdomain.ErrRuntimeAuthFailed),
+		errors.Is(err, integrationdomain.ErrRuntimeMissingCredentials):
+		return apperr.Wrap(err, "connector authentication failed", apperr.ErrCodeUnauthorized)
+	case errors.Is(err, integrationdomain.ErrRuntimeInvalidPayload),
+		errors.Is(err, integrationdomain.ErrRuntimeMissingConfig),
+		errors.Is(err, integrationdomain.ErrRuntimeUnsupportedCapability):
+		return apperr.Wrap(err, "connector rejected request", apperr.ErrCodeBadRequest)
+	case errors.Is(err, integrationdomain.ErrRuntimeNotFound):
+		return apperr.Wrap(err, "connector resource not found", apperr.ErrCodeNotFound)
+	case errors.Is(err, integrationdomain.ErrRuntimeProviderRejected):
+		return apperr.Wrap(err, "connector provider rejected request", apperr.ErrCodeBadGateway)
+	default:
+		return apperr.Wrap(err, "connector invoke failed", apperr.ErrCodeBadGateway)
+	}
 }

@@ -456,7 +456,7 @@ Chỉ sau Fake path xanh.
 ## G2. End-to-end
 
 * [x] Connection verify với sandbox credentials (`httptest` + real testapi URL via `base_url`)
-* [x] Intent CreateInvoice → Succeeded / Failed có snapshot
+* [x] Intent CreateInvoice path (Succeeded / Failed + snapshot) — Fake e2e proven; MISA path unit-tested
 * [x] Retry path unchanged (Replay still deferred — unique `intent_id`)
 * [x] Secrets không lộ log/API
 
@@ -465,18 +465,21 @@ Chỉ sau Fake path xanh.
 > **Done (2026-07-19):** Built-in Runtimes `misa` (destination e-invoice) and `nhanh`
 > (origin + reverse status) under `internal/integration/connectors/{misa,nhanh}/`. Provider
 > DTOs stay inside those packages; Runtime only exchanges Canonical `map[string]any`.
-> MISA: `Verify` = `POST /auth/token`; `Invoke invoice.create` = token + `POST /invoice`
-> (SignType 2 HSM/server publish); config `tax_code`/`inv_series`/`base_url` (default
-> `https://testapi.meinvoice.vn/api/integration`); secret `app_id`/`username`/`password`.
-> Nhanh: `Verify` = authenticated `product/list`; capabilities `invoice.get` (bill/retail →
-> Canonical Invoice) and `invoice.update_status` (order/edit); config `app_id`/`business_id`/
-> `base_url`; secret `access_token`. Both seeded + Enabled on API boot via
-> `SeedBuiltInConnectors`; registry wired in `cmd/api` and `cmd/worker`. Unit tests use
-> `httptest` sandbox servers (auth failure, create invoice, get bill, no secret leakage).
-> Against real MISA testapi: create a Connection with sandbox credentials, Verify, then
-> `POST /api/v1/intents` with `capability: "invoice.create"` and a Canonical Invoice payload
-> (`invoice_number`, `issue_date`, `customer`, `items`). Retry remains the recovery path
-> (Replay still deferred — unique `intent_id`). Secrets never appear in Invoke Metadata.
+> MISA: `Verify` = `POST /auth/token` + authenticated `GET /invoice/templates`; `Invoke
+> invoice.create` = token + `POST /invoice` (SignType 2); config `tax_code`/`inv_series`/
+> `base_url`; secret `app_id`/`username`/`password`. Canonical `invoice_number` maps to
+> meInvoice `RefID` (explicit `ref_id`/`id` wins). Nhanh: `Verify` = `product/list`;
+> `invoice.get` / `invoice.update_status`. Seeded on API boot; registry in api + worker.
+>
+> **G-hardening (2026-07-19):** (1) `invoice_number` → `RefID`; (2) transform ValidateRequired
+> only for invoice create/publish capabilities — `invoice.get` / `invoice.update_status` are
+> identity on request; (3) Domain `ErrRuntime*` sentinels + `ConnectorGateway` /
+> `mapRuntimeErr` map Auth → Unauthorized, invalid payload → BadRequest, not-found → NotFound,
+> provider reject → BadGateway; (4) Verify failure reason stored without AppError boilerplate.
+> Unit tests: httptest Verify+Create, RefID mapping, transform scoping, gateway error codes.
+>
+> **Exit criteria status:** real MISA `testapi` Intent→worker→Succeeded still **manual /
+> pending credentials** (not recorded in CI). httptest covers the connector contract.
 
 **Smoke steps (MISA sandbox / httptest-equivalent):**
 

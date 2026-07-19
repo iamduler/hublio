@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	transformationapp "hublio/internal/transformation/application"
-	transformationdomain "hublio/internal/transformation/domain"
 )
 
 func TestTransformerAdapterEchoCapabilityPassesThroughUnchanged(t *testing.T) {
@@ -21,7 +20,7 @@ func TestTransformerAdapterEchoCapabilityPassesThroughUnchanged(t *testing.T) {
 	}
 }
 
-func TestTransformerAdapterInvoiceCapabilityNormalizes(t *testing.T) {
+func TestTransformerAdapterInvoiceCreateNormalizes(t *testing.T) {
 	adapter := NewTransformerAdapter(transformationapp.NewServices())
 
 	doc := map[string]any{
@@ -44,27 +43,49 @@ func TestTransformerAdapterInvoiceCapabilityNormalizes(t *testing.T) {
 	}
 }
 
-func TestSpecForCapability(t *testing.T) {
-	defaultSpec := transformationdomain.DefaultRequestPipelineSpec()
+func TestTransformerAdapterInvoiceGetDoesNotRequireInvoiceFields(t *testing.T) {
+	adapter := NewTransformerAdapter(transformationapp.NewServices())
+
+	doc := map[string]any{"id": 99}
+	got, err := adapter.TransformRequest(context.Background(), "invoice.get", doc)
+	if err != nil {
+		t.Fatalf("invoice.get should not ValidateRequired invoice fields: %v", err)
+	}
+	if got["id"] != 99 {
+		t.Fatalf("expected identity transform, got %v", got)
+	}
+}
+
+func TestTransformerAdapterInvoiceUpdateStatusPassesThrough(t *testing.T) {
+	adapter := NewTransformerAdapter(transformationapp.NewServices())
+
+	doc := map[string]any{"order_id": 55, "status": 2}
+	got, err := adapter.TransformRequest(context.Background(), "nhanh.invoice.update_status", doc)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got["order_id"] != 55 || got["status"] != 2 {
+		t.Fatalf("expected identity transform, got %v", got)
+	}
+}
+
+func TestIsInvoiceCreateCapability(t *testing.T) {
 	tests := []struct {
-		name       string
 		capability string
-		wantNil    bool
+		want       bool
 	}{
-		{name: "fake echo", capability: "fake.echo", wantNil: true},
-		{name: "invoice lowercase", capability: "misa.invoice.create", wantNil: false},
-		{name: "invoice mixed case", capability: "nhanh.CreateInvoice", wantNil: false},
-		{name: "empty", capability: "", wantNil: true},
+		{"fake.echo", false},
+		{"misa.invoice.create", true},
+		{"invoice.create", true},
+		{"nhanh.CreateInvoice", true},
+		{"invoice.publish", true},
+		{"invoice.get", false},
+		{"invoice.update_status", false},
+		{"", false},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			spec := specForCapability(tt.capability, defaultSpec)
-			if tt.wantNil && spec != nil {
-				t.Fatalf("expected nil spec, got %v", spec)
-			}
-			if !tt.wantNil && spec == nil {
-				t.Fatalf("expected non-nil spec")
-			}
-		})
+		if got := isInvoiceCreateCapability(tt.capability); got != tt.want {
+			t.Fatalf("%q: got %v want %v", tt.capability, got, tt.want)
+		}
 	}
 }

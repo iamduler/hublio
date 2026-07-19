@@ -1,20 +1,20 @@
 package misa
 
 import (
-	"errors"
 	"fmt"
+
+	"hublio/internal/integration/domain"
 )
 
-// Sentinel errors for the MISA Connector Runtime. Callers (Integration/Orchestration) map
-// these to platform AppErrors; provider ErrorCode strings never leave this package raw in
-// success paths — only translated messages.
+// Package-local aliases of Domain Runtime errors so connector code stays readable while
+// Orchestration/Integration can errors.Is against domain.ErrRuntime*.
 var (
-	ErrMissingCredentials = errors.New("misa: missing credentials (app_id, username, password, tax_code)")
-	ErrMissingConfig      = errors.New("misa: missing required config")
-	ErrAuthFailed         = errors.New("misa: authentication failed")
-	ErrUnsupportedCap     = errors.New("misa: unsupported capability")
-	ErrProviderRejected   = errors.New("misa: provider rejected request")
-	ErrInvalidPayload     = errors.New("misa: invalid canonical invoice payload")
+	ErrMissingCredentials = domain.ErrRuntimeMissingCredentials
+	ErrMissingConfig      = domain.ErrRuntimeMissingConfig
+	ErrAuthFailed         = domain.ErrRuntimeAuthFailed
+	ErrUnsupportedCap     = domain.ErrRuntimeUnsupportedCapability
+	ErrProviderRejected   = domain.ErrRuntimeProviderRejected
+	ErrInvalidPayload     = domain.ErrRuntimeInvalidPayload
 )
 
 func authError(providerCode string) error {

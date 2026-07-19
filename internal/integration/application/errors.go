@@ -31,6 +31,46 @@ func mapDomainErr(err error) error {
 	}
 }
 
+// mapRuntimeErr translates Connector Runtime sentinels (and wraps) for Verify/Health paths.
+// Provider ErrorCode strings may appear in the wrapped message; never include secrets.
+func mapRuntimeErr(err error) error {
+	if err == nil {
+		return nil
+	}
+	if ae, ok := err.(*apperr.AppError); ok {
+		return ae
+	}
+	switch {
+	case errors.Is(err, domain.ErrRuntimeAuthFailed),
+		errors.Is(err, domain.ErrRuntimeMissingCredentials):
+		return apperr.Wrap(err, "connector authentication failed", apperr.ErrCodeUnauthorized)
+	case errors.Is(err, domain.ErrRuntimeInvalidPayload),
+		errors.Is(err, domain.ErrRuntimeMissingConfig),
+		errors.Is(err, domain.ErrRuntimeUnsupportedCapability):
+		return apperr.Wrap(err, "connector rejected request", apperr.ErrCodeBadRequest)
+	case errors.Is(err, domain.ErrRuntimeNotFound):
+		return apperr.Wrap(err, "connector resource not found", apperr.ErrCodeNotFound)
+	case errors.Is(err, domain.ErrRuntimeProviderRejected):
+		return apperr.Wrap(err, "connector provider rejected request", apperr.ErrCodeBadGateway)
+	default:
+		return apperr.Wrap(err, "connector runtime error", apperr.ErrCodeBadGateway)
+	}
+}
+
+// verifyFailureReason stores a short, secret-free string on the Connection after a failed Verify.
+func verifyFailureReason(err error) string {
+	if err == nil {
+		return ""
+	}
+	if ae, ok := err.(*apperr.AppError); ok {
+		if ae.Err != nil {
+			return ae.Err.Error()
+		}
+		return ae.Message
+	}
+	return err.Error()
+}
+
 func mapRepoErr(err error) error {
 	if err == nil {
 		return nil

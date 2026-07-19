@@ -55,7 +55,8 @@ func (c *Client) GetToken(ctx context.Context, appID, taxCode, username, passwor
 	return token, nil
 }
 
-// ListTemplates is a lightweight authenticated call used by Health.
+// ListTemplates is an authenticated GET used after GetToken during Verify to confirm the
+// token is usable against meInvoice (HealthInput has no Secret, so live Health stays config-only).
 func (c *Client) ListTemplates(ctx context.Context, token, taxCode string) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+"/invoice/templates?invoiceWithCode=true&ticket=false", nil)
 	if err != nil {

@@ -151,7 +151,7 @@ func (s *Services) VerifyConnection(ctx context.Context, workspaceID, connection
 
 	now = s.clock().Now()
 	if verifyErr != nil {
-		if err := conn.MarkVerificationFailed(verifyErr.Error(), now); err != nil {
+		if err := conn.MarkVerificationFailed(verifyFailureReason(verifyErr), now); err != nil {
 			return nil, mapDomainErr(err)
 		}
 	} else {
@@ -181,11 +181,14 @@ func (s *Services) runVerify(ctx context.Context, conn *domain.Connection) error
 			return err
 		}
 	}
-	return runtime.Verify(ctx, domain.VerifyInput{
+	if err := runtime.Verify(ctx, domain.VerifyInput{
 		ConnectionID: conn.ID(),
 		Config:       conn.Config(),
 		Secret:       secretMap,
-	})
+	}); err != nil {
+		return mapRuntimeErr(err)
+	}
+	return nil
 }
 
 func (s *Services) DisableConnection(ctx context.Context, workspaceID, connectionID uuid.UUID) (*domain.Connection, error) {

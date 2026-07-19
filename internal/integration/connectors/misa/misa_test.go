@@ -29,6 +29,12 @@ func TestConnector_VerifyAndCreateInvoice_SandboxHTTP(t *testing.T) {
 		}
 		_ = json.NewEncoder(w).Encode(apiEnvelope{Success: true, Data: "sandbox-token"})
 	})
+	mux.HandleFunc("/invoice/templates", func(w http.ResponseWriter, r *http.Request) {
+		if got := r.Header.Get("Authorization"); got != "Bearer sandbox-token" {
+			t.Errorf("templates Authorization = %q", got)
+		}
+		_ = json.NewEncoder(w).Encode(apiEnvelope{Success: true, Data: []any{}})
+	})
 	mux.HandleFunc("/invoice", func(w http.ResponseWriter, r *http.Request) {
 		if got := r.Header.Get("Authorization"); got != "Bearer sandbox-token" {
 			t.Errorf("Authorization = %q", got)
@@ -124,6 +130,39 @@ func TestConnector_VerifyAndCreateInvoice_SandboxHTTP(t *testing.T) {
 	raw, _ := json.Marshal(out)
 	if strings.Contains(string(raw), "secret") || strings.Contains(string(raw), "password") {
 		t.Fatalf("response leaked secret material: %s", raw)
+	}
+}
+
+func TestToProviderInvoice_RefIDFromInvoiceNumber(t *testing.T) {
+	t.Parallel()
+	inv, err := toProviderInvoice(map[string]any{
+		"invoice_number": "INV-100",
+		"issue_date":     "2026-07-15",
+		"customer":       map[string]any{"name": "A"},
+		"items":          []any{map[string]any{"name": "Item", "quantity": 1, "unit_price": 10}},
+	}, connectionSettings{InvSeries: "1C25TYY"})
+	if err != nil {
+		t.Fatalf("toProviderInvoice: %v", err)
+	}
+	if inv.RefID != "INV-100" {
+		t.Fatalf("RefID = %q, want INV-100", inv.RefID)
+	}
+}
+
+func TestToProviderInvoice_ExplicitRefIDWins(t *testing.T) {
+	t.Parallel()
+	inv, err := toProviderInvoice(map[string]any{
+		"invoice_number": "INV-100",
+		"ref_id":         "explicit-ref",
+		"issue_date":     "2026-07-15",
+		"customer":       map[string]any{"name": "A"},
+		"items":          []any{map[string]any{"name": "Item", "quantity": 1, "unit_price": 10}},
+	}, connectionSettings{InvSeries: "1C25TYY"})
+	if err != nil {
+		t.Fatalf("toProviderInvoice: %v", err)
+	}
+	if inv.RefID != "explicit-ref" {
+		t.Fatalf("RefID = %q, want explicit-ref", inv.RefID)
 	}
 }
 

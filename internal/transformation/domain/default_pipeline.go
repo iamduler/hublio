@@ -1,11 +1,10 @@
 package domain
 
 // DefaultRequestPipelineSpec is the built-in Canonical → Canonical normalization applied to
-// invoice-like Intent payloads before they reach a Connector Runtime. Every Operation is a
-// no-op on fields that are absent, so callers that apply this spec unconditionally never break
-// payloads that simply do not carry these Canonical invoice fields — only the required-field
-// validation can fail a Document, and it is limited to the two fields every Canonical invoice
-// must carry.
+// invoice *create/publish* Intent payloads before they reach a Connector Runtime. Orchestration
+// selects this spec only for create-like capabilities (see TransformerAdapter); get/update_status
+// Intents use an identity transform so ValidateRequired does not reject non-document payloads.
+// Every Operation is a no-op on fields that are absent — only ValidateRequired can fail a Document.
 func DefaultRequestPipelineSpec() []OperationSpec {
 	return []OperationSpec{
 		{Type: OpTypeRenameField, Params: map[string]any{"from": "buyer_name", "to": "customer.name"}},
