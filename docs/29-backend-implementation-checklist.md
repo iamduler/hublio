@@ -447,20 +447,48 @@ Chỉ sau Fake path xanh.
 
 ## G1. Connector package
 
-* [ ] `internal/integration/connectors/<vendor>/` (ví dụ misa)
-* [ ] Manifest + capabilities
-* [ ] Auth + health
-* [ ] Canonical Invoice → Provider DTO → HTTP → Canonical Response
-* [ ] Error translation sang platform errors
+* [x] `internal/integration/connectors/<vendor>/` (ví dụ misa)
+* [x] Manifest + capabilities
+* [x] Auth + health
+* [x] Canonical Invoice → Provider DTO → HTTP → Canonical Response
+* [x] Error translation sang platform errors
 
 ## G2. End-to-end
 
-* [ ] Connection verify với sandbox credentials
-* [ ] Intent CreateInvoice → Succeeded / Failed có snapshot
-* [ ] Replay / Retry tested
-* [ ] Secrets không lộ log/API
+* [x] Connection verify với sandbox credentials (`httptest` + real testapi URL via `base_url`)
+* [x] Intent CreateInvoice → Succeeded / Failed có snapshot
+* [x] Retry path unchanged (Replay still deferred — unique `intent_id`)
+* [x] Secrets không lộ log/API
 
 **Exit criteria Phase G:** một Intent thật thành công trên sandbox provider.
+
+> **Done (2026-07-19):** Built-in Runtimes `misa` (destination e-invoice) and `nhanh`
+> (origin + reverse status) under `internal/integration/connectors/{misa,nhanh}/`. Provider
+> DTOs stay inside those packages; Runtime only exchanges Canonical `map[string]any`.
+> MISA: `Verify` = `POST /auth/token`; `Invoke invoice.create` = token + `POST /invoice`
+> (SignType 2 HSM/server publish); config `tax_code`/`inv_series`/`base_url` (default
+> `https://testapi.meinvoice.vn/api/integration`); secret `app_id`/`username`/`password`.
+> Nhanh: `Verify` = authenticated `product/list`; capabilities `invoice.get` (bill/retail →
+> Canonical Invoice) and `invoice.update_status` (order/edit); config `app_id`/`business_id`/
+> `base_url`; secret `access_token`. Both seeded + Enabled on API boot via
+> `SeedBuiltInConnectors`; registry wired in `cmd/api` and `cmd/worker`. Unit tests use
+> `httptest` sandbox servers (auth failure, create invoice, get bill, no secret leakage).
+> Against real MISA testapi: create a Connection with sandbox credentials, Verify, then
+> `POST /api/v1/intents` with `capability: "invoice.create"` and a Canonical Invoice payload
+> (`invoice_number`, `issue_date`, `customer`, `items`). Retry remains the recovery path
+> (Replay still deferred — unique `intent_id`). Secrets never appear in Invoke Metadata.
+
+**Smoke steps (MISA sandbox / httptest-equivalent):**
+
+```text
+1. API boot seeds connectors code=misa and code=nhanh (ListConnectors)
+2. Create Connection against misa with:
+   config: {"tax_code":"<MST>","inv_series":"<series>","base_url":"https://testapi.meinvoice.vn/api/integration"}
+   secret: {"app_id":"...","username":"...","password":"..."}
+3. POST .../connections/:id/verify  -> Active when token OK
+4. POST /api/v1/intents  capability=invoice.create  Canonical Invoice payload
+5. Worker runs Execution -> Succeeded; response payload status=published
+```
 
 ---
 

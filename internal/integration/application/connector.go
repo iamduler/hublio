@@ -110,15 +110,7 @@ func (s *Services) ListConnectors(ctx context.Context) ([]*domain.Connector, err
 // SeedFakeConnector registers the built-in "fake" Connector (idempotent) used by
 // Orchestration tests before any real provider Connector exists.
 func (s *Services) SeedFakeConnector(ctx context.Context) (*domain.Connector, error) {
-	existing, err := s.Connectors.FindByCode(ctx, "fake")
-	if err == nil {
-		return existing, nil
-	}
-	if err != domain.ErrNotFound {
-		return nil, mapRepoErr(err)
-	}
-
-	connector, err := s.RegisterConnector(ctx, RegisterConnectorInput{
+	return s.seedConnector(ctx, RegisterConnectorInput{
 		Code:        "fake",
 		Name:        "Fake Connector",
 		Vendor:      "hublio",
@@ -129,6 +121,67 @@ func (s *Services) SeedFakeConnector(ctx context.Context) (*domain.Connector, er
 			{Code: "echo", DisplayName: "Echo", IsAsync: false},
 		},
 	})
+}
+
+// SeedMISAConnector registers the MISA meInvoice destination Connector (idempotent).
+func (s *Services) SeedMISAConnector(ctx context.Context) (*domain.Connector, error) {
+	return s.seedConnector(ctx, RegisterConnectorInput{
+		Code:             "misa",
+		Name:             "MISA meInvoice",
+		Vendor:           "MISA",
+		Category:         domain.ConnectorCategoryDestination,
+		Version:          "1.0.0",
+		Description:      "Electronic invoice destination via MISA meInvoice Open API.",
+		Homepage:         "https://www.misa.vn/",
+		DocumentationURL: "https://www.misa.vn/154989/tai-lieu-open-api-tich-hop-hoa-don-dien-tu-misa-meinvoice-dau-ra/",
+		Capabilities: []RegisterCapabilityInput{
+			{Code: "invoice.create", DisplayName: "Create / publish e-invoice", IsAsync: false},
+		},
+	})
+}
+
+// SeedNhanhConnector registers the Nhanh.vn origin Connector (idempotent).
+func (s *Services) SeedNhanhConnector(ctx context.Context) (*domain.Connector, error) {
+	return s.seedConnector(ctx, RegisterConnectorInput{
+		Code:             "nhanh",
+		Name:             "Nhanh.vn",
+		Vendor:           "Nhanh.vn",
+		Category:         domain.ConnectorCategorySource,
+		Version:          "1.0.0",
+		Description:      "Nhanh.vn POS origin (retail bills) and reverse status update.",
+		Homepage:         "https://nhanh.vn/",
+		DocumentationURL: "https://apidocs.nhanh.vn/",
+		Capabilities: []RegisterCapabilityInput{
+			{Code: "invoice.get", DisplayName: "Get retail bill as Canonical Invoice", IsAsync: false},
+			{Code: "invoice.update_status", DisplayName: "Update order status (reverse)", IsAsync: false},
+		},
+	})
+}
+
+// SeedBuiltInConnectors registers Fake + MISA + Nhanh (idempotent). Used on API boot.
+func (s *Services) SeedBuiltInConnectors(ctx context.Context) error {
+	if _, err := s.SeedFakeConnector(ctx); err != nil {
+		return err
+	}
+	if _, err := s.SeedMISAConnector(ctx); err != nil {
+		return err
+	}
+	if _, err := s.SeedNhanhConnector(ctx); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Services) seedConnector(ctx context.Context, in RegisterConnectorInput) (*domain.Connector, error) {
+	existing, err := s.Connectors.FindByCode(ctx, in.Code)
+	if err == nil {
+		return existing, nil
+	}
+	if err != domain.ErrNotFound {
+		return nil, mapRepoErr(err)
+	}
+
+	connector, err := s.RegisterConnector(ctx, in)
 	if err != nil {
 		return nil, err
 	}

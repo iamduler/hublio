@@ -19,6 +19,8 @@ import (
 	integrationapp "hublio/internal/integration/application"
 	"hublio/internal/integration/connectors"
 	"hublio/internal/integration/connectors/fake"
+	"hublio/internal/integration/connectors/misa"
+	"hublio/internal/integration/connectors/nhanh"
 	integrationinfra "hublio/internal/integration/infrastructure"
 	integrationhttp "hublio/internal/integration/interfaces"
 	orchestrationapp "hublio/internal/orchestration/application"
@@ -170,7 +172,7 @@ func newIntegrationServices(pool *pgxpool.Pool) (*integrationapp.Services, error
 		return nil, err
 	}
 
-	runtimeRegistry := connectors.NewRegistry(fake.New())
+	runtimeRegistry := connectors.NewRegistry(fake.New(), misa.New(), nhanh.New())
 
 	return &integrationapp.Services{
 		Connectors:  integrationinfra.NewConnectorRepository(pool),
@@ -264,19 +266,18 @@ func wireEventsBridges(
 	orchestrationSvc.Audit = eventsinfra.NewOrchestrationAuditBridge(eventsSvc)
 }
 
-// seedIntegrationConnectors registers the built-in "fake" Connector on startup so Orchestration
-// can rely on it being available. Failures are logged but never block application startup
-// (e.g. first boot before migrations have run).
+// seedIntegrationConnectors registers built-in Connectors (fake, misa, nhanh) on startup so
+// Orchestration can resolve runtimes by catalog code. Failures are logged but never block
+// application startup (e.g. first boot before migrations have run).
 func seedIntegrationConnectors(pool *pgxpool.Pool, svc *integrationapp.Services) {
 	if svc == nil {
 		return
 	}
 	ctx := context.Background()
 	if err := persistence.WithinTransaction(ctx, pool, func(ctx context.Context) error {
-		_, err := svc.SeedFakeConnector(ctx)
-		return err
+		return svc.SeedBuiltInConnectors(ctx)
 	}); err != nil && logging.Log != nil {
-		logging.Log.Warn().Err(err).Msg("failed to seed fake connector (will retry lazily on demand)")
+		logging.Log.Warn().Err(err).Msg("failed to seed built-in connectors (will retry lazily on demand)")
 	}
 }
 

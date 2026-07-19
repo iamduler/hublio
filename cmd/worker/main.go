@@ -14,6 +14,8 @@ import (
 	identityinfra "hublio/internal/identity/infrastructure"
 	"hublio/internal/integration/connectors"
 	"hublio/internal/integration/connectors/fake"
+	"hublio/internal/integration/connectors/misa"
+	"hublio/internal/integration/connectors/nhanh"
 	integrationinfra "hublio/internal/integration/infrastructure"
 	orchestrationapp "hublio/internal/orchestration/application"
 	orchestrationdomain "hublio/internal/orchestration/domain"
@@ -133,7 +135,7 @@ func newOrchestrationServices(pool *pgxpool.Pool, workQueue queue.Queue) (*orche
 		return nil, err
 	}
 
-	runtimeRegistry := connectors.NewRegistry(fake.New())
+	runtimeRegistry := connectors.NewRegistry(fake.New(), misa.New(), nhanh.New())
 
 	connectionGateway := orchestrationinfra.NewConnectionGateway(
 		integrationinfra.NewConnectionRepository(pool),

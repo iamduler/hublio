@@ -900,7 +900,8 @@ components:
       properties:
         code:
           type: string
-          example: fake
+          example: misa
+          description: Built-in codes include fake, misa, nhanh (seeded on API boot).
         name:
           type: string
         vendor:
@@ -925,6 +926,7 @@ components:
             properties:
               code:
                 type: string
+                example: invoice.create
               display_name:
                 type: string
               is_async:
@@ -947,10 +949,18 @@ components:
           type: string
         environment:
           type: string
-          example: production
+          example: sandbox
         config:
           type: object
-          description: Canonical-ish, provider-agnostic Connection config (JSONB)
+          description: |
+            Provider-agnostic Connection config (JSONB). Examples:
+            MISA — tax_code, inv_series, optional base_url (default testapi.meinvoice.vn/api/integration),
+            optional sign_type (default 2);
+            Nhanh — app_id, business_id, optional base_url (default pos.open.nhanh.vn/v3.0).
+          example:
+            tax_code: "0101243150"
+            inv_series: "1C25TYY"
+            base_url: "https://testapi.meinvoice.vn/api/integration"
         retry_policy:
           type: object
         timeout_seconds:
@@ -961,7 +971,14 @@ components:
           enum: [api_key, oauth2, bearer_token, basic_auth, jwt]
         secret:
           type: object
-          description: Plaintext credential fields; encrypted at rest, never echoed back
+          description: |
+            Plaintext credential fields; encrypted at rest, never echoed back.
+            MISA — app_id, username, password (tax_code may live here or in config);
+            Nhanh — access_token.
+          example:
+            app_id: "your-misa-app-id"
+            username: "user@example.com"
+            password: "********"
         credential_expires_at:
           type: string
           format: date-time
@@ -976,9 +993,29 @@ components:
         capability:
           type: string
           example: invoice.create
+          description: |
+            Must match a capability on the Connection's Connector.
+            MISA — invoice.create; Nhanh — invoice.get, invoice.update_status; Fake — echo.
         payload:
           type: object
-          description: Canonical-ish, provider-agnostic business payload (JSONB)
+          description: |
+            Canonical-ish business payload (JSONB). For MISA invoice.create include at least
+            invoice_number, issue_date, customer.name, and items[].
+          example:
+            invoice_number: "INV-100"
+            issue_date: "2026-07-15T10:00:00Z"
+            currency: VND
+            customer:
+              name: "Cong ty ABC"
+              tax_code: "0300000000"
+            items:
+              - code: SKU-1
+                name: "San pham 1"
+                quantity: 2
+                unit_price: 100000
+                vat_rate: "10%"
+            subtotal: 200000
+            total: 220000
         correlation_id:
           type: string
           description: Defaults to the request's correlation id when omitted
