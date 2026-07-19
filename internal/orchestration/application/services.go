@@ -138,10 +138,16 @@ func (NoopAuditor) Record(ctx context.Context, rec AuditEvent) error {
 	return nil
 }
 
-// SyncRouteGateway resolves an Enabled SyncRoute for inbound webhook ingress without leaking
+// SyncRouteGateway resolves an Enabled SyncRoute for webhook/poll ingress without leaking
 // Integration types into Orchestration Domain. Implemented in orchestration/infrastructure.
 type SyncRouteGateway interface {
 	ResolveWebhook(ctx context.Context, in ResolveWebhookInput) (ResolvedWebhookRoute, error)
+	ResolvePoll(ctx context.Context, in ResolvePollInput) (ResolvedPollRoute, error)
+	LoadWatermark(ctx context.Context, syncRouteID uuid.UUID, resourceType string) (WatermarkSnapshot, error)
+	AdvanceWatermark(ctx context.Context, syncRouteID uuid.UUID, resourceType string, cursor map[string]any) error
+	ListDuePollTargets(ctx context.Context, now time.Time) ([]DuePollTarget, error)
+	// MatchRouteFilter evaluates SyncRoute JSON filter against a Canonical-ish payload.
+	MatchRouteFilter(filter map[string]any, payload map[string]any) (bool, error)
 }
 
 type ResolveWebhookInput struct {
@@ -162,6 +168,40 @@ type ResolvedWebhookRoute struct {
 	FanOutReverse      *FanOutReverse
 	IdempotencyRule    map[string]any
 	SourceConnectionID uuid.UUID
+}
+
+type ResolvePollInput struct {
+	SyncRouteID  uuid.UUID
+	ResourceType string
+}
+
+// ResolvedPollRoute carries tenant + fan-out + list capability for AcceptPoll.
+type ResolvedPollRoute struct {
+	SyncRouteID        uuid.UUID
+	OrganizationID     uuid.UUID
+	WorkspaceID        uuid.UUID
+	Capability         string
+	ListCapability     string
+	FanOutGroups       []FanOutGroup
+	FanOutReverse      *FanOutReverse
+	IdempotencyRule    map[string]any
+	Filter             map[string]any
+	SourceConnectionID uuid.UUID
+	IntervalSeconds    int
+}
+
+// WatermarkSnapshot is the Postgres poll cursor for one SyncRoute + resource_type.
+type WatermarkSnapshot struct {
+	Cursor    map[string]any
+	UpdatedAt time.Time
+	Found     bool
+}
+
+// DuePollTarget is one SyncRoute resource_type that should be polled now.
+type DuePollTarget struct {
+	SyncRouteID  uuid.UUID
+	WorkspaceID  uuid.UUID
+	ResourceType string
 }
 
 // Services wires the Orchestration use cases. MaxRetries defaults to 3 when <= 0.

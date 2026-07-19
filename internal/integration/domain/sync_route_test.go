@@ -112,6 +112,46 @@ func TestSyncRoute_InvalidActivities(t *testing.T) {
 	}
 }
 
+func TestSyncRoute_CanAcceptPoll(t *testing.T) {
+	t.Parallel()
+	route := mustNewRoute(t, SyncRouteTriggerSchedule, map[string]any{"interval_seconds": 60})
+	if err := route.CanAcceptPoll(); err != ErrSyncRouteNotEnabled {
+		t.Fatalf("before enable: %v", err)
+	}
+	if err := route.Enable(time.Now()); err != nil {
+		t.Fatalf("Enable: %v", err)
+	}
+	if err := route.CanAcceptPoll(); err != nil {
+		t.Fatalf("CanAcceptPoll: %v", err)
+	}
+	if !route.PollIsDue(time.Time{}, time.Now()) {
+		t.Fatal("expected due with zero last polled")
+	}
+	if route.PollIsDue(time.Now(), time.Now()) {
+		t.Fatal("expected not due immediately after poll")
+	}
+}
+
+func TestScheduleIntervalSeconds(t *testing.T) {
+	t.Parallel()
+	if _, err := ScheduleIntervalSeconds(nil); err != ErrInvalidSchedule {
+		t.Fatalf("nil: %v", err)
+	}
+	if _, err := ScheduleIntervalSeconds(map[string]any{"cron": "* * * * *"}); err != ErrInvalidSchedule {
+		t.Fatalf("cron only: %v", err)
+	}
+	d, err := ScheduleIntervalSeconds(map[string]any{"interval_seconds": float64(300)})
+	if err != nil || d != 300*time.Second {
+		t.Fatalf("got %v %v", d, err)
+	}
+	if got := ScheduleListCapability(nil, "invoice"); got != "invoice.list" {
+		t.Fatalf("default capability = %q", got)
+	}
+	if got := ScheduleListCapability(map[string]any{"list_capability": "bill.list"}, "invoice"); got != "bill.list" {
+		t.Fatalf("override = %q", got)
+	}
+}
+
 func mustNewRoute(t *testing.T, trigger SyncRouteTrigger, schedule map[string]any) *SyncRoute {
 	t.Helper()
 	route, err := NewSyncRoute(NewSyncRouteParams{

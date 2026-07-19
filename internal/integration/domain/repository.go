@@ -34,6 +34,8 @@ type SyncRouteRepository interface {
 	Update(ctx context.Context, route *SyncRoute) error
 	FindByID(ctx context.Context, id uuid.UUID) (*SyncRoute, error)
 	ListByWorkspace(ctx context.Context, workspaceID uuid.UUID) ([]*SyncRoute, error)
+	// ListEnabledSchedulable returns Enabled routes with trigger schedule|both (poll candidates).
+	ListEnabledSchedulable(ctx context.Context) ([]*SyncRoute, error)
 }
 
 type SyncRouteWatermarkRepository interface {

@@ -142,3 +142,11 @@ func EnqueueExecution(ctx context.Context, q Queue, payload map[string]any) erro
 		Payload: payload,
 	})
 }
+
+// EnqueuePollSyncRoute enqueues an integration.poll_sync_route job for the worker.
+func EnqueuePollSyncRoute(ctx context.Context, q Queue, payload map[string]any) error {
+	return q.Enqueue(ctx, Job{
+		Type:    TypePollSyncRoute,
+		Payload: payload,
+	})
+}

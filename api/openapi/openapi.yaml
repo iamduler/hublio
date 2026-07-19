@@ -769,6 +769,45 @@ paths:
         "409":
           $ref: "#/components/responses/Error"
 
+  /api/v1/sync-routes/{syncRouteId}/poll:
+    post:
+      tags: [Orchestration]
+      summary: Run SyncRoute poll tick (watermark + list + Intent fan-out)
+      description: |
+        API Key ops/smoke endpoint. Pulls from the SyncRoute source Connection via list
+        capability (default `invoice.list`) using the Postgres watermark cursor, filters
+        each record, submits Intents with fan-out, then advances the watermark after a
+        successful pull cycle (docs/30 §7.2). The worker also ticks Enabled schedule|both
+        routes on `POLL_TICK_INTERVAL_SECONDS` (default 30s) via `integration.poll_sync_route`
+        jobs. Destination Execution failures do not roll back the watermark.
+      operationId: triggerSyncRoutePoll
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - $ref: "#/components/parameters/syncRouteId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [resource_type]
+              properties:
+                resource_type:
+                  type: string
+                  example: invoice
+      responses:
+        "200":
+          description: Poll completed (may accept zero records)
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+
   /api/v1/intents:
     post:
       tags: [Orchestration]
@@ -1285,9 +1324,12 @@ components:
           example: [invoice]
         schedule:
           type: object
-          description: Required when trigger_type is schedule|both (e.g. interval_seconds)
+          description: |
+            Required when trigger_type is schedule|both. MVP key: interval_seconds (1..86400).
+            Optional list_capability overrides the source pull capability (default invoice.list).
           example:
             interval_seconds: 300
+            list_capability: invoice.list
         filter:
           type: object
           description: JSON condition tree (AND/OR); not a Rule Engine

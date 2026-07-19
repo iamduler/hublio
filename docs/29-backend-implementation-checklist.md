@@ -261,6 +261,13 @@ Thứ tự Aggregate: **Organization → Workspace → User/Membership → API K
 > source. Destination Connection/Capability live on Execution.context; RunExecution continues
 > the next wave after success (sibling barrier for parallel). Worker enqueues FollowUpJobs
 > after commit. Steps inside one Execution remain sequential.
+>
+> **Poll watermark scheduler (2026-07-19):** SyncRoute `schedule.interval_seconds` (1..86400)
+> + optional `list_capability`. Worker ticker (`POLL_TICK_INTERVAL_SECONDS`, default 30s)
+> lists Enabled `schedule|both` routes due vs watermark `updated_at`, enqueues
+> `integration.poll_sync_route`. `AcceptPoll` invokes source `invoice.list` (Fake/Nhanh)
+> with Postgres cursor, filters, SubmitIntent fan-out, advances watermark after successful
+> pull (not after destination Succeeded). Ops: `POST /api/v1/sync-routes/:id/poll`.
 
 ---
 

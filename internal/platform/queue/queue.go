@@ -23,6 +23,8 @@ const (
 	TypeHealth = "platform.health"
 	// TypeExecution schedules Orchestration's RunExecution use case for one Execution.
 	TypeExecution = "orchestration.execution"
+	// TypePollSyncRoute schedules Orchestration's AcceptPoll for one SyncRoute + resource_type.
+	TypePollSyncRoute = "integration.poll_sync_route"
 )
 
 // Handler processes a single job. Return nil to ack/remove; non-nil may requeue depending on impl.

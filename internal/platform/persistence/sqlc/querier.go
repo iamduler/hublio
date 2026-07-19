@@ -53,6 +53,7 @@ type Querier interface {
 	ListConnectionsByWorkspace(ctx context.Context, workspaceID uuid.UUID) ([]Connection, error)
 	ListConnectors(ctx context.Context) ([]Connector, error)
 	ListCredentialsByConnection(ctx context.Context, connectionID uuid.UUID) ([]Credential, error)
+	ListEnabledSchedulableSyncRoutes(ctx context.Context) ([]SyncRoute, error)
 	ListEventsByWorkspace(ctx context.Context, arg ListEventsByWorkspaceParams) ([]Event, error)
 	ListEventsByWorkspaceAndExecution(ctx context.Context, arg ListEventsByWorkspaceAndExecutionParams) ([]Event, error)
 	ListExecutionSnapshotsByExecution(ctx context.Context, executionID uuid.UUID) ([]ExecutionSnapshot, error)

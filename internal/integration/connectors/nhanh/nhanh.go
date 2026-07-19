@@ -16,6 +16,7 @@ const Code = "nhanh"
 
 const (
 	CapabilityInvoiceGet          = "invoice.get"
+	CapabilityInvoiceList         = "invoice.list"
 	CapabilityInvoiceUpdateStatus = "invoice.update_status"
 )
 
@@ -61,6 +62,8 @@ func (c *Connector) Invoke(ctx context.Context, in domain.InvokeInput) (domain.I
 	switch {
 	case cap == CapabilityInvoiceGet || cap == Code+"."+CapabilityInvoiceGet:
 		return c.getInvoice(ctx, in)
+	case cap == CapabilityInvoiceList || cap == Code+"."+CapabilityInvoiceList:
+		return c.listInvoices(ctx, in)
 	case cap == CapabilityInvoiceUpdateStatus || cap == Code+"."+CapabilityInvoiceUpdateStatus:
 		return c.updateStatus(ctx, in)
 	default:
@@ -84,6 +87,55 @@ func (c *Connector) getInvoice(ctx context.Context, in domain.InvokeInput) (doma
 	return domain.InvokeOutput{
 		Payload:  billToCanonical(bill),
 		Metadata: map[string]any{"connector": Code, "capability": CapabilityInvoiceGet},
+	}, nil
+}
+
+func (c *Connector) listInvoices(ctx context.Context, in domain.InvokeInput) (domain.InvokeOutput, error) {
+	a, baseURL, err := parseAuth(in.Config, in.Secret)
+	if err != nil {
+		return domain.InvokeOutput{}, err
+	}
+	cursor, _ := in.Payload["cursor"].(map[string]any)
+	if cursor == nil {
+		cursor = map[string]any{}
+	}
+	pageSize := int(int64Field(in.Payload, "page_size", "limit"))
+	if pageSize <= 0 {
+		pageSize = 50
+	}
+	if pageSize > 100 {
+		pageSize = 100
+	}
+	fromDate := stringField(cursor, "last_updated_at", "from_date", "updated_from")
+	bills, err := NewClient(baseURL, c.httpClient).ListRetailBills(ctx, a, listBillsFilter{
+		FromDate: fromDate,
+		PageSize: pageSize,
+	})
+	if err != nil {
+		return domain.InvokeOutput{}, err
+	}
+	records := make([]any, 0, len(bills))
+	next := map[string]any{}
+	for k, v := range cursor {
+		next[k] = v
+	}
+	for i := range bills {
+		rec := billToCanonical(&bills[i])
+		records = append(records, rec)
+		if bills[i].Date != "" {
+			next["last_updated_at"] = bills[i].Date
+		}
+		next["last_record_id"] = fmt.Sprint(bills[i].ID)
+	}
+	if len(bills) == 0 {
+		next["exhausted"] = true
+	}
+	return domain.InvokeOutput{
+		Payload: map[string]any{
+			"records":     records,
+			"next_cursor": next,
+		},
+		Metadata: map[string]any{"connector": Code, "capability": CapabilityInvoiceList},
 	}, nil
 }
 

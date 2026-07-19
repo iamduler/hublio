@@ -119,6 +119,7 @@ func (s *Services) SeedFakeConnector(ctx context.Context) (*domain.Connector, er
 		Description: "Noop connector for local development and Orchestration tests.",
 		Capabilities: []RegisterCapabilityInput{
 			{Code: "echo", DisplayName: "Echo", IsAsync: false},
+			{Code: "invoice.list", DisplayName: "List invoices since cursor (poll)", IsAsync: false},
 		},
 	})
 }
@@ -153,6 +154,7 @@ func (s *Services) SeedNhanhConnector(ctx context.Context) (*domain.Connector, e
 		DocumentationURL: "https://apidocs.nhanh.vn/",
 		Capabilities: []RegisterCapabilityInput{
 			{Code: "invoice.get", DisplayName: "Get retail bill as Canonical Invoice", IsAsync: false},
+			{Code: "invoice.list", DisplayName: "List retail bills since watermark cursor", IsAsync: false},
 			{Code: "invoice.update_status", DisplayName: "Update order status (reverse)", IsAsync: false},
 		},
 	})

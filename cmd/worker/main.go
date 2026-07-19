@@ -33,6 +33,8 @@ import (
 	"github.com/joho/godotenv"
 )
 
+const defaultPollTickInterval = 30 * time.Second
+
 func main() {
 	rootDir := env.MustGetWorkingDir()
 	logFilePath := filepath.Join(rootDir, "logs", "worker.log")
@@ -90,6 +92,8 @@ func main() {
 			return nil
 		case queue.TypeExecution:
 			return handleExecutionJob(ctx, db.Pool, orchestrationSvc, job)
+		case queue.TypePollSyncRoute:
+			return handlePollJob(ctx, db.Pool, orchestrationSvc, job)
 		default:
 			logging.Log.Warn().
 				Str("job_id", job.ID).
@@ -103,6 +107,8 @@ func main() {
 	go func() {
 		errCh <- workQueue.Consume(ctx, handler)
 	}()
+
+	go runPollScheduler(ctx, workQueue, orchestrationSvc)
 
 	select {
 	case <-ctx.Done():
@@ -122,9 +128,53 @@ func main() {
 	logging.Log.Info().Msg("worker shutdown successfully")
 }
 
-// newOrchestrationServices is the worker's own composition root for the Orchestration
-// Application layer (mirrors internal/platform/server's wiring; the worker binary has no
-// HTTP surface so it does not depend on the server package).
+func runPollScheduler(ctx context.Context, workQueue queue.Queue, svc *orchestrationapp.Services) {
+	interval := defaultPollTickInterval
+	if raw := env.GetEnv("POLL_TICK_INTERVAL_SECONDS", ""); raw != "" {
+		if n, err := time.ParseDuration(raw + "s"); err == nil && n >= time.Second {
+			interval = n
+		}
+	}
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	tick := func() {
+		jobs, err := svc.EnqueueDuePolls(ctx)
+		if err != nil {
+			logging.Log.Warn().Err(err).Msg("poll scheduler: list due failed")
+			return
+		}
+		for _, job := range jobs {
+			payload := map[string]any{
+				"sync_route_id": job.SyncRouteID.String(),
+				"workspace_id":  job.WorkspaceID.String(),
+				"resource_type": job.ResourceType,
+			}
+			if err := queue.EnqueuePollSyncRoute(ctx, workQueue, payload); err != nil {
+				logging.Log.Warn().Err(err).
+					Str("sync_route_id", job.SyncRouteID.String()).
+					Str("resource_type", job.ResourceType).
+					Msg("poll scheduler: enqueue failed")
+				continue
+			}
+			logging.Log.Info().
+				Str("sync_route_id", job.SyncRouteID.String()).
+				Str("resource_type", job.ResourceType).
+				Msg("poll scheduler: enqueued poll job")
+		}
+	}
+
+	tick()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			tick()
+		}
+	}
+}
+
 func newOrchestrationServices(pool *pgxpool.Pool, workQueue queue.Queue) (*orchestrationapp.Services, error) {
 	key := env.GetEnv("CREDENTIAL_ENCRYPTION_KEY", "")
 	if key == "" {
@@ -147,6 +197,12 @@ func newOrchestrationServices(pool *pgxpool.Pool, workQueue queue.Queue) (*orche
 	)
 	connectorGateway := orchestrationinfra.NewConnectorGateway(runtimeRegistry)
 	transformer := orchestrationinfra.NewTransformerAdapter(transformationapp.NewServices())
+	syncRouteGateway := orchestrationinfra.NewSyncRouteGateway(
+		integrationinfra.NewSyncRouteRepository(pool),
+		integrationinfra.NewSyncRouteWatermarkRepository(pool),
+		identityinfra.NewWorkspaceRepository(pool),
+		encryptor,
+	)
 
 	return &orchestrationapp.Services{
 		Intents:     orchestrationinfra.NewIntentRepository(pool),
@@ -154,14 +210,12 @@ func newOrchestrationServices(pool *pgxpool.Pool, workQueue queue.Queue) (*orche
 		Idempotency: orchestrationinfra.NewIdempotencyRepository(pool),
 		Connections: connectionGateway,
 		Connectors:  connectorGateway,
+		SyncRoutes:  syncRouteGateway,
 		Transformer: transformer,
 		Jobs:        orchestrationinfra.NewQueueJobEnqueuer(workQueue),
 	}, nil
 }
 
-// newEventsServices mirrors internal/platform/server's Events BC wiring (see that package's
-// doc comment): the worker binary has no HTTP surface, so it composes its own Events
-// Services rather than depending on internal/platform/server.
 func newEventsServices(pool *pgxpool.Pool, counters *metrics.Counters) *eventsapp.Services {
 	eventRepo := eventsinfra.NewEventRepository(pool)
 	svc := &eventsapp.Services{
@@ -187,9 +241,6 @@ func newEventsServices(pool *pgxpool.Pool, counters *metrics.Counters) *eventsap
 	return svc
 }
 
-// handleExecutionJob runs RunExecution inside a single transaction (the use case's
-// transaction boundary) and publishes domain events only after a successful commit.
-// Requeue jobs are enqueued only after commit to avoid racing uncommitted rows.
 func handleExecutionJob(ctx context.Context, pool *pgxpool.Pool, svc *orchestrationapp.Services, job queue.Job) error {
 	raw, _ := job.Payload["execution_id"].(string)
 	executionID, err := uuid.Parse(raw)
@@ -216,14 +267,74 @@ func handleExecutionJob(ctx context.Context, pool *pgxpool.Pool, svc *orchestrat
 			return fmt.Errorf("worker: failed to re-enqueue execution after commit: %w", err)
 		}
 	}
-	for _, job := range result.FollowUpJobs {
-		if job == nil || svc.Jobs == nil {
+	for _, follow := range result.FollowUpJobs {
+		if follow == nil || svc.Jobs == nil {
 			continue
 		}
-		if err := svc.Jobs.EnqueueExecution(ctx, *job); err != nil {
+		if err := svc.Jobs.EnqueueExecution(ctx, *follow); err != nil {
 			return fmt.Errorf("worker: failed to enqueue fan-out follow-up after commit: %w", err)
 		}
 	}
+	return nil
+}
+
+func handlePollJob(ctx context.Context, pool *pgxpool.Pool, svc *orchestrationapp.Services, job queue.Job) error {
+	syncRouteID, err := uuid.Parse(stringField(job.Payload, "sync_route_id"))
+	if err != nil {
+		return fmt.Errorf("worker: invalid sync_route_id in poll job: %w", err)
+	}
+	resourceType := stringField(job.Payload, "resource_type")
+	if resourceType == "" {
+		return fmt.Errorf("worker: resource_type required in poll job")
+	}
+
+	var result *orchestrationapp.AcceptPollResult
+	err = persistence.WithinTransaction(ctx, pool, func(ctx context.Context) error {
+		var innerErr error
+		result, innerErr = svc.AcceptPoll(ctx, orchestrationapp.AcceptPollInput{
+			SyncRouteID:  syncRouteID,
+			ResourceType: resourceType,
+		})
+		return innerErr
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, intentResult := range result.Results {
+		if intentResult == nil || intentResult.Intent == nil {
+			continue
+		}
+		events := intentResult.Intent.PullEvents()
+		for _, exec := range intentResult.Executions {
+			events = append(events, exec.PullEvents()...)
+		}
+		events = orchestrationapp.EnrichEvents(
+			events,
+			intentResult.Intent.OrganizationID(),
+			intentResult.Intent.WorkspaceID(),
+			intentResult.Intent.CorrelationID(),
+		)
+		svc.PublishAfterCommit(ctx, events...)
+	}
+
+	for _, execJob := range result.Jobs {
+		if execJob == nil || svc.Jobs == nil {
+			continue
+		}
+		if err := svc.Jobs.EnqueueExecution(ctx, *execJob); err != nil {
+			return fmt.Errorf("worker: failed to enqueue execution after poll commit: %w", err)
+		}
+	}
+
+	logging.Log.Info().
+		Str("sync_route_id", result.SyncRouteID.String()).
+		Str("resource_type", result.ResourceType).
+		Int("accepted", result.Accepted).
+		Int("replayed", result.Replayed).
+		Int("skipped_filter", result.SkippedFilter).
+		Bool("watermark_advanced", result.WatermarkAdvanced).
+		Msg("poll job processed")
 	return nil
 }
 

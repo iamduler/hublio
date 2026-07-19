@@ -73,6 +73,34 @@ func (c *Client) GetRetailBill(ctx context.Context, a auth, billID int64) (*reta
 	return &bills[0], nil
 }
 
+type listBillsFilter struct {
+	FromDate string
+	PageSize int
+}
+
+func (c *Client) ListRetailBills(ctx context.Context, a auth, f listBillsFilter) ([]retailBill, error) {
+	filters := map[string]any{}
+	if strings.TrimSpace(f.FromDate) != "" {
+		// Overlap-friendly lower bound; provider date formats vary — pass through as-is.
+		filters["fromDate"] = f.FromDate
+	}
+	size := f.PageSize
+	if size <= 0 {
+		size = 50
+	}
+	var out apiResponse
+	if err := c.post(ctx, "/bill/retail", a, map[string]any{
+		"filters":   filters,
+		"paginator": map[string]any{"size": size},
+	}, &out); err != nil {
+		return nil, err
+	}
+	if err := checkAPI(out); err != nil {
+		return nil, err
+	}
+	return decodeBills(out.Data)
+}
+
 func (c *Client) UpdateOrderStatus(ctx context.Context, a auth, orderID int64, status int) error {
 	var out apiResponse
 	if err := c.post(ctx, "/order/edit", a, map[string]any{

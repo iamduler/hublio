@@ -42,6 +42,16 @@ FROM sync_routes
 WHERE workspace_id = $1 AND deleted_at IS NULL
 ORDER BY created_at ASC;
 
+-- name: ListEnabledSchedulableSyncRoutes :many
+SELECT id, workspace_id, source_connection_id, name, status, trigger_type,
+       resource_types, schedule, filter, idempotency_rule, activities, reverse, retry_policy,
+       webhook_secret, created_at, updated_at, deleted_at
+FROM sync_routes
+WHERE deleted_at IS NULL
+  AND status = 'enabled'
+  AND trigger_type IN ('schedule', 'both')
+ORDER BY created_at ASC;
+
 -- name: UpsertSyncRouteWatermark :exec
 INSERT INTO sync_route_watermarks (sync_route_id, resource_type, cursor, updated_at)
 VALUES ($1, $2, $3, $4)

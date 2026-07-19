@@ -38,6 +38,7 @@ func (h *Handler) RegisterRoutes(api *gin.RouterGroup, apiKeyAuth gin.HandlerFun
 		machine.GET("/executions/:executionId/timeline", h.getExecutionTimeline)
 		machine.POST("/executions/:executionId/cancel", h.cancelExecution)
 		machine.POST("/executions/:executionId/retry", h.retryExecution)
+		machine.POST("/sync-routes/:syncRouteId/poll", h.triggerPoll)
 	}
 }
 

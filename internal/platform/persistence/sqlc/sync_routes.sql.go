@@ -123,6 +123,55 @@ func (q *Queries) InsertSyncRoute(ctx context.Context, arg InsertSyncRouteParams
 	return err
 }
 
+const listEnabledSchedulableSyncRoutes = `-- name: ListEnabledSchedulableSyncRoutes :many
+SELECT id, workspace_id, source_connection_id, name, status, trigger_type,
+       resource_types, schedule, filter, idempotency_rule, activities, reverse, retry_policy,
+       webhook_secret, created_at, updated_at, deleted_at
+FROM sync_routes
+WHERE deleted_at IS NULL
+  AND status = 'enabled'
+  AND trigger_type IN ('schedule', 'both')
+ORDER BY created_at ASC
+`
+
+func (q *Queries) ListEnabledSchedulableSyncRoutes(ctx context.Context) ([]SyncRoute, error) {
+	rows, err := q.db.Query(ctx, listEnabledSchedulableSyncRoutes)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SyncRoute{}
+	for rows.Next() {
+		var i SyncRoute
+		if err := rows.Scan(
+			&i.ID,
+			&i.WorkspaceID,
+			&i.SourceConnectionID,
+			&i.Name,
+			&i.Status,
+			&i.TriggerType,
+			&i.ResourceTypes,
+			&i.Schedule,
+			&i.Filter,
+			&i.IdempotencyRule,
+			&i.Activities,
+			&i.Reverse,
+			&i.RetryPolicy,
+			&i.WebhookSecret,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listSyncRouteWatermarks = `-- name: ListSyncRouteWatermarks :many
 SELECT sync_route_id, resource_type, cursor, updated_at
 FROM sync_route_watermarks

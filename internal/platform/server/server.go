@@ -205,6 +205,7 @@ func newOrchestrationServices(
 	connectorGateway := orchestrationinfra.NewConnectorGateway(integrationSvc.Runtimes)
 	syncRouteGateway := orchestrationinfra.NewSyncRouteGateway(
 		integrationSvc.SyncRoutes,
+		integrationSvc.Watermarks,
 		identitySvc.Workspaces,
 		integrationSvc.Secrets,
 	)

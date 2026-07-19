@@ -64,6 +64,22 @@ func (r *SyncRouteRepository) ListByWorkspace(ctx context.Context, workspaceID u
 	return out, nil
 }
 
+func (r *SyncRouteRepository) ListEnabledSchedulable(ctx context.Context) ([]*domain.SyncRoute, error) {
+	rows, err := r.q(ctx).ListEnabledSchedulableSyncRoutes(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]*domain.SyncRoute, 0, len(rows))
+	for _, row := range rows {
+		route, err := mapSyncRoute(row)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, route)
+	}
+	return out, nil
+}
+
 type SyncRouteWatermarkRepository struct {
 	pool *pgxpool.Pool
 }

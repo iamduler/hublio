@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"encoding/json"
 	"strings"
 	"time"
 
@@ -419,6 +420,35 @@ func (r *SyncRoute) CanAcceptWebhook() error {
 	return nil
 }
 
+// CanAcceptPoll checks Enabled status and schedule|both trigger (no webhook secret required).
+func (r *SyncRoute) CanAcceptPoll() error {
+	if r.deletedAt != nil {
+		return ErrSyncRouteRemoved
+	}
+	if r.status != SyncRouteStatusEnabled {
+		return ErrSyncRouteNotEnabled
+	}
+	if r.trigger != SyncRouteTriggerSchedule && r.trigger != SyncRouteTriggerBoth {
+		return ErrPollNotConfigured
+	}
+	if _, err := ScheduleIntervalSeconds(r.schedule); err != nil {
+		return err
+	}
+	return nil
+}
+
+// PollIsDue reports whether a poll tick should run given the last watermark update (or zero).
+func (r *SyncRoute) PollIsDue(lastPolledAt time.Time, now time.Time) bool {
+	interval, err := ScheduleIntervalSeconds(r.schedule)
+	if err != nil {
+		return false
+	}
+	if lastPolledAt.IsZero() {
+		return true
+	}
+	return !now.UTC().Before(lastPolledAt.UTC().Add(interval))
+}
+
 // AllowsResourceType reports whether resourceType is in the route's allow-list.
 func (r *SyncRoute) AllowsResourceType(resourceType string) bool {
 	resourceType = strings.TrimSpace(strings.ToLower(resourceType))
@@ -450,11 +480,62 @@ func (r *SyncRoute) validateReady() error {
 		return ErrWebhookSecretRequired
 	}
 	if r.trigger == SyncRouteTriggerSchedule || r.trigger == SyncRouteTriggerBoth {
-		if len(r.schedule) == 0 {
-			return ErrInvalidSchedule
+		if _, err := ScheduleIntervalSeconds(r.schedule); err != nil {
+			return err
 		}
 	}
 	return nil
+}
+
+// ScheduleIntervalSeconds reads MVP schedule key interval_seconds (1..86400).
+func ScheduleIntervalSeconds(schedule map[string]any) (time.Duration, error) {
+	if len(schedule) == 0 {
+		return 0, ErrInvalidSchedule
+	}
+	raw, ok := schedule["interval_seconds"]
+	if !ok {
+		return 0, ErrInvalidSchedule
+	}
+	seconds := 0
+	switch v := raw.(type) {
+	case int:
+		seconds = v
+	case int32:
+		seconds = int(v)
+	case int64:
+		seconds = int(v)
+	case float64:
+		seconds = int(v)
+	case json.Number:
+		n, err := v.Int64()
+		if err != nil {
+			return 0, ErrInvalidSchedule
+		}
+		seconds = int(n)
+	default:
+		return 0, ErrInvalidSchedule
+	}
+	if seconds < 1 || seconds > 86400 {
+		return 0, ErrInvalidSchedule
+	}
+	return time.Duration(seconds) * time.Second, nil
+}
+
+// ScheduleListCapability returns optional schedule.list_capability, or a default for resourceType.
+func ScheduleListCapability(schedule map[string]any, resourceType string) string {
+	if schedule != nil {
+		if raw, ok := schedule["list_capability"].(string); ok {
+			if v := strings.TrimSpace(raw); v != "" {
+				return v
+			}
+		}
+	}
+	switch strings.TrimSpace(strings.ToLower(resourceType)) {
+	case "invoice":
+		return "invoice.list"
+	default:
+		return strings.TrimSpace(strings.ToLower(resourceType)) + ".list"
+	}
 }
 
 func normalizeResourceTypes(in []string) ([]string, error) {
