@@ -16,7 +16,14 @@ func mapDomainErr(err error) error {
 		errors.Is(err, domain.ErrInvalidVersion),
 		errors.Is(err, domain.ErrInvalidEnvironment),
 		errors.Is(err, domain.ErrInvalidCredentialType),
-		errors.Is(err, domain.ErrEmptySecret):
+		errors.Is(err, domain.ErrEmptySecret),
+		errors.Is(err, domain.ErrInvalidSyncRouteTrigger),
+		errors.Is(err, domain.ErrInvalidResourceTypes),
+		errors.Is(err, domain.ErrInvalidActivityGroup),
+		errors.Is(err, domain.ErrInvalidActivityStep),
+		errors.Is(err, domain.ErrInvalidReverseConfig),
+		errors.Is(err, domain.ErrInvalidSchedule),
+		errors.Is(err, domain.ErrWebhookSecretRequired):
 		return apperr.Wrap(err, err.Error(), apperr.ErrCodeBadRequest)
 	case errors.Is(err, domain.ErrInvalidTransition),
 		errors.Is(err, domain.ErrConnectorRemoved),
@@ -24,7 +31,9 @@ func mapDomainErr(err error) error {
 		errors.Is(err, domain.ErrCapabilityNotFound),
 		errors.Is(err, domain.ErrCredentialNotActive),
 		errors.Is(err, domain.ErrConnectionNotActive),
-		errors.Is(err, domain.ErrConflict):
+		errors.Is(err, domain.ErrConflict),
+		errors.Is(err, domain.ErrSyncRouteRemoved),
+		errors.Is(err, domain.ErrSyncRouteNotEditable):
 		return apperr.Wrap(err, err.Error(), apperr.ErrCodeConflict)
 	default:
 		return apperr.Wrap(err, "domain error", apperr.ErrCodeBadRequest)

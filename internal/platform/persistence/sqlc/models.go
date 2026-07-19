@@ -199,6 +199,33 @@ type Organization struct {
 	DeletedAt pgtype.Timestamptz `json:"deleted_at"`
 }
 
+type SyncRoute struct {
+	ID                 uuid.UUID          `json:"id"`
+	WorkspaceID        uuid.UUID          `json:"workspace_id"`
+	SourceConnectionID uuid.UUID          `json:"source_connection_id"`
+	Name               string             `json:"name"`
+	Status             string             `json:"status"`
+	TriggerType        string             `json:"trigger_type"`
+	ResourceTypes      []byte             `json:"resource_types"`
+	Schedule           []byte             `json:"schedule"`
+	Filter             []byte             `json:"filter"`
+	IdempotencyRule    []byte             `json:"idempotency_rule"`
+	Activities         []byte             `json:"activities"`
+	Reverse            []byte             `json:"reverse"`
+	RetryPolicy        []byte             `json:"retry_policy"`
+	WebhookSecret      []byte             `json:"webhook_secret"`
+	CreatedAt          pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt          pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt          pgtype.Timestamptz `json:"deleted_at"`
+}
+
+type SyncRouteWatermark struct {
+	SyncRouteID  uuid.UUID          `json:"sync_route_id"`
+	ResourceType string             `json:"resource_type"`
+	Cursor       []byte             `json:"cursor"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+}
+
 type User struct {
 	ID                uuid.UUID          `json:"id"`
 	OrganizationID    uuid.UUID          `json:"organization_id"`

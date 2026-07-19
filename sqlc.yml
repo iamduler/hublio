@@ -55,3 +55,7 @@ sql:
             go_type: "string"
           - db_type: "actor_type"
             go_type: "string"
+          - db_type: "sync_route_status"
+            go_type: "string"
+          - db_type: "sync_route_trigger"
+            go_type: "string"

@@ -546,6 +546,192 @@ paths:
         "403":
           $ref: "#/components/responses/Error"
 
+  /api/v1/integration/workspaces/{workspaceId}/sync-routes:
+    get:
+      tags: [Integration]
+      summary: List SyncRoutes in a Workspace
+      operationId: listSyncRoutes
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/workspaceId"
+      responses:
+        "200":
+          description: SyncRoute list (webhook_secret never included)
+    post:
+      tags: [Integration]
+      summary: Create SyncRoute (Draft)
+      description: |
+        Workspace-scoped origin → destination fan-out configuration (not a Workflow).
+        When trigger_type is webhook|both, generates a webhook secret; plaintext is returned
+        once in the response as webhook_secret and never again (use rotate to re-issue).
+      operationId: createSyncRoute
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/workspaceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSyncRouteRequest"
+      responses:
+        "201":
+          description: Created (may include webhook_secret once)
+        "400":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/integration/workspaces/{workspaceId}/sync-routes/{syncRouteId}:
+    get:
+      tags: [Integration]
+      summary: Get SyncRoute
+      operationId: getSyncRoute
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/workspaceId"
+        - $ref: "#/components/parameters/syncRouteId"
+      responses:
+        "200":
+          description: SyncRoute (has_webhook_secret flag; no plaintext)
+        "404":
+          $ref: "#/components/responses/Error"
+    patch:
+      tags: [Integration]
+      summary: Update SyncRoute (Draft or Disabled only)
+      operationId: updateSyncRoute
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/workspaceId"
+        - $ref: "#/components/parameters/syncRouteId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSyncRouteRequest"
+      responses:
+        "200":
+          description: Updated
+        "409":
+          $ref: "#/components/responses/Error"
+    delete:
+      tags: [Integration]
+      summary: Soft-delete SyncRoute (must not be Enabled)
+      operationId: deleteSyncRoute
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/workspaceId"
+        - $ref: "#/components/parameters/syncRouteId"
+      responses:
+        "200":
+          description: Deleted
+        "409":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/integration/workspaces/{workspaceId}/sync-routes/{syncRouteId}/enable:
+    post:
+      tags: [Integration]
+      summary: Enable SyncRoute
+      operationId: enableSyncRoute
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/workspaceId"
+        - $ref: "#/components/parameters/syncRouteId"
+      responses:
+        "200":
+          description: Enabled
+        "400":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/integration/workspaces/{workspaceId}/sync-routes/{syncRouteId}/disable:
+    post:
+      tags: [Integration]
+      summary: Disable SyncRoute
+      operationId: disableSyncRoute
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/workspaceId"
+        - $ref: "#/components/parameters/syncRouteId"
+      responses:
+        "200":
+          description: Disabled
+        "409":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/integration/workspaces/{workspaceId}/sync-routes/{syncRouteId}/webhook-secret/rotate:
+    post:
+      tags: [Integration]
+      summary: Rotate SyncRoute webhook secret (plaintext once)
+      operationId: rotateSyncRouteWebhookSecret
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/workspaceId"
+        - $ref: "#/components/parameters/syncRouteId"
+      responses:
+        "200":
+          description: Rotated; response includes webhook_secret once
+        "400":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/integration/workspaces/{workspaceId}/sync-routes/{syncRouteId}/watermarks:
+    get:
+      tags: [Integration]
+      summary: List poll watermarks for a SyncRoute
+      operationId: listSyncRouteWatermarks
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/workspaceId"
+        - $ref: "#/components/parameters/syncRouteId"
+      responses:
+        "200":
+          description: Watermark list
+
+  /api/v1/integration/workspaces/{workspaceId}/sync-routes/{syncRouteId}/watermarks/{resourceType}:
+    put:
+      tags: [Integration]
+      summary: Upsert poll watermark cursor
+      operationId: upsertSyncRouteWatermark
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/workspaceId"
+        - $ref: "#/components/parameters/syncRouteId"
+        - name: resourceType
+          in: path
+          required: true
+          schema:
+            type: string
+            example: invoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [cursor]
+              properties:
+                cursor:
+                  type: object
+                  additionalProperties: true
+                  example:
+                    last_updated_at: "2026-07-19T00:00:00Z"
+                    last_record_id: "123"
+      responses:
+        "200":
+          description: Upserted
+
   /api/v1/intents:
     post:
       tags: [Orchestration]
@@ -817,6 +1003,13 @@ components:
       schema:
         type: string
         format: uuid
+    syncRouteId:
+      name: syncRouteId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
     intentId:
       name: intentId
       in: path
@@ -1033,3 +1226,111 @@ components:
         expires_at:
           type: string
           format: date-time
+
+    CreateSyncRouteRequest:
+      type: object
+      required: [source_connection_id, name, trigger_type, resource_types, activities]
+      properties:
+        source_connection_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Nhanh to MISA invoices
+        trigger_type:
+          type: string
+          enum: [webhook, schedule, both]
+        resource_types:
+          type: array
+          items:
+            type: string
+          example: [invoice]
+        schedule:
+          type: object
+          description: Required when trigger_type is schedule|both (e.g. interval_seconds)
+          example:
+            interval_seconds: 300
+        filter:
+          type: object
+          description: JSON condition tree (AND/OR); not a Rule Engine
+        idempotency_rule:
+          type: object
+          example:
+            rule: provider_triple
+        activities:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/SyncRouteActivityGroup"
+        reverse:
+          $ref: "#/components/schemas/SyncRouteReverse"
+        retry_policy:
+          type: object
+
+    UpdateSyncRouteRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        source_connection_id:
+          type: string
+          format: uuid
+        trigger_type:
+          type: string
+          enum: [webhook, schedule, both]
+        resource_types:
+          type: array
+          items:
+            type: string
+        schedule:
+          type: object
+        filter:
+          type: object
+        idempotency_rule:
+          type: object
+        activities:
+          type: array
+          items:
+            $ref: "#/components/schemas/SyncRouteActivityGroup"
+        reverse:
+          $ref: "#/components/schemas/SyncRouteReverse"
+        clear_reverse:
+          type: boolean
+          default: false
+        retry_policy:
+          type: object
+
+    SyncRouteActivityGroup:
+      type: object
+      required: [group_mode, steps]
+      properties:
+        group_mode:
+          type: string
+          enum: [sequential, parallel]
+        steps:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [destination_connection_id, capability]
+            properties:
+              destination_connection_id:
+                type: string
+                format: uuid
+              capability:
+                type: string
+                example: invoice.create
+              mapping_key:
+                type: string
+
+    SyncRouteReverse:
+      type: object
+      required: [capability]
+      properties:
+        capability:
+          type: string
+          example: invoice.update_status
+        on:
+          type: string
+          enum: [success, failure, always]
+          default: success

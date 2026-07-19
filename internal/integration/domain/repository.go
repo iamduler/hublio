@@ -28,3 +28,16 @@ type CredentialRepository interface {
 	FindActiveByConnection(ctx context.Context, connectionID uuid.UUID) (*Credential, error)
 	ListByConnection(ctx context.Context, connectionID uuid.UUID) ([]*Credential, error)
 }
+
+type SyncRouteRepository interface {
+	Save(ctx context.Context, route *SyncRoute) error
+	Update(ctx context.Context, route *SyncRoute) error
+	FindByID(ctx context.Context, id uuid.UUID) (*SyncRoute, error)
+	ListByWorkspace(ctx context.Context, workspaceID uuid.UUID) ([]*SyncRoute, error)
+}
+
+type SyncRouteWatermarkRepository interface {
+	Upsert(ctx context.Context, wm *SyncRouteWatermark) error
+	Find(ctx context.Context, syncRouteID uuid.UUID, resourceType string) (*SyncRouteWatermark, error)
+	ListBySyncRoute(ctx context.Context, syncRouteID uuid.UUID) ([]*SyncRouteWatermark, error)
+}

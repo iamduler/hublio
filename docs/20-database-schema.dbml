@@ -158,6 +158,7 @@ Enum aggregate_type {
   connection
   intent
   execution
+  sync_route
 }
 
 Enum actor_type {
@@ -410,6 +411,80 @@ Table credentials {
 
 ///////////////////////////////////////////////////////////
 //
+// INTEGRATION — SyncRoute (configuration, not Runtime Aggregate)
+// docs/30 §5.2; AGENTS.md SyncRoute clarification
+//
+///////////////////////////////////////////////////////////
+
+Enum sync_route_status {
+  draft
+  enabled
+  disabled
+}
+
+Enum sync_route_trigger {
+  webhook
+  schedule
+  both
+}
+
+Table sync_routes {
+  id uuid [pk]
+  workspace_id uuid
+  source_connection_id uuid
+
+  name varchar(255)
+  status sync_route_status
+  trigger_type sync_route_trigger
+
+  resource_types jsonb
+  schedule jsonb
+  filter jsonb
+  idempotency_rule jsonb
+  activities jsonb
+  reverse jsonb
+  retry_policy jsonb
+  webhook_secret jsonb
+
+  created_at timestamptz
+  updated_at timestamptz
+  deleted_at timestamptz
+
+  indexes {
+    workspace_id
+    source_connection_id
+    status
+    (workspace_id, name) [unique]
+  }
+
+  Note: '''
+  Workspace-scoped origin → destination fan-out configuration.
+  Not a Workflow / BPMN Aggregate. activities JSON describes
+  sequential|parallel Execution groups under one Intent.
+  webhook_secret is encrypted at rest; plaintext shown once on create/rotate.
+  trigger_type: webhook | schedule | both (column name avoids SQL reserved TRIGGER).
+  '''
+}
+
+Table sync_route_watermarks {
+  sync_route_id uuid
+  resource_type varchar(100)
+  cursor jsonb
+  updated_at timestamptz
+
+  indexes {
+    (sync_route_id, resource_type) [pk]
+    updated_at
+  }
+
+  Note: '''
+  Poll watermark / cursor per SyncRoute + resource_type (docs/30 §7.2).
+  Postgres is source of truth — not Redis.
+  '''
+}
+
+///////////////////////////////////////////////////////////
+//
 // ORCHESTRATION
 //
 ///////////////////////////////////////////////////////////
@@ -639,6 +714,9 @@ Ref: connector_capabilities.connector_id > connectors.id
 Ref: connections.connector_id > connectors.id
 Ref: connections.workspace_id > workspaces.id
 Ref: credentials.connection_id > connections.id
+Ref: sync_routes.workspace_id > workspaces.id
+Ref: sync_routes.source_connection_id > connections.id
+Ref: sync_route_watermarks.sync_route_id > sync_routes.id
 Ref: intents.organization_id > organizations.id
 Ref: intents.workspace_id > workspaces.id
 Ref: intents.connection_id > connections.id

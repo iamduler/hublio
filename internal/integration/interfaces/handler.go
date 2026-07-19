@@ -50,6 +50,17 @@ func (h *Handler) RegisterRoutes(api *gin.RouterGroup, jwtAuth gin.HandlerFunc) 
 		integration.POST("/workspaces/:workspaceId/connections/:connectionId/disable", h.disableConnection)
 		integration.POST("/workspaces/:workspaceId/connections/:connectionId/enable", h.enableConnection)
 		integration.POST("/workspaces/:workspaceId/connections/:connectionId/credentials/rotate", h.rotateCredential)
+
+		integration.GET("/workspaces/:workspaceId/sync-routes", h.listSyncRoutes)
+		integration.POST("/workspaces/:workspaceId/sync-routes", h.createSyncRoute)
+		integration.GET("/workspaces/:workspaceId/sync-routes/:syncRouteId", h.getSyncRoute)
+		integration.PATCH("/workspaces/:workspaceId/sync-routes/:syncRouteId", h.updateSyncRoute)
+		integration.POST("/workspaces/:workspaceId/sync-routes/:syncRouteId/enable", h.enableSyncRoute)
+		integration.POST("/workspaces/:workspaceId/sync-routes/:syncRouteId/disable", h.disableSyncRoute)
+		integration.DELETE("/workspaces/:workspaceId/sync-routes/:syncRouteId", h.deleteSyncRoute)
+		integration.POST("/workspaces/:workspaceId/sync-routes/:syncRouteId/webhook-secret/rotate", h.rotateSyncRouteWebhookSecret)
+		integration.GET("/workspaces/:workspaceId/sync-routes/:syncRouteId/watermarks", h.listSyncRouteWatermarks)
+		integration.PUT("/workspaces/:workspaceId/sync-routes/:syncRouteId/watermarks/:resourceType", h.upsertSyncRouteWatermark)
 	}
 }
 

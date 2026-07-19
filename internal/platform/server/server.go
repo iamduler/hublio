@@ -178,6 +178,8 @@ func newIntegrationServices(pool *pgxpool.Pool) (*integrationapp.Services, error
 		Connectors:  integrationinfra.NewConnectorRepository(pool),
 		Connections: integrationinfra.NewConnectionRepository(pool),
 		Credentials: integrationinfra.NewCredentialRepository(pool),
+		SyncRoutes:  integrationinfra.NewSyncRouteRepository(pool),
+		Watermarks:  integrationinfra.NewSyncRouteWatermarkRepository(pool),
 		Runtimes:    runtimeRegistry,
 		Secrets:     encryptor,
 	}, nil

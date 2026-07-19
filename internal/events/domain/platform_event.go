@@ -38,12 +38,14 @@ const (
 	AggregateTypeConnection   AggregateType = "connection"
 	AggregateTypeIntent       AggregateType = "intent"
 	AggregateTypeExecution    AggregateType = "execution"
+	AggregateTypeSyncRoute    AggregateType = "sync_route"
 )
 
 func (t AggregateType) valid() bool {
 	switch t {
 	case AggregateTypeOrganization, AggregateTypeWorkspace, AggregateTypeConnector,
-		AggregateTypeConnection, AggregateTypeIntent, AggregateTypeExecution:
+		AggregateTypeConnection, AggregateTypeIntent, AggregateTypeExecution,
+		AggregateTypeSyncRoute:
 		return true
 	default:
 		return false

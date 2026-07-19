@@ -23,6 +23,13 @@ const (
 	EventCredentialCreated = "CredentialCreated"
 	EventCredentialRevoked = "CredentialRevoked"
 	EventCredentialRotated = "CredentialRotated"
+
+	EventSyncRouteCreated              = "SyncRouteCreated"
+	EventSyncRouteUpdated              = "SyncRouteUpdated"
+	EventSyncRouteEnabled              = "SyncRouteEnabled"
+	EventSyncRouteDisabled             = "SyncRouteDisabled"
+	EventSyncRouteDeleted              = "SyncRouteDeleted"
+	EventSyncRouteWebhookSecretRotated = "SyncRouteWebhookSecretRotated"
 )
 
 // Event is an immutable domain fact recorded on aggregates.

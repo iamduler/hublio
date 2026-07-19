@@ -49,6 +49,8 @@ func mapIntegrationEvent(e integrationdomain.Event) eventsapp.PublishInput {
 	case strings.HasPrefix(e.Name, "Credential"):
 		aggregateType = eventsdomain.AggregateTypeConnection
 		aggregateID = uuidPtrOrSelf(uuidFromPayload(e.Payload, "connection_id"), e.AggregateID)
+	case strings.HasPrefix(e.Name, "SyncRoute"):
+		aggregateType, aggregateID = eventsdomain.AggregateTypeSyncRoute, e.AggregateID
 	default: // Connection*
 		aggregateType, aggregateID = eventsdomain.AggregateTypeConnection, e.AggregateID
 	}

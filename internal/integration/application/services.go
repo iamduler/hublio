@@ -69,6 +69,8 @@ type Services struct {
 	Connectors  domain.ConnectorRepository
 	Connections domain.ConnectionRepository
 	Credentials domain.CredentialRepository
+	SyncRoutes  domain.SyncRouteRepository
+	Watermarks  domain.SyncRouteWatermarkRepository
 	Runtimes    domain.RuntimeRegistry
 	Secrets     SecretEncryptor
 	Events      EventPublisher

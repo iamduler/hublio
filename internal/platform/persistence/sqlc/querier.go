@@ -24,6 +24,8 @@ type Querier interface {
 	GetIntentByID(ctx context.Context, id uuid.UUID) (Intent, error)
 	GetOrganizationByID(ctx context.Context, id uuid.UUID) (Organization, error)
 	GetOrganizationByName(ctx context.Context, name string) (Organization, error)
+	GetSyncRouteByID(ctx context.Context, id uuid.UUID) (SyncRoute, error)
+	GetSyncRouteWatermark(ctx context.Context, arg GetSyncRouteWatermarkParams) (SyncRouteWatermark, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (User, error)
 	GetWorkspaceByID(ctx context.Context, id uuid.UUID) (Workspace, error)
@@ -42,6 +44,7 @@ type Querier interface {
 	InsertIdempotencyKey(ctx context.Context, arg InsertIdempotencyKeyParams) error
 	InsertIntent(ctx context.Context, arg InsertIntentParams) error
 	InsertOrganization(ctx context.Context, arg InsertOrganizationParams) error
+	InsertSyncRoute(ctx context.Context, arg InsertSyncRouteParams) error
 	InsertUser(ctx context.Context, arg InsertUserParams) error
 	InsertWorkspace(ctx context.Context, arg InsertWorkspaceParams) error
 	InsertWorkspaceUser(ctx context.Context, arg InsertWorkspaceUserParams) error
@@ -55,6 +58,8 @@ type Querier interface {
 	ListExecutionSnapshotsByExecution(ctx context.Context, executionID uuid.UUID) ([]ExecutionSnapshot, error)
 	ListExecutionStepsByExecution(ctx context.Context, executionID uuid.UUID) ([]ExecutionStep, error)
 	ListExecutionTimelinesByExecution(ctx context.Context, executionID uuid.UUID) ([]ExecutionTimeline, error)
+	ListSyncRouteWatermarks(ctx context.Context, syncRouteID uuid.UUID) ([]SyncRouteWatermark, error)
+	ListSyncRoutesByWorkspace(ctx context.Context, workspaceID uuid.UUID) ([]SyncRoute, error)
 	ListWorkspaceUsersByUser(ctx context.Context, userID uuid.UUID) ([]WorkspaceUser, error)
 	ListWorkspaceUsersByWorkspace(ctx context.Context, workspaceID uuid.UUID) ([]WorkspaceUser, error)
 	ListWorkspacesByOrganization(ctx context.Context, organizationID uuid.UUID) ([]Workspace, error)
@@ -68,8 +73,10 @@ type Querier interface {
 	UpdateExecutionStep(ctx context.Context, arg UpdateExecutionStepParams) error
 	UpdateIntent(ctx context.Context, arg UpdateIntentParams) error
 	UpdateOrganization(ctx context.Context, arg UpdateOrganizationParams) error
+	UpdateSyncRoute(ctx context.Context, arg UpdateSyncRouteParams) error
 	UpdateUser(ctx context.Context, arg UpdateUserParams) error
 	UpdateWorkspace(ctx context.Context, arg UpdateWorkspaceParams) error
+	UpsertSyncRouteWatermark(ctx context.Context, arg UpsertSyncRouteWatermarkParams) error
 }
 
 var _ Querier = (*Queries)(nil)

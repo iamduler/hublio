@@ -239,6 +239,15 @@ Thứ tự Aggregate: **Organization → Workspace → User/Membership → API K
 > `internal/platform/server/server.go`, OpenAPI paths added under `Integration` tag. Individual
 > Capability enable/disable HTTP endpoints and SyncRoute are intentionally deferred (not in Phase C
 > scope). `go build ./...` and `go test ./...` pass.
+>
+> **SyncRoute (2026-07-19):** Migration `000005_sync_routes` adds `sync_routes` +
+> `sync_route_watermarks`, and extends `aggregate_type` with `sync_route`. Domain configuration
+> entity (not Workflow): Draft → Enabled ↔ Disabled; soft-delete when not Enabled. Activities
+> JSON (`group_mode` sequential|parallel + destination steps). Webhook secret generated on
+> create when `trigger_type` is webhook|both (encrypted at rest; plaintext once). Watermark
+> Upsert/List for poll cursors. Management API under
+> `/api/v1/integration/workspaces/:workspaceId/sync-routes`. Fan-out into multi-Execution
+> SubmitIntent and webhook HTTP ingress are **not** in this slice.
 
 ---
 
