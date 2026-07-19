@@ -23,8 +23,9 @@ type AcceptWebhookInput struct {
 }
 
 // AcceptWebhook validates an inbound SyncRoute webhook (via SyncRouteGateway) then submits
-// a Business Intent. Clients never create Executions directly. Fan-out to multiple Executions
-// is deferred — v1 uses the primary activity step only.
+// a Business Intent that fans out to one Execution per activity step (sequential or parallel
+// per group). Intent.connection_id is the SyncRoute source; each Execution overrides the
+// destination Connection/Capability via context.
 func (s *Services) AcceptWebhook(ctx context.Context, in AcceptWebhookInput) (*SubmitIntentResult, error) {
 	if s.SyncRoutes == nil {
 		return nil, apperr.New("sync route gateway not configured", apperr.ErrCodeInternal)
@@ -45,6 +46,9 @@ func (s *Services) AcceptWebhook(ctx context.Context, in AcceptWebhookInput) (*S
 	})
 	if err != nil {
 		return nil, err
+	}
+	if len(route.FanOutGroups) == 0 {
+		return nil, apperr.New("sync route has no activity steps", apperr.ErrCodeConflict)
 	}
 
 	operation := strings.TrimSpace(strings.ToLower(in.Operation))
@@ -69,14 +73,22 @@ func (s *Services) AcceptWebhook(ctx context.Context, in AcceptWebhookInput) (*S
 		correlationID = fmt.Sprintf("wh-%s", route.SyncRouteID.String())
 	}
 
+	capability := route.Capability
+	if capability == "" && len(route.FanOutGroups[0].Steps) > 0 {
+		capability = route.FanOutGroups[0].Steps[0].Capability
+	}
+
 	return s.SubmitIntent(ctx, SubmitIntentInput{
 		OrganizationID: route.OrganizationID,
 		WorkspaceID:    route.WorkspaceID,
-		ConnectionID:   route.ConnectionID,
-		Capability:     route.Capability,
+		ConnectionID:   route.SourceConnectionID,
+		Capability:     capability,
 		Payload:        in.Payload,
 		CorrelationID:  correlationID,
 		IdempotencyKey: idempotencyKey,
+		SyncRouteID:    route.SyncRouteID,
+		FanOutGroups:   route.FanOutGroups,
+		FanOutReverse:  route.FanOutReverse,
 	})
 }
 

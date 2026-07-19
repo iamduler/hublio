@@ -103,11 +103,24 @@ func (h *Handler) submitIntent(c *gin.Context) {
 	if result.Execution != nil {
 		events = append(events, result.Execution.PullEvents()...)
 	}
+	for _, exec := range result.Executions {
+		if result.Execution != nil && exec.ID() == result.Execution.ID() {
+			continue
+		}
+		events = append(events, exec.PullEvents()...)
+	}
 	events = application.EnrichEvents(events, orgID, workspaceID, correlationID)
 	h.svc.PublishAfterCommit(c.Request.Context(), events...)
 
-	if result.Job != nil && h.svc.Jobs != nil {
-		if err := h.svc.Jobs.EnqueueExecution(c.Request.Context(), *result.Job); err != nil {
+	jobs := result.Jobs
+	if len(jobs) == 0 && result.Job != nil {
+		jobs = []*application.ExecutionJob{result.Job}
+	}
+	for _, job := range jobs {
+		if job == nil || h.svc.Jobs == nil {
+			continue
+		}
+		if err := h.svc.Jobs.EnqueueExecution(c.Request.Context(), *job); err != nil {
 			httpx.ResponseError(c, apperr.Wrap(err, "intent accepted but failed to enqueue execution", apperr.ErrCodeInternal))
 			return
 		}
@@ -117,10 +130,18 @@ func (h *Handler) submitIntent(c *gin.Context) {
 	if result.Replayed {
 		status = http.StatusOK
 	}
-	httpx.ResponseSuccess(c, status, "intent submitted", gin.H{
+	resp := gin.H{
 		"intent":    intentDTO(result.Intent),
 		"execution": executionDTOPtr(result.Execution),
-	})
+	}
+	if len(result.Executions) > 1 {
+		execDTOs := make([]gin.H, 0, len(result.Executions))
+		for _, e := range result.Executions {
+			execDTOs = append(execDTOs, executionDTO(e))
+		}
+		resp["executions"] = execDTOs
+	}
+	httpx.ResponseSuccess(c, status, "intent submitted", resp)
 }
 
 func (h *Handler) getIntent(c *gin.Context) {

@@ -532,12 +532,17 @@ Table executions {
   created_at timestamptz
 
   indexes {
-    intent_id [unique]
+    intent_id
     status
     (status, created_at)
     (started_at)
     (completed_at)
   }
+
+  Note: '''
+  One Intent may fan out to multiple Executions (SyncRoute).
+  intent_id is indexed, not unique. Steps inside one Execution stay sequential.
+  '''
 }
 
 ///////////////////////////////////////////////////////////

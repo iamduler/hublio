@@ -430,8 +430,8 @@ func (r *SyncRoute) AllowsResourceType(resourceType string) bool {
 	return false
 }
 
-// PrimaryActivityStep returns the first step of the first activity group (v1 single-Execution
-// path until SyncRoute fan-out lands). Reverse is not used as primary.
+// PrimaryActivityStep returns the first step of the first activity group.
+// Prefer Activities() for SyncRoute fan-out (N Executions). Reverse is not a primary step.
 func (r *SyncRoute) PrimaryActivityStep() (ActivityStep, error) {
 	if len(r.activities) == 0 || len(r.activities[0].Steps) == 0 {
 		return ActivityStep{}, ErrInvalidActivityGroup

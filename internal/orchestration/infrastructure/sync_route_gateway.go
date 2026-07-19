@@ -9,6 +9,8 @@ import (
 	integrationdomain "hublio/internal/integration/domain"
 	orchestrationapp "hublio/internal/orchestration/application"
 	"hublio/internal/platform/apperr"
+
+	"github.com/google/uuid"
 )
 
 // SyncRouteGateway adapts Integration SyncRoute + Identity Workspace into Orchestration's
@@ -64,9 +66,13 @@ func (g *SyncRouteGateway) ResolveWebhook(ctx context.Context, in orchestrationa
 		return orchestrationapp.ResolvedWebhookRoute{}, apperr.Wrap(integrationdomain.ErrFilterRejected, "payload rejected by filter", apperr.ErrCodeBadRequest)
 	}
 
-	step, err := route.PrimaryActivityStep()
-	if err != nil {
-		return orchestrationapp.ResolvedWebhookRoute{}, apperr.Wrap(err, "sync route has no activity step", apperr.ErrCodeConflict)
+	groups := mapFanOutGroups(route.Activities())
+	if len(groups) == 0 {
+		return orchestrationapp.ResolvedWebhookRoute{}, apperr.Wrap(
+			integrationdomain.ErrInvalidActivityGroup,
+			"sync route has no activity step",
+			apperr.ErrCodeConflict,
+		)
 	}
 
 	ws, err := g.workspaces.FindByID(ctx, route.WorkspaceID())
@@ -77,15 +83,51 @@ func (g *SyncRouteGateway) ResolveWebhook(ctx context.Context, in orchestrationa
 		return orchestrationapp.ResolvedWebhookRoute{}, apperr.New("workspace is disabled", apperr.ErrCodeConflict)
 	}
 
+	capability := ""
+	if len(groups[0].Steps) > 0 {
+		capability = groups[0].Steps[0].Capability
+	}
+
 	return orchestrationapp.ResolvedWebhookRoute{
 		SyncRouteID:        route.ID(),
 		OrganizationID:     ws.OrganizationID(),
 		WorkspaceID:        route.WorkspaceID(),
-		ConnectionID:       step.DestinationConnectionID,
-		Capability:         step.Capability,
+		Capability:         capability,
+		FanOutGroups:       groups,
+		FanOutReverse:      mapFanOutReverse(route.SourceConnectionID(), route.Reverse()),
 		IdempotencyRule:    route.IdempotencyRule(),
 		SourceConnectionID: route.SourceConnectionID(),
 	}, nil
+}
+
+func mapFanOutGroups(in []integrationdomain.ActivityGroup) []orchestrationapp.FanOutGroup {
+	out := make([]orchestrationapp.FanOutGroup, 0, len(in))
+	for _, g := range in {
+		steps := make([]orchestrationapp.FanOutStep, 0, len(g.Steps))
+		for _, s := range g.Steps {
+			steps = append(steps, orchestrationapp.FanOutStep{
+				ConnectionID: s.DestinationConnectionID,
+				Capability:   s.Capability,
+				MappingKey:   s.MappingKey,
+			})
+		}
+		out = append(out, orchestrationapp.FanOutGroup{
+			Mode:  string(g.Mode),
+			Steps: steps,
+		})
+	}
+	return out
+}
+
+func mapFanOutReverse(sourceConnID uuid.UUID, rev *integrationdomain.ReverseConfig) *orchestrationapp.FanOutReverse {
+	if rev == nil {
+		return nil
+	}
+	return &orchestrationapp.FanOutReverse{
+		ConnectionID: sourceConnID,
+		Capability:   rev.Capability,
+		On:           rev.On,
+	}
 }
 
 func (g *SyncRouteGateway) decryptWebhookSecret(ciphertext []byte) (string, error) {

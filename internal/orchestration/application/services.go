@@ -151,13 +151,15 @@ type ResolveWebhookInput struct {
 	Payload      map[string]any
 }
 
-// ResolvedWebhookRoute carries tenant + primary destination for AcceptWebhook → SubmitIntent.
+// ResolvedWebhookRoute carries tenant + fan-out plan for AcceptWebhook → SubmitIntent.
+// Intent.connection_id is SourceConnectionID; each Execution overrides destination via context.
 type ResolvedWebhookRoute struct {
 	SyncRouteID        uuid.UUID
 	OrganizationID     uuid.UUID
 	WorkspaceID        uuid.UUID
-	ConnectionID       uuid.UUID // primary destination (v1 single Execution)
-	Capability         string
+	Capability         string // Intent-level default (first destination capability)
+	FanOutGroups       []FanOutGroup
+	FanOutReverse      *FanOutReverse
 	IdempotencyRule    map[string]any
 	SourceConnectionID uuid.UUID
 }

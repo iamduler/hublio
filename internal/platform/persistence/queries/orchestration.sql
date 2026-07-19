@@ -49,7 +49,16 @@ WHERE id = $1;
 SELECT id, intent_id, status, result, retry_attempt, current_step_no, context,
        failure_reason, started_at, completed_at, created_at
 FROM executions
-WHERE intent_id = $1;
+WHERE intent_id = $1
+ORDER BY created_at ASC
+LIMIT 1;
+
+-- name: ListExecutionsByIntentID :many
+SELECT id, intent_id, status, result, retry_attempt, current_step_no, context,
+       failure_reason, started_at, completed_at, created_at
+FROM executions
+WHERE intent_id = $1
+ORDER BY created_at ASC;
 
 -- name: InsertExecutionStep :exec
 INSERT INTO execution_steps (

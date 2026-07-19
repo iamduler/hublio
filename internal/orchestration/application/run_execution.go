@@ -12,11 +12,12 @@ import (
 	"github.com/google/uuid"
 )
 
-// RunExecutionResult is returned by RunExecution. When RequeueJob is non-nil the caller
-// must enqueue it AFTER the surrounding transaction commits.
+// RunExecutionResult is returned by RunExecution. When RequeueJob / FollowUpJobs are
+// non-nil the caller must enqueue them AFTER the surrounding transaction commits.
 type RunExecutionResult struct {
-	Execution  *domain.Execution
-	RequeueJob *ExecutionJob
+	Execution    *domain.Execution
+	RequeueJob   *ExecutionJob
+	FollowUpJobs []*ExecutionJob // fan-out continuation (next sequential / parallel wave)
 }
 
 // RunExecution drives one Execution through its sequential Steps (validate ->
@@ -49,7 +50,8 @@ func (s *Services) RunExecution(ctx context.Context, executionID uuid.UUID) (*Ru
 		return &RunExecutionResult{Execution: execution}, nil
 	}
 
-	resolved, resolveErr := s.Connections.ResolveForIntent(ctx, intent.WorkspaceID(), intent.ConnectionID())
+	targetConnID, targetCapability := executionTarget(intent, execution)
+	resolved, resolveErr := s.Connections.ResolveForIntent(ctx, intent.WorkspaceID(), targetConnID)
 
 	for {
 		step, ok := execution.NextPendingStep()
@@ -61,7 +63,7 @@ func (s *Services) RunExecution(ctx context.Context, executionID uuid.UUID) (*Ru
 			return nil, mapDomainErr(err)
 		}
 
-		stepErr := s.runStep(ctx, execution, intent, step, resolved, resolveErr)
+		stepErr := s.runStep(ctx, execution, intent, step, resolved, resolveErr, targetCapability)
 		now = s.clock().Now()
 		if stepErr != nil {
 			_ = execution.FailStep(step.StepNo(), stepErrorCode(stepErr), stepErr.Error(), now)
@@ -93,7 +95,11 @@ func (s *Services) RunExecution(ctx context.Context, executionID uuid.UUID) (*Ru
 		if err := s.Executions.Update(ctx, execution); err != nil {
 			return nil, mapRepoErr(err)
 		}
-		return &RunExecutionResult{Execution: execution}, nil
+		followUps, err := s.continueFanOutAfterSuccess(ctx, execution, intent)
+		if err != nil {
+			return nil, err
+		}
+		return &RunExecutionResult{Execution: execution, FollowUpJobs: followUps}, nil
 	}
 
 	reason := failureReason(execution)
@@ -134,10 +140,22 @@ func (s *Services) RunExecution(ctx context.Context, executionID uuid.UUID) (*Ru
 	if err := s.Executions.Update(ctx, execution); err != nil {
 		return nil, mapRepoErr(err)
 	}
-	return &RunExecutionResult{Execution: execution}, nil
+	followUps, err := s.continueFanOutAfterFailure(ctx, execution, intent)
+	if err != nil {
+		return nil, err
+	}
+	return &RunExecutionResult{Execution: execution, FollowUpJobs: followUps}, nil
 }
 
-func (s *Services) runStep(ctx context.Context, execution *domain.Execution, intent *domain.Intent, step *domain.ExecutionStep, resolved ResolvedConnection, resolveErr error) error {
+func (s *Services) runStep(
+	ctx context.Context,
+	execution *domain.Execution,
+	intent *domain.Intent,
+	step *domain.ExecutionStep,
+	resolved ResolvedConnection,
+	resolveErr error,
+	capability string,
+) error {
 	switch step.StepType() {
 	case domain.StepTypeValidate:
 		if resolveErr != nil {
@@ -146,7 +164,7 @@ func (s *Services) runStep(ctx context.Context, execution *domain.Execution, int
 		return nil
 
 	case domain.StepTypeTransformRequest:
-		transformed, err := s.transformer().TransformRequest(ctx, intent.Capability(), intent.Payload())
+		transformed, err := s.transformer().TransformRequest(ctx, capability, intent.Payload())
 		if err != nil {
 			return err
 		}
@@ -154,14 +172,14 @@ func (s *Services) runStep(ctx context.Context, execution *domain.Execution, int
 		return nil
 
 	case domain.StepTypeInvokeConnector:
-		return s.invokeConnectorStep(ctx, execution, intent, step, resolved)
+		return s.invokeConnectorStep(ctx, execution, intent, step, resolved, capability)
 
 	case domain.StepTypeTransformResponse:
 		resp, ok := execution.Context()["invoke_response"].(map[string]any)
 		if !ok {
 			return nil
 		}
-		transformed, err := s.transformer().TransformResponse(ctx, intent.Capability(), resp)
+		transformed, err := s.transformer().TransformResponse(ctx, capability, resp)
 		if err != nil {
 			return err
 		}
@@ -169,10 +187,8 @@ func (s *Services) runStep(ctx context.Context, execution *domain.Execution, int
 		return nil
 
 	case domain.StepTypePublishEvent:
-		// Events BC (Phase F) will publish a durable runtime event here; for now we only
-		// record the intent on the Execution timeline.
-		return s.appendTimeline(execution, "publish_event", "execution runtime event recorded (Events BC pending)", map[string]any{
-			"capability": intent.Capability(),
+		return s.appendTimeline(execution, "publish_event", "execution runtime event recorded", map[string]any{
+			"capability": capability,
 		}, s.clock().Now())
 
 	default:
@@ -180,7 +196,14 @@ func (s *Services) runStep(ctx context.Context, execution *domain.Execution, int
 	}
 }
 
-func (s *Services) invokeConnectorStep(ctx context.Context, execution *domain.Execution, intent *domain.Intent, step *domain.ExecutionStep, resolved ResolvedConnection) error {
+func (s *Services) invokeConnectorStep(
+	ctx context.Context,
+	execution *domain.Execution,
+	intent *domain.Intent,
+	step *domain.ExecutionStep,
+	resolved ResolvedConnection,
+	capability string,
+) error {
 	requestPayload, ok := execution.Context()["request"].(map[string]any)
 	if !ok || requestPayload == nil {
 		requestPayload = intent.Payload()
@@ -194,7 +217,7 @@ func (s *Services) invokeConnectorStep(ctx context.Context, execution *domain.Ex
 
 	resp, err := s.Connectors.Invoke(ctx, resolved.ConnectorCode, InvokeRequest{
 		ConnectionID: resolved.ConnectionID,
-		Capability:   intent.Capability(),
+		Capability:   capability,
 		Config:       resolved.Config,
 		Secret:       resolved.Secret,
 		Payload:      requestPayload,

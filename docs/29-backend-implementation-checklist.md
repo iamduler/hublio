@@ -246,14 +246,21 @@ Thứ tự Aggregate: **Organization → Workspace → User/Membership → API K
 > JSON (`group_mode` sequential|parallel + destination steps). Webhook secret generated on
 > create when `trigger_type` is webhook|both (encrypted at rest; plaintext once). Watermark
 > Upsert/List for poll cursors. Management API under
-> `/api/v1/integration/workspaces/:workspaceId/sync-routes`. Fan-out into multi-Execution
-> SubmitIntent is **not** in the SyncRoute config slice.
+> `/api/v1/integration/workspaces/:workspaceId/sync-routes`. Runtime fan-out (N Executions)
+> is implemented in Orchestration (see Fan-out note below), not in this config slice.
 >
 > **Webhook ingress (2026-07-19):** `POST /api/v1/webhooks/sync-routes/:syncRouteId` (public;
 > auth = `X-Hublio-Webhook-Secret`, constant-time compare). Orchestration `AcceptWebhook` →
 > SyncRouteGateway (Integration) validates Enabled + trigger + resource_type + JSON filter →
-> `SubmitIntent` on primary activity step. Derived idempotency key when omitted. OpenAPI
-> updated. Fan-out still deferred.
+> `SubmitIntent` with SyncRoute fan-out plan. Derived idempotency key when omitted. OpenAPI
+> updated.
+>
+> **Fan-out N Executions (2026-07-19):** Migration `000006_execution_fanout` drops
+> `executions_intent_id_unique` (intent_id indexed). One Intent may own N Executions.
+> Webhook maps activity groups → Executions (`sequential` | `parallel`); optional reverse on
+> source. Destination Connection/Capability live on Execution.context; RunExecution continues
+> the next wave after success (sibling barrier for parallel). Worker enqueues FollowUpJobs
+> after commit. Steps inside one Execution remain sequential.
 
 ---
 

@@ -23,20 +23,26 @@ type SubmitIntentInput struct {
 	Payload        map[string]any
 	CorrelationID  string
 	IdempotencyKey string
+	// Optional SyncRoute fan-out (webhook ingress). When FanOutGroups is non-empty,
+	// one Intent fans out to N Executions; ConnectionID should be the SyncRoute source.
+	SyncRouteID   uuid.UUID
+	FanOutGroups  []FanOutGroup
+	FanOutReverse *FanOutReverse
 }
 
 type SubmitIntentResult struct {
-	Intent    *domain.Intent
-	Execution *domain.Execution // nil when the Intent was Rejected
-	Replayed  bool              // true when returned from an existing Idempotency-Key
-	// Job must be enqueued by the caller AFTER the surrounding transaction commits.
-	// Enqueue-inside-tx races the worker against uncommitted rows.
-	Job *ExecutionJob
+	Intent     *domain.Intent
+	Execution  *domain.Execution   // first / primary Execution (backward compatible)
+	Executions []*domain.Execution // all Executions under the Intent (fan-out)
+	Replayed   bool
+	// Job is the first job (backward compatible). Prefer Jobs for fan-out.
+	Job  *ExecutionJob
+	Jobs []*ExecutionJob
 }
 
 // SubmitIntent is the single entry point for Business Intents. It resolves the target
 // Connection, creates the Intent, accepts/rejects it based on payload validity, and on
-// Accept creates+queues the (unique, v1) Execution and enqueues the worker job.
+// Accept creates+queues Execution(s) and returns worker jobs for after-commit enqueue.
 func (s *Services) SubmitIntent(ctx context.Context, in SubmitIntentInput) (*SubmitIntentResult, error) {
 	now := s.clock().Now()
 
@@ -88,46 +94,47 @@ func (s *Services) SubmitIntent(ctx context.Context, in SubmitIntentInput) (*Sub
 		return nil, mapRepoErr(err)
 	}
 
-	execution, err := s.createExecution(ctx, intent.ID(), now)
-	if err != nil {
-		return nil, err
+	if len(in.FanOutGroups) > 0 {
+		executions, jobs, err := s.createFanOutExecutions(ctx, intent, in.SyncRouteID, in.FanOutGroups, in.FanOutReverse, now)
+		if err != nil {
+			return nil, err
+		}
+		result.Executions = executions
+		if len(executions) > 0 {
+			result.Execution = executions[0]
+		}
+		result.Jobs = jobs
+		if len(jobs) > 0 {
+			result.Job = jobs[0]
+		}
+	} else {
+		execution, err := s.createExecution(ctx, intent.ID(), now)
+		if err != nil {
+			return nil, err
+		}
+		result.Execution = execution
+		result.Executions = []*domain.Execution{execution}
+		result.Job = &ExecutionJob{
+			ExecutionID:    execution.ID(),
+			IntentID:       intent.ID(),
+			OrganizationID: in.OrganizationID,
+			WorkspaceID:    in.WorkspaceID,
+			CorrelationID:  in.CorrelationID,
+		}
+		result.Jobs = []*ExecutionJob{result.Job}
 	}
 
 	if err := s.saveIdempotencyKey(ctx, in, intent.ID(), now); err != nil {
 		return nil, err
 	}
 
-	result.Execution = execution
-	result.Job = &ExecutionJob{
-		ExecutionID:    execution.ID(),
-		IntentID:       intent.ID(),
-		OrganizationID: in.OrganizationID,
-		WorkspaceID:    in.WorkspaceID,
-		CorrelationID:  in.CorrelationID,
-	}
 	return result, nil
 }
 
 func (s *Services) createExecution(ctx context.Context, intentID uuid.UUID, now time.Time) (*domain.Execution, error) {
-	execID, err := id.NewV7()
+	execution, err := s.createExecutionWithContext(ctx, intentID, nil, now)
 	if err != nil {
-		return nil, apperr.Wrap(err, "failed to generate execution id", apperr.ErrCodeInternal)
-	}
-	stepIDs := make([]uuid.UUID, len(domain.DefaultStepTypes()))
-	for i := range stepIDs {
-		stepID, err := id.NewV7()
-		if err != nil {
-			return nil, apperr.Wrap(err, "failed to generate execution step id", apperr.ErrCodeInternal)
-		}
-		stepIDs[i] = stepID
-	}
-
-	execution, err := domain.NewExecution(execID, intentID, stepIDs, now)
-	if err != nil {
-		return nil, mapDomainErr(err)
-	}
-	if err := s.Executions.Save(ctx, execution); err != nil {
-		return nil, mapRepoErr(err)
+		return nil, err
 	}
 	if err := execution.Queue(now); err != nil {
 		return nil, mapDomainErr(err)
@@ -162,12 +169,13 @@ func (s *Services) loadSubmittedIntent(ctx context.Context, intentID uuid.UUID) 
 	if err != nil {
 		return nil, mapRepoErr(err)
 	}
-	execution, err := s.Executions.FindByIntentID(ctx, intent.ID())
+	executions, err := s.Executions.ListByIntentID(ctx, intent.ID())
 	if err != nil {
-		if errors.Is(err, domain.ErrNotFound) {
-			return &SubmitIntentResult{Intent: intent, Replayed: true}, nil
-		}
 		return nil, mapRepoErr(err)
 	}
-	return &SubmitIntentResult{Intent: intent, Execution: execution, Replayed: true}, nil
+	result := &SubmitIntentResult{Intent: intent, Executions: executions, Replayed: true}
+	if len(executions) > 0 {
+		result.Execution = executions[0]
+	}
+	return result, nil
 }

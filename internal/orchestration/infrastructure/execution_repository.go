@@ -158,6 +158,22 @@ func (r *ExecutionRepository) FindByIntentID(ctx context.Context, intentID uuid.
 	return r.hydrate(ctx, row)
 }
 
+func (r *ExecutionRepository) ListByIntentID(ctx context.Context, intentID uuid.UUID) ([]*domain.Execution, error) {
+	rows, err := r.q(ctx).ListExecutionsByIntentID(ctx, intentID)
+	if err != nil {
+		return nil, mapNotFound(err)
+	}
+	out := make([]*domain.Execution, 0, len(rows))
+	for _, row := range rows {
+		exec, err := r.hydrate(ctx, row)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, exec)
+	}
+	return out, nil
+}
+
 func (r *ExecutionRepository) hydrate(ctx context.Context, row sqlc.Execution) (*domain.Execution, error) {
 	q := r.q(ctx)
 

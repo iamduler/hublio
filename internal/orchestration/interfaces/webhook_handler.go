@@ -84,11 +84,24 @@ func (h *Handler) acceptWebhook(c *gin.Context) {
 	if result.Execution != nil {
 		events = append(events, result.Execution.PullEvents()...)
 	}
+	for _, exec := range result.Executions {
+		if result.Execution != nil && exec.ID() == result.Execution.ID() {
+			continue
+		}
+		events = append(events, exec.PullEvents()...)
+	}
 	events = application.EnrichEvents(events, orgID, workspaceID, correlationID)
 	h.svc.PublishAfterCommit(c.Request.Context(), events...)
 
-	if result.Job != nil && h.svc.Jobs != nil {
-		if err := h.svc.Jobs.EnqueueExecution(c.Request.Context(), *result.Job); err != nil {
+	jobs := result.Jobs
+	if len(jobs) == 0 && result.Job != nil {
+		jobs = []*application.ExecutionJob{result.Job}
+	}
+	for _, job := range jobs {
+		if job == nil || h.svc.Jobs == nil {
+			continue
+		}
+		if err := h.svc.Jobs.EnqueueExecution(c.Request.Context(), *job); err != nil {
 			httpx.ResponseError(c, apperr.Wrap(err, "intent accepted but failed to enqueue execution", apperr.ErrCodeInternal))
 			return
 		}
@@ -100,10 +113,11 @@ func (h *Handler) acceptWebhook(c *gin.Context) {
 		ResourceType: "sync_route",
 		ResourceID:   syncRouteID,
 		Metadata: map[string]any{
-			"workspace_id":  workspaceID.String(),
-			"intent_id":     result.Intent.ID().String(),
-			"resource_type": req.ResourceType,
-			"replayed":      result.Replayed,
+			"workspace_id":   workspaceID.String(),
+			"intent_id":      result.Intent.ID().String(),
+			"resource_type":  req.ResourceType,
+			"replayed":       result.Replayed,
+			"execution_count": len(result.Executions),
 		},
 	})
 
@@ -120,6 +134,13 @@ func (h *Handler) acceptWebhook(c *gin.Context) {
 	}
 	if result.Execution != nil {
 		body["execution_id"] = result.Execution.ID().String()
+	}
+	if len(result.Executions) > 0 {
+		ids := make([]string, 0, len(result.Executions))
+		for _, e := range result.Executions {
+			ids = append(ids, e.ID().String())
+		}
+		body["execution_ids"] = ids
 	}
 	httpx.ResponseSuccess(c, status, "webhook accepted", body)
 }

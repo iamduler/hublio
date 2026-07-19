@@ -216,6 +216,14 @@ func handleExecutionJob(ctx context.Context, pool *pgxpool.Pool, svc *orchestrat
 			return fmt.Errorf("worker: failed to re-enqueue execution after commit: %w", err)
 		}
 	}
+	for _, job := range result.FollowUpJobs {
+		if job == nil || svc.Jobs == nil {
+			continue
+		}
+		if err := svc.Jobs.EnqueueExecution(ctx, *job); err != nil {
+			return fmt.Errorf("worker: failed to enqueue fan-out follow-up after commit: %w", err)
+		}
+	}
 	return nil
 }
 

@@ -740,9 +740,11 @@ paths:
         Public ingress (no JWT / API key). Validates `X-Hublio-Webhook-Secret` against the
         SyncRoute encrypted secret (constant-time), checks Enabled + webhook|both trigger,
         resource_type allow-list, and optional JSON filter. On success submits a Business
-        Intent targeting the primary activity step (v1 single Execution; fan-out deferred).
-        Idempotency key may be supplied or is derived from workspace + route + resource +
-        operation + business key. Never logs the webhook secret.
+        Intent bound to the SyncRoute source Connection and fans out to one Execution per
+        activity step (sequential or parallel per group; optional reverse). Response includes
+        `execution_id` (first) and `execution_ids` (all). Idempotency key may be supplied or
+        is derived from workspace + route + resource + operation + business key. Never logs
+        the webhook secret.
       operationId: acceptSyncRouteWebhook
       security: []
       parameters:
@@ -774,8 +776,9 @@ paths:
       description: |
         Resolves the Connection (must be Active), creates the Intent (Submitted), then
         Accepts or Rejects it based on payload/capability validity. On Accept, creates and
-        Queues the (v1: unique per Intent) Execution and enqueues the `orchestration.execution`
-        worker job. Idempotency-Key is required; replays return the original Intent/Execution.
+        Queues one Execution (direct submit) and enqueues the `orchestration.execution`
+        worker job. SyncRoute webhook ingress may fan out to multiple Executions under the
+        same Intent. Idempotency-Key is required; replays return the original Intent/Execution(s).
       operationId: submitIntent
       security:
         - apiKeyAuth: []

@@ -58,6 +58,7 @@ type Querier interface {
 	ListExecutionSnapshotsByExecution(ctx context.Context, executionID uuid.UUID) ([]ExecutionSnapshot, error)
 	ListExecutionStepsByExecution(ctx context.Context, executionID uuid.UUID) ([]ExecutionStep, error)
 	ListExecutionTimelinesByExecution(ctx context.Context, executionID uuid.UUID) ([]ExecutionTimeline, error)
+	ListExecutionsByIntentID(ctx context.Context, intentID uuid.UUID) ([]Execution, error)
 	ListSyncRouteWatermarks(ctx context.Context, syncRouteID uuid.UUID) ([]SyncRouteWatermark, error)
 	ListSyncRoutesByWorkspace(ctx context.Context, workspaceID uuid.UUID) ([]SyncRoute, error)
 	ListWorkspaceUsersByUser(ctx context.Context, userID uuid.UUID) ([]WorkspaceUser, error)

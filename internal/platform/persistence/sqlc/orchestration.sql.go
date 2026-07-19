@@ -43,6 +43,8 @@ SELECT id, intent_id, status, result, retry_attempt, current_step_no, context,
        failure_reason, started_at, completed_at, created_at
 FROM executions
 WHERE intent_id = $1
+ORDER BY created_at ASC
+LIMIT 1
 `
 
 func (q *Queries) GetExecutionByIntentID(ctx context.Context, intentID uuid.UUID) (Execution, error) {
@@ -430,6 +432,46 @@ func (q *Queries) ListExecutionTimelinesByExecution(ctx context.Context, executi
 			&i.Event,
 			&i.Message,
 			&i.Metadata,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listExecutionsByIntentID = `-- name: ListExecutionsByIntentID :many
+SELECT id, intent_id, status, result, retry_attempt, current_step_no, context,
+       failure_reason, started_at, completed_at, created_at
+FROM executions
+WHERE intent_id = $1
+ORDER BY created_at ASC
+`
+
+func (q *Queries) ListExecutionsByIntentID(ctx context.Context, intentID uuid.UUID) ([]Execution, error) {
+	rows, err := q.db.Query(ctx, listExecutionsByIntentID, intentID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Execution{}
+	for rows.Next() {
+		var i Execution
+		if err := rows.Scan(
+			&i.ID,
+			&i.IntentID,
+			&i.Status,
+			&i.Result,
+			&i.RetryAttempt,
+			&i.CurrentStepNo,
+			&i.Context,
+			&i.FailureReason,
+			&i.StartedAt,
+			&i.CompletedAt,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err

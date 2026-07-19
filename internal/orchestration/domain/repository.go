@@ -22,7 +22,10 @@ type ExecutionRepository interface {
 	// (append-only) Snapshots/Timeline entries.
 	Update(ctx context.Context, execution *Execution) error
 	FindByID(ctx context.Context, id uuid.UUID) (*Execution, error)
+	// FindByIntentID returns the earliest Execution for the Intent (backward compatible).
 	FindByIntentID(ctx context.Context, intentID uuid.UUID) (*Execution, error)
+	// ListByIntentID returns all Executions for an Intent (fan-out), ordered by created_at.
+	ListByIntentID(ctx context.Context, intentID uuid.UUID) ([]*Execution, error)
 }
 
 // IdempotencyRepository persists Intent idempotency keys (Postgres is the source of truth;
