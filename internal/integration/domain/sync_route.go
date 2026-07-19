@@ -402,6 +402,43 @@ func (r *SyncRoute) SoftDelete(now time.Time) error {
 	return nil
 }
 
+// CanAcceptWebhook checks Enabled status and webhook trigger + secret presence.
+func (r *SyncRoute) CanAcceptWebhook() error {
+	if r.deletedAt != nil {
+		return ErrSyncRouteRemoved
+	}
+	if r.status != SyncRouteStatusEnabled {
+		return ErrSyncRouteNotEnabled
+	}
+	if !r.NeedsWebhookSecret() {
+		return ErrWebhookNotConfigured
+	}
+	if len(r.webhookSecretCipher) == 0 {
+		return ErrWebhookSecretRequired
+	}
+	return nil
+}
+
+// AllowsResourceType reports whether resourceType is in the route's allow-list.
+func (r *SyncRoute) AllowsResourceType(resourceType string) bool {
+	resourceType = strings.TrimSpace(strings.ToLower(resourceType))
+	for _, t := range r.resourceTypes {
+		if t == resourceType {
+			return true
+		}
+	}
+	return false
+}
+
+// PrimaryActivityStep returns the first step of the first activity group (v1 single-Execution
+// path until SyncRoute fan-out lands). Reverse is not used as primary.
+func (r *SyncRoute) PrimaryActivityStep() (ActivityStep, error) {
+	if len(r.activities) == 0 || len(r.activities[0].Steps) == 0 {
+		return ActivityStep{}, ErrInvalidActivityGroup
+	}
+	return r.activities[0].Steps[0], nil
+}
+
 func (r *SyncRoute) validateReady() error {
 	if len(r.resourceTypes) == 0 {
 		return ErrInvalidResourceTypes

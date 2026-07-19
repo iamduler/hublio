@@ -23,8 +23,14 @@ func mapDomainErr(err error) error {
 		errors.Is(err, domain.ErrInvalidActivityStep),
 		errors.Is(err, domain.ErrInvalidReverseConfig),
 		errors.Is(err, domain.ErrInvalidSchedule),
-		errors.Is(err, domain.ErrWebhookSecretRequired):
+		errors.Is(err, domain.ErrWebhookSecretRequired),
+		errors.Is(err, domain.ErrInvalidFilter),
+		errors.Is(err, domain.ErrResourceTypeNotAllowed),
+		errors.Is(err, domain.ErrFilterRejected),
+		errors.Is(err, domain.ErrWebhookNotConfigured):
 		return apperr.Wrap(err, err.Error(), apperr.ErrCodeBadRequest)
+	case errors.Is(err, domain.ErrWebhookSecretMismatch):
+		return apperr.Wrap(err, "unauthorized", apperr.ErrCodeUnauthorized)
 	case errors.Is(err, domain.ErrInvalidTransition),
 		errors.Is(err, domain.ErrConnectorRemoved),
 		errors.Is(err, domain.ErrConnectorNotUsable),
@@ -33,7 +39,8 @@ func mapDomainErr(err error) error {
 		errors.Is(err, domain.ErrConnectionNotActive),
 		errors.Is(err, domain.ErrConflict),
 		errors.Is(err, domain.ErrSyncRouteRemoved),
-		errors.Is(err, domain.ErrSyncRouteNotEditable):
+		errors.Is(err, domain.ErrSyncRouteNotEditable),
+		errors.Is(err, domain.ErrSyncRouteNotEnabled):
 		return apperr.Wrap(err, err.Error(), apperr.ErrCodeConflict)
 	default:
 		return apperr.Wrap(err, "domain error", apperr.ErrCodeBadRequest)

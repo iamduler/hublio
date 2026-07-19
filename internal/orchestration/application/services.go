@@ -138,6 +138,30 @@ func (NoopAuditor) Record(ctx context.Context, rec AuditEvent) error {
 	return nil
 }
 
+// SyncRouteGateway resolves an Enabled SyncRoute for inbound webhook ingress without leaking
+// Integration types into Orchestration Domain. Implemented in orchestration/infrastructure.
+type SyncRouteGateway interface {
+	ResolveWebhook(ctx context.Context, in ResolveWebhookInput) (ResolvedWebhookRoute, error)
+}
+
+type ResolveWebhookInput struct {
+	SyncRouteID  uuid.UUID
+	SecretHeader string
+	ResourceType string
+	Payload      map[string]any
+}
+
+// ResolvedWebhookRoute carries tenant + primary destination for AcceptWebhook → SubmitIntent.
+type ResolvedWebhookRoute struct {
+	SyncRouteID        uuid.UUID
+	OrganizationID     uuid.UUID
+	WorkspaceID        uuid.UUID
+	ConnectionID       uuid.UUID // primary destination (v1 single Execution)
+	Capability         string
+	IdempotencyRule    map[string]any
+	SourceConnectionID uuid.UUID
+}
+
 // Services wires the Orchestration use cases. MaxRetries defaults to 3 when <= 0.
 type Services struct {
 	Intents     domain.IntentRepository
@@ -145,6 +169,7 @@ type Services struct {
 	Idempotency domain.IdempotencyRepository
 	Connections ConnectionGateway
 	Connectors  ConnectorGateway
+	SyncRoutes  SyncRouteGateway
 	Transformer Transformer
 	Jobs        JobEnqueuer
 	Events      EventPublisher

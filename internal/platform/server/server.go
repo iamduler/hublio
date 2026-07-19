@@ -203,6 +203,11 @@ func newOrchestrationServices(
 		integrationSvc.Secrets,
 	)
 	connectorGateway := orchestrationinfra.NewConnectorGateway(integrationSvc.Runtimes)
+	syncRouteGateway := orchestrationinfra.NewSyncRouteGateway(
+		integrationSvc.SyncRoutes,
+		identitySvc.Workspaces,
+		integrationSvc.Secrets,
+	)
 	transformer := orchestrationinfra.NewTransformerAdapter(transformationapp.NewServices())
 
 	return &orchestrationapp.Services{
@@ -211,6 +216,7 @@ func newOrchestrationServices(
 		Idempotency: orchestrationinfra.NewIdempotencyRepository(pool),
 		Connections: connectionGateway,
 		Connectors:  connectorGateway,
+		SyncRoutes:  syncRouteGateway,
 		Transformer: transformer,
 		Jobs:        orchestrationinfra.NewQueueJobEnqueuer(workQueue),
 	}
@@ -341,6 +347,7 @@ func (a *Application) registerRoutes(router *gin.Engine) {
 
 	orchestrationHandler := orchestrationhttp.NewHandler(a.orchestration, a.db.Pool)
 	orchestrationHandler.RegisterRoutes(api, middleware.APIKeyMiddleware(a.apiKeyAuth))
+	orchestrationHandler.RegisterWebhookRoutes(api)
 
 	eventsHandler := eventshttp.NewHandler(a.events)
 	eventsHandler.RegisterRoutes(api, middleware.APIKeyMiddleware(a.apiKeyAuth))

@@ -732,6 +732,41 @@ paths:
         "200":
           description: Upserted
 
+  /api/v1/webhooks/sync-routes/{syncRouteId}:
+    post:
+      tags: [Orchestration]
+      summary: Inbound SyncRoute webhook (shared-secret header)
+      description: |
+        Public ingress (no JWT / API key). Validates `X-Hublio-Webhook-Secret` against the
+        SyncRoute encrypted secret (constant-time), checks Enabled + webhook|both trigger,
+        resource_type allow-list, and optional JSON filter. On success submits a Business
+        Intent targeting the primary activity step (v1 single Execution; fan-out deferred).
+        Idempotency key may be supplied or is derived from workspace + route + resource +
+        operation + business key. Never logs the webhook secret.
+      operationId: acceptSyncRouteWebhook
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/syncRouteId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AcceptWebhookRequest"
+      responses:
+        "201":
+          description: Intent created (or accepted)
+        "200":
+          description: Idempotent replay
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+
   /api/v1/intents:
     post:
       tags: [Orchestration]
@@ -1334,3 +1369,34 @@ components:
           type: string
           enum: [success, failure, always]
           default: success
+
+    AcceptWebhookRequest:
+      type: object
+      required: [resource_type, payload]
+      properties:
+        resource_type:
+          type: string
+          example: invoice
+        operation:
+          type: string
+          description: Defaults to upsert; used in derived idempotency key
+          example: create
+        payload:
+          type: object
+          description: Canonical-ish business payload for the Intent
+          additionalProperties: true
+          example:
+            invoice_number: "INV-100"
+            issue_date: "2026-07-15T10:00:00Z"
+            currency: VND
+            customer:
+              name: "Cong ty ABC"
+            items:
+              - name: "San pham 1"
+                quantity: 1
+                unit_price: 100000
+        idempotency_key:
+          type: string
+          description: Optional; when omitted Hublio derives a stable key
+        correlation_id:
+          type: string

@@ -247,7 +247,13 @@ Thứ tự Aggregate: **Organization → Workspace → User/Membership → API K
 > create when `trigger_type` is webhook|both (encrypted at rest; plaintext once). Watermark
 > Upsert/List for poll cursors. Management API under
 > `/api/v1/integration/workspaces/:workspaceId/sync-routes`. Fan-out into multi-Execution
-> SubmitIntent and webhook HTTP ingress are **not** in this slice.
+> SubmitIntent is **not** in the SyncRoute config slice.
+>
+> **Webhook ingress (2026-07-19):** `POST /api/v1/webhooks/sync-routes/:syncRouteId` (public;
+> auth = `X-Hublio-Webhook-Secret`, constant-time compare). Orchestration `AcceptWebhook` →
+> SyncRouteGateway (Integration) validates Enabled + trigger + resource_type + JSON filter →
+> `SubmitIntent` on primary activity step. Derived idempotency key when omitted. OpenAPI
+> updated. Fan-out still deferred.
 
 ---
 
