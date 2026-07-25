@@ -1,0 +1,21 @@
+{
+  "meta": {
+    "brand": "Hublio",
+    "title": "Hublio",
+    "description": "Nền tảng tích hợp và điều phối nghiệp vụ"
+  },
+  "nav": {
+    "signIn": "Đăng nhập",
+    "signOut": "Đăng xuất",
+    "getStarted": "Bắt đầu"
+  },
+  "settings": {
+    "appearance": {
+      "themes": {
+        "system": "Hệ thống",
+        "light": "Sáng",
+        "dark": "Tối"
+      }
+    }
+  }
+}

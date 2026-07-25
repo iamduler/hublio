@@ -1,0 +1,15 @@
+{
+  "title": "Execution",
+  "loadError": "Could not load execution.",
+  "fromIntent": "From intent",
+  "steps": "Steps",
+  "noSteps": "No steps recorded.",
+  "timeline": "Timeline",
+  "noTimeline": "No timeline entries.",
+  "actions": {
+    "cancel": "Cancel",
+    "retry": "Retry",
+    "cancelDone": "Execution cancelled.",
+    "retryDone": "Execution retry queued."
+  }
+}

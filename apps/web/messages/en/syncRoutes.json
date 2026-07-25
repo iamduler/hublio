@@ -1,0 +1,45 @@
+{
+  "title": "Sync Routes",
+  "subtitle": "Route source events to destination systems.",
+  "create": "New sync route",
+  "createSubtitle": "Fan out from a source connection to destinations.",
+  "empty": "No sync routes yet.",
+  "emptyBody": "Create a sync route to automate integrations.",
+  "loadError": "Could not load sync routes.",
+  "created": "Sync route created.",
+  "deleted": "Sync route deleted.",
+  "columns": {
+    "name": "Name",
+    "trigger": "Trigger",
+    "resources": "Resource types",
+    "status": "Status"
+  },
+  "form": {
+    "name": "Name",
+    "source": "Source connection",
+    "trigger": "Trigger",
+    "selectConnection": "Select a connection",
+    "resourceTypes": "Resource types",
+    "resourceTypesHint": "comma-separated, e.g. order, invoice",
+    "destinationStep": "Destination step",
+    "destination": "Destination connection",
+    "capability": "Capability",
+    "cancel": "Cancel",
+    "submit": "Create sync route"
+  },
+  "actions": {
+    "enable": "Enable",
+    "disable": "Disable",
+    "delete": "Delete",
+    "rotateSecret": "Rotate secret",
+    "enableDone": "Sync route enabled.",
+    "disableDone": "Sync route disabled.",
+    "rotateDone": "Webhook secret rotated."
+  },
+  "deleteTitle": "Delete sync route?",
+  "deleteBody": "This permanently removes the sync route configuration.",
+  "webhookSecret": "Webhook secret",
+  "secretOnce": "Copy this secret now — it is shown only once.",
+  "watermarks": "Watermarks",
+  "noWatermarks": "No watermarks recorded yet."
+}

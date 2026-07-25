@@ -1,0 +1,34 @@
+{
+  "nav": {
+    "overview": "Overview",
+    "connectors": "Connectors",
+    "connections": "Connections",
+    "syncRoutes": "Sync Routes",
+    "intents": "Intents",
+    "events": "Events",
+    "apiKeys": "API Keys",
+    "team": "Team",
+    "settings": "Settings",
+    "sections": {
+      "integration": "Integration",
+      "orchestration": "Orchestration",
+      "workspace": "Workspace"
+    }
+  },
+  "home": {
+    "title": "Overview",
+    "welcome": "Monitor integrations and orchestrations across your workspace."
+  },
+  "overview": {
+    "kpis": {
+      "connections": "Connections",
+      "activeConnections": "{count} active",
+      "connectors": "Connectors",
+      "syncRoutes": "Sync routes",
+      "recentEvents": "Recent events"
+    },
+    "recentActivity": "Recent activity",
+    "viewAll": "View all",
+    "noActivity": "No recent events yet."
+  }
+}

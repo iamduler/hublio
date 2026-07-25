@@ -1,0 +1,18 @@
+{
+  "title": "Sự kiện",
+  "subtitle": "Sự kiện runtime, nghiệp vụ và hệ thống của workspace này.",
+  "empty": "Chưa có sự kiện nào.",
+  "loadError": "Không thể tải sự kiện.",
+  "columns": {
+    "event": "Sự kiện",
+    "category": "Loại",
+    "aggregate": "Aggregate",
+    "execution": "Execution",
+    "time": "Thời gian"
+  },
+  "detail": {
+    "correlation": "Correlation ID",
+    "publishedBy": "Phát hành bởi",
+    "payload": "Payload"
+  }
+}

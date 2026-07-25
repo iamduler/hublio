@@ -1,0 +1,8 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* Shared Hublio design system (tokens, @theme, base styles, @source). */
+@import "../../../packages/ui/src/styles/theme.css";
+
+/* Scan admin sources for Tailwind classes. */
+@source "./";

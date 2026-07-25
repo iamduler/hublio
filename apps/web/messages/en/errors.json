@@ -1,0 +1,5 @@
+{
+  "generic": "Something went wrong. Please try again.",
+  "unauthorized": "Invalid email or password.",
+  "network": "Unable to reach the API. Check NEXT_PUBLIC_API_URL."
+}

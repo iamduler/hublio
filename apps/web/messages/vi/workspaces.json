@@ -1,0 +1,34 @@
+{
+  "switcher": {
+    "label": "Workspace",
+    "none": "Chọn workspace",
+    "empty": "Chưa có workspace",
+    "create": "Workspace mới"
+  },
+  "created": "Đã tạo workspace.",
+  "createTitle": "Tạo workspace",
+  "createSubtitle": "Workspace cô lập connection, thông tin xác thực và dữ liệu runtime.",
+  "form": {
+    "name": "Tên workspace",
+    "environment": "Môi trường",
+    "cancel": "Huỷ",
+    "submit": "Tạo workspace"
+  },
+  "settings": {
+    "title": "Cài đặt workspace",
+    "subtitle": "Quản lý workspace đang hoạt động.",
+    "general": "Chung",
+    "name": "Tên",
+    "environment": "Môi trường",
+    "status": "Trạng thái",
+    "enable": "Bật",
+    "disable": "Tắt",
+    "enableTitle": "Bật workspace?",
+    "disableTitle": "Tắt workspace?",
+    "enableBody": "Bật lại workspace này và tiếp tục các tích hợp.",
+    "disableBody": "Tắt sẽ dừng mọi tích hợp của workspace này.",
+    "enabled": "Đã bật workspace.",
+    "disabled": "Đã tắt workspace.",
+    "noWorkspace": "Chưa chọn workspace."
+  }
+}

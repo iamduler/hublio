@@ -1,0 +1,34 @@
+{
+  "nav": {
+    "overview": "Tổng quan",
+    "connectors": "Connector",
+    "connections": "Connection",
+    "syncRoutes": "Sync Route",
+    "intents": "Intent",
+    "events": "Sự kiện",
+    "apiKeys": "API Key",
+    "team": "Nhóm",
+    "settings": "Cài đặt",
+    "sections": {
+      "integration": "Tích hợp",
+      "orchestration": "Điều phối",
+      "workspace": "Workspace"
+    }
+  },
+  "home": {
+    "title": "Tổng quan",
+    "welcome": "Giám sát tích hợp và điều phối trong workspace của bạn."
+  },
+  "overview": {
+    "kpis": {
+      "connections": "Connection",
+      "activeConnections": "{count} đang hoạt động",
+      "connectors": "Connector",
+      "syncRoutes": "Sync route",
+      "recentEvents": "Sự kiện gần đây"
+    },
+    "recentActivity": "Hoạt động gần đây",
+    "viewAll": "Xem tất cả",
+    "noActivity": "Chưa có sự kiện nào."
+  }
+}

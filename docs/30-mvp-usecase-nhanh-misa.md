@@ -290,6 +290,9 @@ Evaluation trên Canonical (hoặc normalized source DTO trước map — **ưu 
 # 12. Follow-ups
 
 1. ~~Amend Freeze wording for parallel Executions~~ — done in AGENTS / docs Freeze.
-2. Add `sync_routes` (+ webhook secret + watermark) to DBML when starting Integration design.
-3. Confirm Nhanh header name for webhook secret + MISA auth docs.
+2. ~~Add `sync_routes` (+ webhook secret + watermark) to DBML~~ — done.
+3. Confirm Nhanh header name for webhook secret (locked: `X-Hublio-Webhook-Secret`).
 4. Freeze Invoice Canonical fields for first mapping.
+5. MISA smoke SoT: [docs/31](31-misa-meinvoice-smoke.md) ← [webapi/intro](https://doc.meinvoice.vn/webapi/intro.html).
+   Run with real test credentials; decide whether Runtime should move from Integration Open API
+   to Web API (`/SAInvoice/Insert` draft) or keep dual paths.

@@ -1,0 +1,28 @@
+{
+  "title": "API Keys",
+  "subtitle": "Machine credentials scoped to this workspace.",
+  "create": "New API key",
+  "createTitle": "Create API key",
+  "copyOnce": "Copy this key now — it is shown only once.",
+  "nameLabel": "Key name",
+  "namePlaceholder": "e.g. production-integration",
+  "done": "Done",
+  "generate": "Generate key",
+  "created": "API key created.",
+  "rotated": "API key rotated.",
+  "disabled": "API key disabled.",
+  "loadError": "Could not load API keys.",
+  "empty": "No API keys yet.",
+  "columns": {
+    "name": "Name",
+    "prefix": "Prefix",
+    "lastUsed": "Last used",
+    "status": "Status",
+    "actions": "Actions"
+  },
+  "rotate": "Rotate",
+  "disable": "Disable",
+  "disableTitle": "Disable API key?",
+  "disableBody": "Applications using this key will stop working immediately.",
+  "cancel": "Cancel"
+}

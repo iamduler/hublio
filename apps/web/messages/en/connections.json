@@ -1,0 +1,41 @@
+{
+  "title": "Connections",
+  "subtitle": "Configured connections to external systems.",
+  "create": "New connection",
+  "createSubtitle": "Connect a workspace to an external system.",
+  "empty": "No connections yet.",
+  "emptyBody": "Create your first connection to start integrating.",
+  "loadError": "Could not load connections.",
+  "created": "Connection created.",
+  "columns": {
+    "name": "Name",
+    "environment": "Environment",
+    "status": "Status",
+    "default": "Default"
+  },
+  "form": {
+    "connector": "Connector",
+    "selectConnector": "Select a connector",
+    "name": "Name",
+    "environment": "Environment",
+    "credentialType": "Credential type",
+    "secret": "Credentials",
+    "description": "Description",
+    "cancel": "Cancel",
+    "submit": "Create connection"
+  },
+  "actions": {
+    "verify": "Verify",
+    "rotate": "Rotate credentials",
+    "enable": "Enable",
+    "disable": "Disable",
+    "verifyDone": "Verification started.",
+    "rotateDone": "Credentials rotated.",
+    "enableDone": "Connection enabled.",
+    "disableDone": "Connection disabled."
+  },
+  "detail": {
+    "timeout": "Timeout",
+    "updated": "Updated"
+  }
+}

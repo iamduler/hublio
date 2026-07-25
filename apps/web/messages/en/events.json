@@ -1,0 +1,18 @@
+{
+  "title": "Events",
+  "subtitle": "Runtime, business and system events for this workspace.",
+  "empty": "No events yet.",
+  "loadError": "Could not load events.",
+  "columns": {
+    "event": "Event",
+    "category": "Category",
+    "aggregate": "Aggregate",
+    "execution": "Execution",
+    "time": "Time"
+  },
+  "detail": {
+    "correlation": "Correlation ID",
+    "publishedBy": "Published by",
+    "payload": "Payload"
+  }
+}

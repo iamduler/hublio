@@ -1,0 +1,41 @@
+{
+  "title": "Connection",
+  "subtitle": "Các connection đã cấu hình tới hệ thống bên ngoài.",
+  "create": "Connection mới",
+  "createSubtitle": "Kết nối workspace tới một hệ thống bên ngoài.",
+  "empty": "Chưa có connection nào.",
+  "emptyBody": "Tạo connection đầu tiên để bắt đầu tích hợp.",
+  "loadError": "Không thể tải connection.",
+  "created": "Đã tạo connection.",
+  "columns": {
+    "name": "Tên",
+    "environment": "Môi trường",
+    "status": "Trạng thái",
+    "default": "Mặc định"
+  },
+  "form": {
+    "connector": "Connector",
+    "selectConnector": "Chọn connector",
+    "name": "Tên",
+    "environment": "Môi trường",
+    "credentialType": "Loại thông tin xác thực",
+    "secret": "Thông tin xác thực",
+    "description": "Mô tả",
+    "cancel": "Huỷ",
+    "submit": "Tạo connection"
+  },
+  "actions": {
+    "verify": "Xác minh",
+    "rotate": "Xoay thông tin xác thực",
+    "enable": "Bật",
+    "disable": "Tắt",
+    "verifyDone": "Đã bắt đầu xác minh.",
+    "rotateDone": "Đã xoay thông tin xác thực.",
+    "enableDone": "Đã bật connection.",
+    "disableDone": "Đã tắt connection."
+  },
+  "detail": {
+    "timeout": "Thời gian chờ",
+    "updated": "Cập nhật"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "title": "Intents",
+  "subtitle": "Submit business intents and inspect their executions.",
+  "runTitle": "Run intent",
+  "resultTitle": "Result",
+  "submitted": "Intent submitted.",
+  "invalidJson": "Payload must be valid JSON.",
+  "noResult": "Submit an intent to see the result here.",
+  "loadError": "Could not load intent.",
+  "form": {
+    "connection": "Connection",
+    "selectConnection": "Select a connection",
+    "capability": "Capability",
+    "payload": "Payload (JSON)",
+    "submit": "Submit intent"
+  },
+  "result": {
+    "intent": "Intent",
+    "status": "Status",
+    "executions": "Executions"
+  },
+  "detail": {
+    "connection": "Connection",
+    "correlation": "Correlation ID",
+    "submitted": "Submitted",
+    "payload": "Payload"
+  }
+}

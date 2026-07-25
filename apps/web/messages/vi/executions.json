@@ -1,0 +1,15 @@
+{
+  "title": "Execution",
+  "loadError": "Không thể tải execution.",
+  "fromIntent": "Từ intent",
+  "steps": "Các bước",
+  "noSteps": "Chưa ghi nhận bước nào.",
+  "timeline": "Dòng thời gian",
+  "noTimeline": "Chưa có mục dòng thời gian.",
+  "actions": {
+    "cancel": "Huỷ",
+    "retry": "Thử lại",
+    "cancelDone": "Đã huỷ execution.",
+    "retryDone": "Đã đưa execution vào hàng đợi thử lại."
+  }
+}

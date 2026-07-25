@@ -1,0 +1,34 @@
+{
+  "switcher": {
+    "label": "Workspace",
+    "none": "Select workspace",
+    "empty": "No workspaces yet",
+    "create": "New workspace"
+  },
+  "created": "Workspace created.",
+  "createTitle": "Create workspace",
+  "createSubtitle": "Workspaces isolate connections, credentials and runtime data.",
+  "form": {
+    "name": "Workspace name",
+    "environment": "Environment",
+    "cancel": "Cancel",
+    "submit": "Create workspace"
+  },
+  "settings": {
+    "title": "Workspace settings",
+    "subtitle": "Manage the active workspace.",
+    "general": "General",
+    "name": "Name",
+    "environment": "Environment",
+    "status": "Status",
+    "enable": "Enable",
+    "disable": "Disable",
+    "enableTitle": "Enable workspace?",
+    "disableTitle": "Disable workspace?",
+    "enableBody": "Re-enable this workspace and resume its integrations.",
+    "disableBody": "Disabling stops all integrations for this workspace.",
+    "enabled": "Workspace enabled.",
+    "disabled": "Workspace disabled.",
+    "noWorkspace": "No active workspace selected."
+  }
+}

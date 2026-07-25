@@ -1,0 +1,18 @@
+{
+  "title": "Connector",
+  "subtitle": "Danh mục connector khả dụng cho tổ chức này.",
+  "empty": "Chưa đăng ký connector nào.",
+  "loadError": "Không thể tải connector.",
+  "docs": "Tài liệu",
+  "capabilities": "Khả năng",
+  "noCapabilities": "Chưa khai báo khả năng nào.",
+  "columns": {
+    "name": "Tên",
+    "vendor": "Nhà cung cấp",
+    "category": "Loại",
+    "version": "Phiên bản",
+    "capabilities": "Khả năng",
+    "status": "Trạng thái",
+    "code": "Mã"
+  }
+}

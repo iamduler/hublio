@@ -29,6 +29,7 @@ Nguồn đúng:
 * `docs/00` … `docs/28`
 * `docs/20-database-schema.dbml`
 * `docs/30-mvp-usecase-nhanh-misa.md` (MVP product north star: Nhanh.vn → MISA)
+* `docs/31-misa-meinvoice-smoke.md` (MISA sandbox smoke SoT: Web API intro)
 
 ---
 
@@ -358,7 +359,7 @@ Thứ tự Aggregate: **Organization → Workspace → User/Membership → API K
    then verify it (-> Active)
 5. POST /api/v1/intents  with header  X-API-KEY: <key>  and  Idempotency-Key: <uuid>
    body: {"connection_id": "<connection-id>", "capability": "fake.echo", "payload": {"foo": "bar"}}
-6. go run ./cmd/worker   (consumes orchestration.execution)
+6. make worker   (or: go -C apps/api run ./cmd/worker) — consumes orchestration.execution
 7. GET /api/v1/executions/:executionId with X-API-KEY -> poll until status = "succeeded"
 ```
 
@@ -507,19 +508,23 @@ Chỉ sau Fake path xanh.
 > provider reject → BadGateway; (4) Verify failure reason stored without AppError boilerplate.
 > Unit tests: httptest Verify+Create, RefID mapping, transform scoping, gateway error codes.
 >
-> **Exit criteria status:** real MISA `testapi` Intent→worker→Succeeded still **manual /
+> **Exit criteria status:** real MISA sandbox Intent→worker→Succeeded still **manual /
 > pending credentials** (not recorded in CI). httptest covers the connector contract.
+>
+> **Smoke SoT (2026-07-19):** [docs/31-misa-meinvoice-smoke.md](31-misa-meinvoice-smoke.md)
+> — primary source [doc.meinvoice.vn/webapi/intro.html](https://doc.meinvoice.vn/webapi/intro.html)
+> (Web API: `testapp.meinvoice.vn/api`, OAuth, `/SAInvoice/Insert`). Script:
+> `scripts/misa_webapi_smoke.sh`. Hublio Runtime `misa` still uses Integration Open API
+> (`testapi…/api/integration`); see §4 of that doc — do not mix hosts.
 
-**Smoke steps (MISA sandbox / httptest-equivalent):**
+**Smoke steps (see docs/31):**
 
 ```text
-1. API boot seeds connectors code=misa and code=nhanh (ListConnectors)
-2. Create Connection against misa with:
-   config: {"tax_code":"<MST>","inv_series":"<series>","base_url":"https://testapi.meinvoice.vn/api/integration"}
-   secret: {"app_id":"...","username":"...","password":"..."}
-3. POST .../connections/:id/verify  -> Active when token OK
-4. POST /api/v1/intents  capability=invoice.create  Canonical Invoice payload
-5. Worker runs Execution -> Succeeded; response payload status=published
+A) Web API (SoT): MISA_TAX_CODE/USERNAME/PASSWORD → ./scripts/misa_webapi_smoke.sh [insert]
+   → draft on testapp.meinvoice.vn → sign/publish in UI
+B) Hublio Intent (Integration Open API, needs appid):
+   Connection base_url=https://testapi.meinvoice.vn/api/integration
+   verify → POST /api/v1/intents invoice.create → worker → succeeded
 ```
 
 ---

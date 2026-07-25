@@ -37,3 +37,12 @@ tmp/
 logs/
 *.log
 uploads/
+figma/
+
+# JS / Node / monorepo
+node_modules/
+.next/
+.turbo/
+dist/
+.pnpm-store/
+next-env.d.ts

@@ -1,0 +1,45 @@
+{
+  "title": "Sync Route",
+  "subtitle": "Định tuyến sự kiện nguồn tới hệ thống đích.",
+  "create": "Sync route mới",
+  "createSubtitle": "Phân phối từ connection nguồn tới các đích.",
+  "empty": "Chưa có sync route nào.",
+  "emptyBody": "Tạo sync route để tự động hoá tích hợp.",
+  "loadError": "Không thể tải sync route.",
+  "created": "Đã tạo sync route.",
+  "deleted": "Đã xoá sync route.",
+  "columns": {
+    "name": "Tên",
+    "trigger": "Kích hoạt",
+    "resources": "Loại tài nguyên",
+    "status": "Trạng thái"
+  },
+  "form": {
+    "name": "Tên",
+    "source": "Connection nguồn",
+    "trigger": "Kích hoạt",
+    "selectConnection": "Chọn connection",
+    "resourceTypes": "Loại tài nguyên",
+    "resourceTypesHint": "ngăn cách bằng dấu phẩy, ví dụ: order, invoice",
+    "destinationStep": "Bước đích",
+    "destination": "Connection đích",
+    "capability": "Khả năng",
+    "cancel": "Huỷ",
+    "submit": "Tạo sync route"
+  },
+  "actions": {
+    "enable": "Bật",
+    "disable": "Tắt",
+    "delete": "Xoá",
+    "rotateSecret": "Xoay secret",
+    "enableDone": "Đã bật sync route.",
+    "disableDone": "Đã tắt sync route.",
+    "rotateDone": "Đã xoay webhook secret."
+  },
+  "deleteTitle": "Xoá sync route?",
+  "deleteBody": "Thao tác này xoá vĩnh viễn cấu hình sync route.",
+  "webhookSecret": "Webhook secret",
+  "secretOnce": "Sao chép secret ngay — chỉ hiển thị một lần.",
+  "watermarks": "Watermark",
+  "noWatermarks": "Chưa ghi nhận watermark nào."
+}

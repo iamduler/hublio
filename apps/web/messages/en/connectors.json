@@ -1,0 +1,18 @@
+{
+  "title": "Connectors",
+  "subtitle": "Available connector catalog for this organization.",
+  "empty": "No connectors registered.",
+  "loadError": "Could not load connectors.",
+  "docs": "Documentation",
+  "capabilities": "Capabilities",
+  "noCapabilities": "No capabilities declared.",
+  "columns": {
+    "name": "Name",
+    "vendor": "Vendor",
+    "category": "Category",
+    "version": "Version",
+    "capabilities": "Capabilities",
+    "status": "Status",
+    "code": "Code"
+  }
+}

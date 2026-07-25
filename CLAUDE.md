@@ -145,7 +145,7 @@ Always follow
 
 Every external integration belongs inside
 
-internal/integration/connectors
+apps/api/internal/integration/connectors
 
 Never place provider-specific logic elsewhere.
 

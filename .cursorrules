@@ -58,22 +58,26 @@ One Intent may fan out to multiple Executions (sequential or parallel enqueue). 
 
 ## Package Rules
 
-Always use the existing package layout.
+The repository is a monorepo. The Go backend lives under `apps/api/` and the
+Next.js frontends live under `apps/` (e.g. `apps/web`, `apps/admin`), with shared
+JS/TS in `packages/`. The Go module path is unchanged (`hublio`).
+
+Always use the existing Go package layout (paths are relative to `apps/api/`).
 
 ```
-internal/
+apps/api/internal/
 
-    identity/
+ identity/
 
-    integration/
+ integration/
 
-    orchestration/
+ orchestration/
 
-    transformation/
+ transformation/
 
-    events/
+ events/
 
-    platform/
+ platform/
 ```
 
 Do not create new architectural layers.
@@ -105,7 +109,7 @@ The Domain must never import Infrastructure.
 Provider-specific code belongs only in
 
 ```
-internal/integration/connectors/
+apps/api/internal/integration/connectors/
 ```
 
 Do not leak provider DTOs into the Domain.

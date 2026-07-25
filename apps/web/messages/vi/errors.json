@@ -1,0 +1,5 @@
+{
+  "generic": "Đã xảy ra lỗi. Vui lòng thử lại.",
+  "unauthorized": "Email hoặc mật khẩu không đúng.",
+  "network": "Không kết nối được API. Kiểm tra NEXT_PUBLIC_API_URL."
+}

@@ -64,21 +64,29 @@ Business rules never belong to the frontend.
 # 4. Project Structure
 
 ```text
-apps/dashboard/src/
-    app/
-    features/
-    components/
-    lib/
+apps/web/               # @hublio/web — user workspace
+    app/                # App Router (route groups + [locale])
+    features/           # feature-first modules (api, hooks, components)
+    components/         # app-specific layout/composition components
+    providers/
+    lib/                # api client, bff, i18n, utils
     hooks/
-    services/
-    types/
-    styles/
-	packages/
-		ui
-		api-client
-		config
-		types
+    messages/           # next-intl translations (en, vi)
+apps/admin/             # @hublio/admin — admin console
+    app/
+    i18n/
+    messages/
+packages/
+    ui                  # @hublio/ui — shared components + design theme
+    config              # @hublio/config — shared tsconfig base
+    sdk                 # @hublio/sdk — types generated from openapi.yaml
 ```
+
+Notes:
+
+* Apps use the App Router directly at `app/` (no `src/` wrapper).
+* The shared HTTP client stays in each app under `lib/api`; shared **types** come
+  from `@hublio/sdk` (generated from `api/openapi/openapi.yaml`).
 
 ---
 
@@ -126,15 +134,17 @@ Features should not depend directly on each other.
 
 Component hierarchy
 
-* UI Components
-* Shared Components
-* Feature Components
+* UI Components (`@hublio/ui`)
+* App Shared Components (`apps/web/components`)
+* Feature Components (`features/*/components`)
 
-Reusable UI belongs in
+Reusable primitives belong in
 
 ```text
-components/ui
+packages/ui
 ```
+
+App-specific layout / composition stays in `apps/web/components`.
 
 ---
 
@@ -144,13 +154,52 @@ The frontend communicates only with Hublio REST APIs.
 
 Provider APIs are never called directly.
 
-API calls belong inside
+API modules live in
 
 ```text
-services/
+features/<name>/api.ts
 ```
 
-or feature-specific API modules.
+Shared fetch helpers live in
+
+```text
+apps/web/lib/api/
+```
+
+Shared **DTO types** come from `@hublio/sdk` (generated from `api/openapi/openapi.yaml`).
+Do not introduce a full generated runtime client unless explicitly requested.
+Hand-written feature clients remain the default; adopt SDK types incrementally.
+
+---
+
+# 8.1 Browser → API access (hybrid BFF)
+
+**Frozen rule for Version 1.** Not every browser call must go through Next.js.
+
+```text
+Browser
+  ├─ JWT routes ──────────────► Go API (NEXT_PUBLIC_API_URL)
+  │   auth, workspaces, connectors, connections,
+  │   sync-routes, team, api-keys, …
+  │
+  └─ API-key-only routes ─────► Next.js BFF (/api/…) ──► Go API (X-API-KEY)
+      intents, executions, events
+```
+
+| Path | Browser calls | Why |
+| --- | --- | --- |
+| JWT Identity / Integration CRUD | Go directly (`lib/api/client`) | User JWT already authorizes; Next adds no secret |
+| Intent / Execution / Events | Next BFF (`lib/api/bff-client` → `app/api/*`) | Go requires workspace API key; key must stay server-side |
+
+Rules:
+
+* Use Next.js BFF **only** when Next adds security (hold secrets) or useful server orchestration.
+* Do **not** proxy all JWT CRUD through Next “for consistency”.
+* Workspace API keys must never be sent to the browser. Mint/cache them in
+  `lib/api/bff.ts` (httpOnly cookie) and forward as `X-API-KEY` to Go.
+* Browser JWT stays in cookies (`hublio_session` / `hublio_refresh`) for V1.
+  Moving to httpOnly-only JWT + full Next proxy is a separate security decision,
+  not the default architecture.
 
 ---
 
@@ -181,9 +230,10 @@ Validation rules should match backend validation.
 
 # 11. Authentication
 
-Dashboard authentication uses JWT.
+Dashboard **user** authentication uses JWT (browser → Go).
 
-API Keys are never used by the Dashboard.
+Workspace **API keys** are used only by the Next.js BFF (server → Go) for
+routes that do not accept JWT. The browser never holds those API keys.
 
 ---
 
@@ -278,6 +328,9 @@ Business rules remain in the backend.
 
 Features are isolated.
 
-Types are shared through API contracts.
+Types are shared through API contracts (`@hublio/sdk`).
+
+Browser → API access is **hybrid** (JWT direct to Go; API-key routes via Next BFF).
+Do not force every call through Next.js.
 
 The Dashboard should remain fast, accessible, and maintainable.

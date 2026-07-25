@@ -1,0 +1,10 @@
+{
+  "title": "Nhóm",
+  "subtitle": "Quản lý thành viên và vai trò trong workspace.",
+  "inviteTitle": "Thêm thành viên",
+  "email": "Email",
+  "role": "Vai trò",
+  "invite": "Thêm thành viên",
+  "invited": "Đã thêm thành viên.",
+  "listUnavailable": "Backend chưa cung cấp endpoint danh sách thành viên. Thành viên đã thêm sẽ hiển thị ở đây khi có sẵn."
+}

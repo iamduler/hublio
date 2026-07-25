@@ -1,0 +1,273 @@
+/* Shared Hublio design system: tokens, theme mapping, base styles. */
+/* Consumed by apps via `@import` after `@import "tailwindcss"`. */
+
+/* Scan shared UI components so Tailwind generates their classes. */
+@source "..";
+
+/* ── Hublio design tokens (Figma blue + slate) ── */
+:root {
+  /* BRAND */
+  --primary: #2563EB;
+  --primary-ink: #1D4ED8;
+  --primary-soft: #EFF6FF;
+  --accent: #3B82F6;
+
+  /* FOUNDATION — dark chrome */
+  --slate-950: #0B1220;
+  --slate-900: #0F172A;
+  --slate-800: #1E293B;
+  --navy-900: var(--slate-900);
+  --navy-700: var(--slate-800);
+  --navy-600: #334155;
+  --navy: var(--slate-900);
+  --navy-2: var(--slate-800);
+
+  /* NEUTRAL */
+  --ink: #0F172A;
+  --ink-2: #334155;
+  --muted-clr: #64748B;
+  --faint: #94A3B8;
+  --line: #E2E8F0;
+  --line-2: #F1F5F9;
+  --line-3: #CBD5E1;
+  --bg: #FAFAFA;
+  --white: #FFFFFF;
+
+  /* SEMANTIC */
+  --success: #16A34A;
+  --success-soft: #DCFCE7;
+  --amber: #D97706;
+  --amber-soft: #FEF3C7;
+  --sky: #0284C7;
+  --sky-soft: #E0F2FE;
+  --violet: #7C3AED;
+  --violet-soft: #EDE9FE;
+  --danger: #DC2626;
+  --danger-soft: #FEE2E2;
+  --green: #16A34A;
+
+  /* SHAPE — Figma radius 0.75rem base */
+  --radius: 0.75rem;
+  --r-sm: 8px;
+  --r: 12px;
+  --r-lg: 18px;
+  --r-xl: 28px;
+  --radius-card: 12px;
+
+  /* SHADOW */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 10px 30px -12px rgba(15, 23, 42, 0.18);
+  --shadow-pop: 0 30px 60px -20px rgba(15, 23, 42, 0.28);
+
+  /* MOTION */
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* LAYOUT */
+  --nav-h: 64px;
+  --side-w: 248px;
+}
+
+html.dark {
+  --bg: #0B0E14;
+  --white: #171C28;
+  --line: #2F384A;
+  --line-2: #222836;
+  --line-3: #3E485C;
+  --ink: #F8FAFC;
+  --ink-2: #CBD5E1;
+  --muted-clr: #94A3B8;
+  --faint: #7B879C;
+  --primary-soft: #0F2F2C;
+  --success-soft: #10291C;
+  --amber-soft: #2A200C;
+  --sky-soft: #0C2233;
+  --violet-soft: #1A1430;
+  --danger-soft: #2C1418;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 12px 32px -14px rgba(0, 0, 0, 0.65);
+  --shadow-pop: 0 28px 56px -18px rgba(0, 0, 0, 0.75);
+}
+
+@theme {
+  --color-primary: var(--primary);
+  --color-primary-foreground: #ffffff;
+  --color-background: var(--bg);
+  --color-foreground: var(--ink);
+  --color-card: var(--white);
+  --color-card-foreground: var(--ink);
+  --color-popover: var(--white);
+  --color-popover-foreground: var(--ink);
+  --color-secondary: var(--line-2);
+  --color-secondary-foreground: var(--ink-2);
+  --color-muted: var(--line-2);
+  --color-muted-foreground: var(--muted-clr);
+  --color-accent: var(--primary-soft);
+  --color-accent-foreground: var(--primary-ink);
+  --color-destructive: var(--danger);
+  --color-destructive-foreground: #ffffff;
+  --color-border: var(--line);
+  --color-input: var(--line);
+  --color-ring: var(--primary);
+  --color-navy: var(--navy);
+  --color-success: var(--success);
+  --color-amber: var(--amber);
+  --color-sky: var(--sky);
+  --color-violet: var(--violet);
+  --color-danger: var(--danger);
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r);
+  --radius-lg: var(--r-lg);
+  --radius-xl: var(--r-xl);
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-display: var(--font-inter), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, "SF Mono", Menlo, monospace;
+  --font-emoji: var(--font-noto-emoji), "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--ink);
+  background: var(--bg);
+  margin: 0;
+}
+
+.flag-emoji {
+  display: inline-block;
+  flex-shrink: 0;
+  font-family: var(--font-emoji);
+  font-style: normal;
+  font-weight: 400;
+  font-size: 1.2em;
+  line-height: 1;
+  vertical-align: -0.1em;
+  user-select: none;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+::selection {
+  background: var(--primary);
+  color: #fff;
+}
+
+.eyebrow {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-clr);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 8px;
+  padding: 48px 24px;
+  color: var(--ink-2);
+}
+
+.nav-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  height: 3px;
+  pointer-events: none;
+  transition: opacity 180ms var(--ease);
+}
+
+.nav-progress__bar {
+  height: 100%;
+  width: 0;
+  background: var(--primary);
+  box-shadow:
+    0 0 10px color-mix(in srgb, var(--primary), transparent 35%),
+    0 0 4px color-mix(in srgb, var(--primary), transparent 55%);
+  transition: width 420ms var(--ease);
+  border-radius: 0 2px 2px 0;
+}
+
+.nav-progress[data-phase="loading"] .nav-progress__bar {
+  transition-duration: 8s;
+  transition-timing-function: cubic-bezier(0.1, 0.05, 0, 1);
+}
+
+.nav-progress[data-phase="complete"] .nav-progress__bar {
+  transition-duration: 200ms;
+  transition-timing-function: ease-out;
+}
+
+.landing-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: calc(100dvh - var(--nav-h));
+  display: grid;
+  place-items: center;
+  padding: 64px 24px;
+  background:
+    radial-gradient(1000px 520px at 15% -10%, color-mix(in srgb, var(--primary), transparent 78%), transparent 60%),
+    radial-gradient(800px 480px at 100% 100%, color-mix(in srgb, var(--slate-900), transparent 90%), transparent 55%),
+    linear-gradient(180deg, #F1F5F9 0%, var(--bg) 55%, #EEF2FF 100%);
+}
+
+html.dark .landing-hero {
+  background:
+    radial-gradient(1000px 520px at 15% -10%, color-mix(in srgb, var(--primary), transparent 70%), transparent 60%),
+    radial-gradient(800px 480px at 100% 100%, color-mix(in srgb, #14B8A6, transparent 85%), transparent 55%),
+    var(--bg);
+}
+
+.empty-state .ei {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: var(--primary-soft);
+  color: var(--primary-ink);
+  margin-bottom: 8px;
+}
+
+.empty-state h2 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.empty-state p {
+  margin: 0;
+  max-width: 28rem;
+  font-size: 0.875rem;
+  color: var(--muted-clr);
+}

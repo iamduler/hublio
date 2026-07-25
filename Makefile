@@ -4,21 +4,22 @@ export
 # Ensure tools installed via `go install` are on PATH (migrate, sqlc, …).
 export PATH := $(PATH):$(shell go env GOPATH)/bin
 
-MIGRATION_PATH=./migrations
+API_DIR=apps/api
+MIGRATION_PATH=./$(API_DIR)/migrations
 DATABASE_URL=postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=$(DB_SSLMODE)
 
 MIGRATE ?= $(shell command -v migrate 2>/dev/null || echo "$(shell go env GOPATH)/bin/migrate")
 
 ENV_FILE=.env
-PROD_COMPOSE_FILE=docker-compose.prod.yml
-NOAPP_COMPOSE_FILE=docker-compose.noapp.yml
-DEV_COMPOSE_FILE=docker-compose.dev.yml
+PROD_COMPOSE_FILE=deploy/docker-compose.prod.yml
+NOAPP_COMPOSE_FILE=deploy/docker-compose.noapp.yml
+DEV_COMPOSE_FILE=deploy/docker-compose.dev.yml
 
 server:
-	go run ./cmd/api
+	go -C $(API_DIR) run ./cmd/api
 
 worker:
-	go run ./cmd/worker
+	go -C $(API_DIR) run ./cmd/worker
 
 migrate_create:
 	$(MIGRATE) create -ext sql -dir $(MIGRATION_PATH) -seq $(name)
@@ -51,19 +52,19 @@ db_create:
 db_setup: db_create migrate_up
 
 sqlc:
-	sqlc generate
+	cd $(API_DIR) && sqlc generate
 
 test:
-	go test ./...
+	go -C $(API_DIR) test ./...
 
 vet:
-	go vet ./...
+	go -C $(API_DIR) vet ./...
 
 check: vet test build
 
 build:
-	go build -o bin/api ./cmd/api
-	go build -o bin/worker ./cmd/worker
+	go -C $(API_DIR) build -o bin/api ./cmd/api
+	go -C $(API_DIR) build -o bin/worker ./cmd/worker
 
 enqueue_health:
 	@curl -sS -X POST -H "X-API-KEY: $${API_KEY}" http://localhost:$${SERVER_PORT:-8080}/api/v1/platform/queue/health

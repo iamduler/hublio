@@ -1,0 +1,28 @@
+{
+  "title": "Intent",
+  "subtitle": "Gửi intent nghiệp vụ và xem các execution.",
+  "runTitle": "Chạy intent",
+  "resultTitle": "Kết quả",
+  "submitted": "Đã gửi intent.",
+  "invalidJson": "Payload phải là JSON hợp lệ.",
+  "noResult": "Gửi một intent để xem kết quả tại đây.",
+  "loadError": "Không thể tải intent.",
+  "form": {
+    "connection": "Connection",
+    "selectConnection": "Chọn connection",
+    "capability": "Khả năng",
+    "payload": "Payload (JSON)",
+    "submit": "Gửi intent"
+  },
+  "result": {
+    "intent": "Intent",
+    "status": "Trạng thái",
+    "executions": "Execution"
+  },
+  "detail": {
+    "connection": "Connection",
+    "correlation": "Correlation ID",
+    "submitted": "Đã gửi",
+    "payload": "Payload"
+  }
+}

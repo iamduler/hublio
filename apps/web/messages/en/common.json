@@ -1,0 +1,21 @@
+{
+  "meta": {
+    "brand": "Hublio",
+    "title": "Hublio",
+    "description": "Business Integration and Orchestration Platform"
+  },
+  "nav": {
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "getStarted": "Get started"
+  },
+  "settings": {
+    "appearance": {
+      "themes": {
+        "system": "System",
+        "light": "Light",
+        "dark": "Dark"
+      }
+    }
+  }
+}

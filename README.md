@@ -13,28 +13,38 @@ Chi tiết kiến trúc: [`AGENTS.md`](AGENTS.md), [`docs/`](docs/), checklist b
 
 | Layer | Tech |
 | --- | --- |
-| API / Worker | Go (`cmd/api`, `cmd/worker`) |
+| API / Worker | Go (`apps/api/cmd/api`, `apps/api/cmd/worker`) |
 | Database | PostgreSQL |
 | Cache / Work queue | Redis |
 | Messaging (optional) | RabbitMQ |
-| Dashboard (sau) | Next.js |
+| Frontend | Next.js 16 (`apps/web`, `apps/admin`) |
+| Shared TS packages | `packages/ui`, `packages/config`, `packages/sdk` |
 
 ---
 
 ## Project layout
 
+Monorepo: Go backend under `apps/api` (module `hublio`), Next.js apps and shared
+TypeScript alongside. pnpm workspaces + Turborepo for JS; `go.work` for Go.
+
 ```text
-cmd/
-  api/
-  worker/
-internal/
-  identity/
-  integration/
-  orchestration/
-  transformation/
-  events/
-  platform/
-migrations/
+apps/
+  api/                 # Go backend (module: hublio)
+    cmd/api/           # REST API entrypoint
+    cmd/worker/        # background worker entrypoint
+    internal/          # bounded contexts: identity, integration,
+                       #   orchestration, transformation, events, platform
+    migrations/
+    sqlc.yml
+  web/                 # Next.js user workspace (@hublio/web)
+  admin/               # Next.js admin console (@hublio/admin)
+packages/
+  ui/                  # @hublio/ui — shared components + design theme
+  config/              # @hublio/config — shared tsconfig base
+  sdk/                 # @hublio/sdk — types generated from openapi.yaml
+api/openapi/           # OpenAPI spec (source of truth)
+deploy/                # Dockerfiles + docker-compose
+system/                # infra config (redis.conf)
 scripts/
 docs/
 ```
@@ -205,11 +215,47 @@ make bash
 | `make server` | Chạy API |
 | `make worker` | Chạy worker (Redis queue) |
 | `make check` | `vet` + `test` + `build` |
-| `make build` | Binary `bin/api`, `bin/worker` |
+| `make build` | Binary `apps/api/bin/api`, `apps/api/bin/worker` |
 | `make enqueue_health` | Push job `platform.health` |
 | `make noapp` | Chỉ infra Docker |
 | `make dev` / `make prod` | Compose đầy đủ |
 | `make stop_noapp` / `make stop_prod` | Dừng compose |
+
+---
+
+## Frontend (Next.js)
+
+Managed with **pnpm workspaces** + **Turborepo** from the repo root.
+
+```bash
+pnpm install                 # install all workspaces
+pnpm dev                     # run dev servers (turbo)
+pnpm --filter @hublio/web dev    # user workspace  (http://localhost:3000)
+pnpm --filter @hublio/admin dev  # admin console   (http://localhost:3001)
+
+pnpm build                   # build web + admin + packages
+pnpm lint                    # lint all
+pnpm test                    # unit tests (vitest)
+```
+
+Shared packages:
+
+* `@hublio/ui` — shadcn components, common components, and the design theme
+  (`packages/ui/src/styles/theme.css`), consumed by both apps.
+* `@hublio/config` — shared `tsconfig.base.json`.
+* `@hublio/sdk` — TypeScript types generated from `api/openapi/openapi.yaml`.
+  Regenerate after changing the spec:
+
+  ```bash
+  pnpm --filter @hublio/sdk generate
+  ```
+
+Set `NEXT_PUBLIC_API_URL` (e.g. `http://localhost:8080/api/v1`) for the web app.
+
+**API access (hybrid):** JWT CRUD from the browser hits Go directly; Intent /
+Execution / Events go through the Next.js BFF so workspace API keys stay
+server-side. See [`docs/24-nextjs-architecture.md`](docs/24-nextjs-architecture.md)
+§8.1.
 
 ---
 
@@ -250,8 +296,8 @@ make migrate_up
 
 ```bash
 make build
-./bin/api
-./bin/worker
+./apps/api/bin/api
+./apps/api/bin/worker
 ```
 
 Chạy sau reverse proxy (Nginx), expose health/readiness cho orchestration:

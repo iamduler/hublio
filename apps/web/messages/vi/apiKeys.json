@@ -1,0 +1,28 @@
+{
+  "title": "API Key",
+  "subtitle": "Thông tin xác thực máy giới hạn trong workspace này.",
+  "create": "API key mới",
+  "createTitle": "Tạo API key",
+  "copyOnce": "Sao chép key ngay — chỉ hiển thị một lần.",
+  "nameLabel": "Tên key",
+  "namePlaceholder": "ví dụ: production-integration",
+  "done": "Xong",
+  "generate": "Tạo key",
+  "created": "Đã tạo API key.",
+  "rotated": "Đã xoay API key.",
+  "disabled": "Đã tắt API key.",
+  "loadError": "Không thể tải API key.",
+  "empty": "Chưa có API key nào.",
+  "columns": {
+    "name": "Tên",
+    "prefix": "Tiền tố",
+    "lastUsed": "Dùng gần nhất",
+    "status": "Trạng thái",
+    "actions": "Thao tác"
+  },
+  "rotate": "Xoay",
+  "disable": "Tắt",
+  "disableTitle": "Tắt API key?",
+  "disableBody": "Ứng dụng dùng key này sẽ ngừng hoạt động ngay lập tức.",
+  "cancel": "Huỷ"
+}

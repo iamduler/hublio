@@ -56,6 +56,19 @@ Merge
 
 Every stage must succeed before progressing.
 
+## Current implementation
+
+`.github/workflows/ci.yml` runs two jobs on push/PR:
+
+* **backend** — `working-directory: apps/api`; `go vet`, `go test`, and `go build`
+  of `./cmd/api` and `./cmd/worker` (Go version from `apps/api/go.mod`).
+* **frontend** — pnpm workspace at the repo root; `pnpm install --frozen-lockfile`,
+  then `pnpm lint`, `pnpm test`, and `pnpm build` (Turborepo fans out to
+  `apps/web`, `apps/admin`, and `packages/*`).
+
+Container images are built from the Dockerfiles in `deploy/` (build context = repo
+root, Go module in `apps/api`).
+
 ---
 
 # 4. Continuous Integration

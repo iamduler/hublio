@@ -132,9 +132,25 @@ Never reverse this direction.
 
 ---
 
+# Repository Layout
+
+Hublio is a monorepo.
+
+```text
+apps/api/      # Go backend (module path: hublio)
+apps/web/      # Next.js user workspace
+apps/admin/    # Next.js admin (scaffold)
+packages/      # shared JS/TS (ui, config, sdk)
+api/openapi/   # OpenAPI source of truth
+deploy/        # Dockerfiles + compose (deployment)
+docs/          # architecture + schema docs
+```
+
+The Go module path remains `hublio`; all Go import paths are unchanged.
+
 # Package Layout
 
-Every bounded context follows
+Every Go bounded context (under `apps/api/internal/`) follows
 
 ```text
 application/
@@ -343,9 +359,24 @@ Interactive UI (Scalar, Scramble-like) is served at `/docs` when docs are enable
 * Whenever you **add, change, rename, or remove** a public HTTP route, request/response
   body, path/query parameter, auth scheme, or status code → **update `api/openapi/openapi.yaml`
   in the same change**.
-* Do not introduce Swagger/swag annotations, OpenAPI codegen, or a second competing spec
-  file unless explicitly requested.
-* Keep Scalar / docs wiring in `internal/platform/docsui` only — no business logic there.
+* Do not introduce Swagger/swag annotations, backend OpenAPI codegen, or a second competing
+ spec file unless explicitly requested.
+* Keep Scalar / docs wiring in `apps/api/internal/platform/docsui` only — no business logic there.
+
+**Frontend SDK (allowed):** `packages/sdk` contains **TypeScript types generated from
+`api/openapi/openapi.yaml`** (via `openapi-typescript`). This *consumes* the single source of
+truth; it is not a competing spec and is not backend codegen. Whenever the spec changes,
+regenerate with `pnpm --filter @hublio/sdk generate` and commit `packages/sdk/src/schema.d.ts`
+in the same change. Frontend apps import DTO types from `@hublio/sdk`.
+
+**Frontend API access (hybrid BFF — frozen):** Not every browser call goes through Next.js.
+
+* JWT Identity / Integration CRUD → browser → Go (`NEXT_PUBLIC_API_URL`) via `lib/api/client`.
+* Intent / Execution / Events (API-key-only) → browser → Next BFF (`app/api/*`) → Go with
+  server-held `X-API-KEY`. Workspace API keys must never reach the browser.
+* Use BFF only when Next holds a secret or performs useful server orchestration.
+  Do not proxy all JWT CRUD through Next for consistency.
+* Details: `docs/24-nextjs-architecture.md` §8.1 and `apps/web/AGENTS.md`.
 
 Agents and developers must apply this without being reminded.
 

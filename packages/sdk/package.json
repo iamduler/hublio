@@ -1,0 +1,19 @@
+{
+  "name": "@hublio/sdk",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema.d.ts"
+  },
+  "scripts": {
+    "generate": "openapi-typescript ../../api/openapi/openapi.yaml -o ./src/schema.d.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@hublio/config": "workspace:*",
+    "openapi-typescript": "^7.4.0",
+    "typescript": "^5"
+  }
+}

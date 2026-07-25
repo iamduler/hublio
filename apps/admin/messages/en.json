@@ -1,0 +1,10 @@
+{
+  "admin": {
+    "eyebrow": "Hublio Admin",
+    "title": "Admin Console",
+    "subtitle": "Operate organizations, workspaces, and platform settings.",
+    "placeholder": "This is a scaffold. Admin features will be added incrementally on top of the shared design system and Go API.",
+    "cta": "View documentation",
+    "status": "Scaffold"
+  }
+}

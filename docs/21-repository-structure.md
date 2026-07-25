@@ -44,52 +44,54 @@ Infrastructure depends on the Domain.
 
 # 3. High-Level Structure
 
+Hublio is a monorepo. The Go backend is a single module under `apps/api` (module
+path `hublio`); the Next.js applications and shared TypeScript live alongside it.
+
 ```text
 ├── apps/
-│   ├── api/
-│   ├── worker/
-│   └── dashboard/
+│   ├── api/                 # Go backend (module: hublio)
+│   │   ├── cmd/
+│   │   │   ├── api/         # REST API entrypoint
+│   │   │   └── worker/      # background worker entrypoint
+│   │   ├── internal/        # Go business modules (bounded contexts)
+│   │   ├── migrations/      # SQL migrations
+│   │   ├── tests/
+│   │   ├── go.mod
+│   │   └── sqlc.yml
+│   ├── web/                 # Next.js user workspace (@hublio/web)
+│   └── admin/               # Next.js admin console (@hublio/admin)
 │
-├── internal/
+├── packages/               # Shared TypeScript packages
+│   ├── ui/                  # @hublio/ui — shadcn + common components + theme
+│   ├── config/              # @hublio/config — shared tsconfig base
+│   └── sdk/                 # @hublio/sdk — types generated from openapi.yaml
 │
-├── packages/
+├── api/openapi/            # OpenAPI spec (source of truth)
 │
-├── database/
+├── deploy/                 # Dockerfiles + docker-compose
 │
-├── openapi/
+├── system/                 # infra config (redis.conf)
+│
+├── scripts/                # dev/ops scripts
 │
 ├── docs/
-│
-├── deployments/
-│
-├── docker/
-│
-├── tooling/
-│
-├── scripts/
-│
 ├── .github/
-│
 ├── AGENTS.md
-│
 ├── go.work
-│
-├── go.mod
-│
-├── package.json
-│
-└── pnpm-workspace.yaml
+├── Makefile
+├── package.json            # pnpm workspace root + turbo
+├── pnpm-workspace.yaml
+└── turbo.json
 ```
 
 apps/
-    Go executables
-    Next.js applications
+    Go backend (`api`) and Next.js applications (`web`, `admin`)
 
 packages/
-    Shared TypeScript packages
+    Shared TypeScript packages (`ui`, `config`, `sdk`)
 
-internal/
-    Go business modules
+apps/api/internal/
+    Go business modules (bounded contexts)
 ---
 
 # 4. Application Entry Points
@@ -127,7 +129,7 @@ Workers share the same Domain Model as the API.
 Every Bounded Context follows the same structure.
 
 ```text
-internal/orchestration/
+apps/api/internal/orchestration/
 
     application/
 
@@ -213,7 +215,7 @@ Interfaces translate external requests into Application use cases.
 Each Connector lives in its own package.
 
 ```text
-internal/integration/connectors/
+apps/api/internal/integration/connectors/
 
     misa/
 
@@ -235,7 +237,7 @@ No Connector depends on another Connector.
 Shared platform functionality lives under
 
 ```text
-internal/platform/
+apps/api/internal/platform/
 ```
 
 Examples
@@ -371,9 +373,13 @@ Version 1 intentionally excludes
 * Plugin Loading
 * Runtime Module Discovery
 * Hexagonal Frameworks
-* Code Generation
+* Backend code generation
 
 The project remains a modular monolith.
+
+Note: frontend TypeScript **types** are generated from `api/openapi/openapi.yaml`
+into `packages/sdk` (see AGENTS.md → OpenAPI). This consumes the single spec and
+is not backend code generation.
 
 ---
 

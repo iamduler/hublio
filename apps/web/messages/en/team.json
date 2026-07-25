@@ -1,0 +1,10 @@
+{
+  "title": "Team",
+  "subtitle": "Manage workspace members and roles.",
+  "inviteTitle": "Add member",
+  "email": "Email",
+  "role": "Role",
+  "invite": "Add member",
+  "invited": "Member added.",
+  "listUnavailable": "The backend does not expose a member list endpoint yet. Added members will appear here once it is available."
+}
