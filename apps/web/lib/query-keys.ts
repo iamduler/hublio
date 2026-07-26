@@ -1,8 +1,8 @@
 /**
  * Central TanStack Query key factory.
  *
- * Convention: every workspace-scoped list is keyed by the active workspace id
- * so switching workspaces transparently swaps cached data.
+ * Convention: every workspace-scoped list/detail is keyed by the active
+ * workspace id so switching workspaces transparently swaps cached data.
  */
 export const queryKeys = {
   workspaces: (organizationId: string) =>
@@ -24,10 +24,12 @@ export const queryKeys = {
 
   members: (workspaceId: string) => ["members", workspaceId] as const,
 
-  intent: (intentId: string) => ["intents", intentId] as const,
-  execution: (executionId: string) => ["executions", executionId] as const,
-  executionTimeline: (executionId: string) =>
-    ["executions", executionId, "timeline"] as const,
+  intent: (workspaceId: string, intentId: string) =>
+    ["intents", workspaceId, intentId] as const,
+  execution: (workspaceId: string, executionId: string) =>
+    ["executions", workspaceId, executionId] as const,
+  executionTimeline: (workspaceId: string, executionId: string) =>
+    ["executions", workspaceId, executionId, "timeline"] as const,
 
   events: (workspaceId: string, executionId?: string) =>
     ["events", workspaceId, executionId ?? "all"] as const,

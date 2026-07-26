@@ -1,21 +1,15 @@
+/**
+ * @deprecated Dashboard no longer mints workspace API keys.
+ * Orchestration/events accept JWT + X-Workspace-ID via `/api/go`.
+ * Prefer `lib/api/proxy-go.ts`.
+ */
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { SESSION_COOKIE } from "@/lib/auth";
 import { WORKSPACE_COOKIE } from "@/lib/workspace";
 
-/**
- * Server-only BFF helper.
- *
- * The browser dashboard authenticates with a JWT (identity/integration
- * routes). Orchestration + Events routes on the Go API are gated behind
- * `X-API-KEY` (machine auth). This module bridges the two: it mints a
- * per-workspace API key using the user's JWT, caches the plaintext in an
- * httpOnly cookie (never exposed to the browser), and proxies requests to Go
- * with that key.
- */
-
 const WS_KEY_COOKIE = "hublio_ws_key";
-const WS_KEY_MAX_AGE = 12 * 60 * 60; // 12h — re-mint after expiry
+const WS_KEY_MAX_AGE = 12 * 60 * 60;
 const BFF_KEY_NAME = "hublio-ui-bff";
 
 function goBaseUrl(): string {
@@ -97,10 +91,7 @@ async function mintWorkspaceKey(
   return key;
 }
 
-/**
- * Resolve the active workspace API key, minting + caching it if needed.
- * Must be called inside a Route Handler (can write cookies).
- */
+/** @deprecated Prefer proxyGoWithJWT from proxy-go.ts */
 export async function resolveWorkspaceContext(): Promise<WorkspaceContext> {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
@@ -130,10 +121,7 @@ export async function resolveWorkspaceContext(): Promise<WorkspaceContext> {
   return { token, workspaceId, apiKey: key };
 }
 
-/**
- * Proxy a request to the Go API using the workspace API key and stream the
- * Go envelope back to the browser verbatim (same status + body).
- */
+/** @deprecated Prefer proxyGoWithJWT from proxy-go.ts */
 export async function proxyToGo(
   ctx: WorkspaceContext,
   path: string,

@@ -14,7 +14,7 @@ import (
 )
 
 // Handler serves the read-only Platform Events API (F3 Observability):
-// GET /api/v1/events — persisted PlatformEvents, Workspace-scoped via API-Key auth.
+// GET /api/v1/events — Workspace-scoped via API key or JWT + X-Workspace-ID.
 type Handler struct {
 	svc *application.Services
 }

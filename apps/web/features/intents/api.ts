@@ -1,19 +1,20 @@
-import { bff, unwrapData } from "@/lib/api/bff-client";
-import type { SuccessEnvelope } from "@/lib/api/types";
+import { api, unwrapData, type SuccessEnvelope } from "@/lib/api/client";
 import type { CreateIntentPayload, CreateIntentResult, Intent } from "./types";
 
-/** Orchestration context via BFF (X-API-KEY held server-side). */
+/** Orchestration via JWT proxy (`/api/go` → Go Bearer + X-Workspace-ID). */
 export const intentsApi = {
   create(payload: CreateIntentPayload, idempotencyKey?: string) {
-    return bff
+    return api
       .post<SuccessEnvelope<CreateIntentResult>>("/intents", payload, {
-        ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
+        headers: idempotencyKey
+          ? { "Idempotency-Key": idempotencyKey }
+          : undefined,
       })
       .then((res) => unwrapData<CreateIntentResult>(res));
   },
 
   get(intentId: string) {
-    return bff
+    return api
       .get<SuccessEnvelope<Intent>>(`/intents/${intentId}`)
       .then((res) => unwrapData<Intent>(res));
   },

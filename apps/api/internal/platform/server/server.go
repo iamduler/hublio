@@ -352,11 +352,11 @@ func (a *Application) registerRoutes(router *gin.Engine) {
 	integrationHandler.RegisterRoutes(api, middleware.AuthMiddleware())
 
 	orchestrationHandler := orchestrationhttp.NewHandler(a.orchestration, a.db.Pool)
-	orchestrationHandler.RegisterRoutes(api, middleware.APIKeyMiddleware(a.apiKeyAuth))
+	orchestrationHandler.RegisterRoutes(api, middleware.MachineOrJWTMiddleware(a.apiKeyAuth, membershipChecker))
 	orchestrationHandler.RegisterWebhookRoutes(api)
 
 	eventsHandler := eventshttp.NewHandler(a.events)
-	eventsHandler.RegisterRoutes(api, middleware.APIKeyMiddleware(a.apiKeyAuth))
+	eventsHandler.RegisterRoutes(api, middleware.MachineOrJWTMiddleware(a.apiKeyAuth, membershipChecker))
 
 	machine := api.Group("")
 	machine.Use(middleware.APIKeyMiddleware(a.apiKeyAuth))

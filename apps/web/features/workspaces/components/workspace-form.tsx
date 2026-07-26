@@ -1,11 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo } from "react";
 import { useTranslations } from "next-intl";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@hublio/ui/ui/button";
 import { Input } from "@hublio/ui/ui/input";
-import { Label } from "@hublio/ui/ui/label";
 import { Card, CardContent } from "@hublio/ui/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@hublio/ui/ui/form";
 import {
   Select,
   SelectContent,
@@ -19,28 +28,31 @@ import { useAuth } from "@/providers/auth-provider";
 import { useWorkspace } from "@/providers/workspace-provider";
 import { useRouter } from "@/i18n/navigation";
 import { useCreateWorkspace } from "../hooks";
+import {
+  makeWorkspaceSchema,
+  type WorkspaceFormValues,
+} from "../schemas";
 
-const ENVIRONMENTS = ["production", "staging", "development"];
+const ENVIRONMENTS = ["production", "staging", "development"] as const;
 
 export function WorkspaceForm() {
   const t = useTranslations("workspaces");
+  const tv = useTranslations("validation");
   const getError = useApiErrorMessage();
   const router = useRouter();
   const { user } = useAuth();
   const { setActiveWorkspace } = useWorkspace();
   const createWorkspace = useCreateWorkspace(user?.organization_id);
 
-  const [name, setName] = useState("");
-  const [environment, setEnvironment] = useState("production");
+  const schema = useMemo(() => makeWorkspaceSchema(tv), [tv]);
+  const form = useForm<WorkspaceFormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { name: "", environment: "production" },
+  });
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!name.trim()) return;
+  async function onSubmit(values: WorkspaceFormValues) {
     try {
-      const workspace = await createWorkspace.mutateAsync({
-        name: name.trim(),
-        environment,
-      });
+      const workspace = await createWorkspace.mutateAsync(values);
       setActiveWorkspace(workspace.id);
       toast.success(t("created"));
       router.replace("/dashboard");
@@ -52,46 +64,65 @@ export function WorkspaceForm() {
   return (
     <Card>
       <CardContent className="p-6">
-        <form className="space-y-5" onSubmit={(e) => void onSubmit(e)}>
-          <div className="space-y-2">
-            <Label htmlFor="ws-name">{t("form.name")}</Label>
-            <Input
-              id="ws-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+        <Form {...form}>
+          <form
+            className="space-y-5"
+            onSubmit={form.handleSubmit((v) => void onSubmit(v))}
+          >
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("form.name")}</FormLabel>
+                  <FormControl>
+                    <Input id="ws-name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <div className="space-y-2">
-            <Label>{t("form.environment")}</Label>
-            <Select value={environment} onValueChange={setEnvironment}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {ENVIRONMENTS.map((env) => (
-                  <SelectItem key={env} value={env}>
-                    {env}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.back()}
-            >
-              {t("form.cancel")}
-            </Button>
-            <Button
-              type="submit"
-              disabled={!name.trim() || createWorkspace.isPending}
-            >
-              {t("form.submit")}
-            </Button>
-          </div>
-        </form>
+            <FormField
+              control={form.control}
+              name="environment"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("form.environment")}</FormLabel>
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {ENVIRONMENTS.map((env) => (
+                        <SelectItem key={env} value={env}>
+                          {env}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => router.back()}
+              >
+                {t("form.cancel")}
+              </Button>
+              <Button type="submit" disabled={createWorkspace.isPending}>
+                {t("form.submit")}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </CardContent>
     </Card>
   );

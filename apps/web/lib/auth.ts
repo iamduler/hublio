@@ -1,16 +1,21 @@
 import type { User } from "@/types/auth";
 
-/** Access token (Bearer). Set by the client after login. */
+/** Access token (Bearer) — httpOnly; set only by Next `/api/auth/*` routes. */
 export const SESSION_COOKIE = "hublio_session";
 
-/** Refresh token for POST /auth/logout (and future refresh). */
+/** Refresh token — httpOnly; set only by Next `/api/auth/*` routes. */
 export const REFRESH_COOKIE = "hublio_refresh";
 
 /** Cached user snapshot (JWT payload is encrypted server-side). */
 export const USER_STORAGE_KEY = "hublio_user";
 
-const ACCESS_MAX_AGE_DEFAULT = 15 * 60; // matches Go AccessTokenTTL
-const REFRESH_MAX_AGE_DEFAULT = 7 * 24 * 60 * 60;
+/**
+ * Client-visible presence flag (NOT the JWT). Used by proxy.ts soft-gate and
+ * AuthProvider while the real token stays httpOnly.
+ */
+export const AUTH_PRESENT_COOKIE = "hublio_auth";
+
+const AUTH_PRESENT_MAX_AGE = 7 * 24 * 60 * 60;
 
 export function readCookie(name: string): string | undefined {
   if (typeof document === "undefined") return undefined;
@@ -30,25 +35,14 @@ function deleteCookie(name: string): void {
   document.cookie = `${name}=; path=/; max-age=0; SameSite=Lax`;
 }
 
-export function setAuthCookies(opts: {
-  accessToken: string;
-  refreshToken: string;
-  accessMaxAge?: number;
-  refreshMaxAge?: number;
-}): void {
-  writeCookie(
-    SESSION_COOKIE,
-    opts.accessToken,
-    opts.accessMaxAge ?? ACCESS_MAX_AGE_DEFAULT,
-  );
-  writeCookie(
-    REFRESH_COOKIE,
-    opts.refreshToken,
-    opts.refreshMaxAge ?? REFRESH_MAX_AGE_DEFAULT,
-  );
+/** Mark the browser as authenticated without exposing the JWT. */
+export function setAuthPresentCookie(): void {
+  writeCookie(AUTH_PRESENT_COOKIE, "1", AUTH_PRESENT_MAX_AGE);
 }
 
 export function clearAuthCookies(): void {
+  deleteCookie(AUTH_PRESENT_COOKIE);
+  // Best-effort: legacy JS-readable cookies from before httpOnly migration.
   deleteCookie(SESSION_COOKIE);
   deleteCookie(REFRESH_COOKIE);
   if (typeof window !== "undefined") {

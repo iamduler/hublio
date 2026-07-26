@@ -1,4 +1,4 @@
-import { SESSION_COOKIE, clearAuthCookies, readCookie } from "@/lib/auth";
+import { clearAuthCookies } from "@/lib/auth";
 import { getBrowserLocale } from "@/lib/i18n/locale";
 import { unwrapData, type ErrorEnvelope, type SuccessEnvelope } from "./types";
 
@@ -13,11 +13,12 @@ export class ApiError extends Error {
   }
 }
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
-
-function readBrowserToken(): string | undefined {
-  return readCookie(SESSION_COOKIE);
-}
+/**
+ * Browser → Next JWT proxy → Go.
+ * Tokens live in httpOnly cookies; the browser never reads them.
+ * Same-origin `/api/go/*` attaches Authorization + X-Workspace-ID server-side.
+ */
+const BASE_URL = "/api/go";
 
 function buildUrl(path: string, params?: Record<string, unknown>): string {
   if (!params) return path;
@@ -29,7 +30,6 @@ function buildUrl(path: string, params?: Record<string, unknown>): string {
 }
 
 export type ApiFetchInit = RequestInit & {
-  token?: string;
   params?: Record<string, unknown>;
   locale?: string;
 };
@@ -39,14 +39,12 @@ export async function apiFetch<T = unknown>(
   init: ApiFetchInit = {},
 ): Promise<T> {
   const {
-    token: explicitToken,
     params,
     locale: explicitLocale,
     headers: extraHeaders,
     body,
     ...rest
   } = init;
-  const token = explicitToken ?? readBrowserToken();
   const locale = explicitLocale ?? getBrowserLocale();
 
   const url = `${BASE_URL}${buildUrl(path, params)}`;
@@ -55,7 +53,6 @@ export async function apiFetch<T = unknown>(
   const headers: Record<string, string> = {
     Accept: "application/json",
     "Accept-Language": locale,
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(extraHeaders as Record<string, string>),
   };
 
@@ -63,11 +60,15 @@ export async function apiFetch<T = unknown>(
     headers["Content-Type"] = "application/json";
   }
 
-  const res = await fetch(url, { ...rest, body, headers });
+  const res = await fetch(url, {
+    ...rest,
+    body,
+    headers,
+    credentials: "same-origin",
+  });
 
   if (!res.ok) {
     if (res.status === 401) {
-      // No public refresh endpoint yet — clear session on unauthorized.
       clearAuthCookies();
     }
 

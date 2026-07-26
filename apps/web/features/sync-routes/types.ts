@@ -1,18 +1,13 @@
+import type { Schemas } from "@/lib/api/sdk";
+
 export type SyncRouteStatus = "draft" | "enabled" | "disabled";
-export type SyncRouteTrigger = "webhook" | "schedule" | "both";
-export type GroupMode = "sequential" | "parallel";
+export type SyncRouteTrigger = Schemas["CreateSyncRouteRequest"]["trigger_type"];
+export type GroupMode = Schemas["SyncRouteActivityGroup"]["group_mode"];
 
-export interface SyncRouteStep {
-  destination_connection_id: string;
-  capability: string;
-  mapping_key?: string;
-}
+export type SyncRouteStep = Schemas["SyncRouteActivityGroup"]["steps"][number];
+export type SyncRouteActivity = Schemas["SyncRouteActivityGroup"];
 
-export interface SyncRouteActivity {
-  group_mode: GroupMode;
-  steps: SyncRouteStep[];
-}
-
+/** Response entity — not yet a named OpenAPI schema. */
 export interface SyncRoute {
   id: string;
   workspace_id: string;
@@ -29,13 +24,26 @@ export interface SyncRoute {
   webhook_secret?: string;
 }
 
-export interface CreateSyncRoutePayload {
-  source_connection_id: string;
-  name: string;
-  trigger_type: SyncRouteTrigger;
-  resource_types: string[];
-  activities: SyncRouteActivity[];
-}
+export type CreateSyncRoutePayload = Omit<
+  Schemas["CreateSyncRouteRequest"],
+  "schedule" | "filter" | "idempotency_rule" | "retry_policy"
+> & {
+  schedule?: Record<string, unknown>;
+  filter?: Record<string, unknown>;
+  idempotency_rule?: Record<string, unknown>;
+  retry_policy?: Record<string, unknown>;
+};
+
+export type UpdateSyncRoutePayload = Omit<
+  Schemas["UpdateSyncRouteRequest"],
+  "schedule" | "filter" | "idempotency_rule" | "retry_policy" | "activities"
+> & {
+  schedule?: Record<string, unknown>;
+  filter?: Record<string, unknown>;
+  idempotency_rule?: Record<string, unknown>;
+  retry_policy?: Record<string, unknown>;
+  activities?: SyncRouteActivity[];
+};
 
 export interface SyncRouteWatermark {
   resource_type: string;

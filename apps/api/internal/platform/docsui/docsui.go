@@ -84,12 +84,52 @@ func loadOpenAPI() ([]byte, error) {
 
 func openAPICandidates() []string {
 	rel := filepath.Join("api", "openapi", "openapi.yaml")
-	out := []string{rel}
+
+	var out []string
+	seen := make(map[string]struct{})
+	add := func(p string) {
+		if p == "" {
+			return
+		}
+		if _, ok := seen[p]; ok {
+			return
+		}
+		seen[p] = struct{}{}
+		out = append(out, p)
+	}
+
+	// Explicit override wins (absolute path to the spec file).
+	if override := strings.TrimSpace(env.GetEnv("OPENAPI_SPEC_PATH", "")); override != "" {
+		add(override)
+	}
+
+	add(rel)
+
+	// Walk up from the working directory so the spec is found whether the
+	// process runs at the repo root or inside apps/api (monorepo layout).
 	if cwd, err := os.Getwd(); err == nil {
-		out = append(out, filepath.Join(cwd, rel))
+		add(filepath.Join(cwd, rel))
+		for dir := cwd; ; {
+			add(filepath.Join(dir, rel))
+			parent := filepath.Dir(dir)
+			if parent == dir {
+				break
+			}
+			dir = parent
+		}
 	}
+
+	// Walk up from the executable directory as a fallback.
 	if ex, err := os.Executable(); err == nil {
-		out = append(out, filepath.Join(filepath.Dir(ex), rel))
+		for dir := filepath.Dir(ex); ; {
+			add(filepath.Join(dir, rel))
+			parent := filepath.Dir(dir)
+			if parent == dir {
+				break
+			}
+			dir = parent
+		}
 	}
+
 	return out
 }

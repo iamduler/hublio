@@ -1,11 +1,10 @@
-import { bff, unwrapData } from "@/lib/api/bff-client";
-import type { SuccessEnvelope } from "@/lib/api/types";
+import { api, unwrapData, type SuccessEnvelope } from "@/lib/api/client";
 import type { DomainEvent, EventsQuery } from "./types";
 
-/** Events context via BFF (X-API-KEY held server-side, workspace-scoped). */
+/** Events via JWT proxy (`/api/go` → Go Bearer + X-Workspace-ID). */
 export const eventsApi = {
   list(query: EventsQuery = {}) {
-    return bff
+    return api
       .get<SuccessEnvelope<DomainEvent[]>>("/events", {
         execution_id: query.execution_id,
         limit: query.limit,

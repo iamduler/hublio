@@ -1,17 +1,16 @@
-import { bff, unwrapData } from "@/lib/api/bff-client";
-import type { SuccessEnvelope } from "@/lib/api/types";
+import { api, unwrapData, type SuccessEnvelope } from "@/lib/api/client";
 import type { Execution, ExecutionTimeline } from "./types";
 
-/** Orchestration context via BFF (X-API-KEY held server-side). */
+/** Orchestration via JWT proxy (`/api/go` → Go Bearer + X-Workspace-ID). */
 export const executionsApi = {
   get(executionId: string) {
-    return bff
+    return api
       .get<SuccessEnvelope<Execution>>(`/executions/${executionId}`)
       .then((res) => unwrapData<Execution>(res));
   },
 
   timeline(executionId: string) {
-    return bff
+    return api
       .get<SuccessEnvelope<ExecutionTimeline>>(
         `/executions/${executionId}/timeline`,
       )
@@ -19,7 +18,7 @@ export const executionsApi = {
   },
 
   cancel(executionId: string) {
-    return bff
+    return api
       .post<SuccessEnvelope<Execution>>(
         `/executions/${executionId}/cancel`,
         {},
@@ -28,7 +27,7 @@ export const executionsApi = {
   },
 
   retry(executionId: string) {
-    return bff
+    return api
       .post<SuccessEnvelope<Execution>>(
         `/executions/${executionId}/retry`,
         {},

@@ -215,12 +215,13 @@ pnpm --filter @hublio/web dev       # terminal 3
 
 ---
 
-## API access (hybrid BFF)
+## API access (httpOnly JWT proxy)
 
-Không bắt buộc mọi request qua Next.js.
+Browser không giữ JWT / workspace API key.
 
-* **JWT routes** → `lib/api/client` → Go  
-* **API-key routes** (intents, executions, events) → `lib/api/bff-client` → Next `app/api/*` → Go  
+* **Auth** → `/api/auth/*` → Go (Next set httpOnly cookies)  
+* **Dashboard APIs** → `lib/api/client` → `/api/go/*` → Go (Bearer + `X-Workspace-ID`)  
+* **Machine clients** vẫn gọi Go trực tiếp với `X-API-KEY`
 
 Chi tiết: [`docs/24-nextjs-architecture.md`](docs/24-nextjs-architecture.md) §8.1.
 

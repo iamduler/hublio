@@ -26,19 +26,18 @@ The app moved into a pnpm + Turborepo monorepo. Paths below are now relative to
 
 ---
 
-## API access policy (frozen)
+## API access policy
 
-Hybrid BFF — **do not** route all browser traffic through Next.js.
+httpOnly JWT proxy — browser never holds tokens or workspace API keys.
 
 | Browser → | Auth | Used for |
 | --- | --- | --- |
-| Go (`NEXT_PUBLIC_API_URL` via `lib/api/client`) | JWT | auth, workspaces, connectors, connections, sync-routes, team, api-keys |
-| Next BFF (`app/api/*` via `lib/api/bff-client`) | server `X-API-KEY` | intents, executions, events |
+| Next `/api/auth/*` | httpOnly cookies | login / register / logout / session |
+| Next `/api/go/*` (`lib/api/client`) | server Bearer + `X-Workspace-ID` | identity, integration, intents, executions, events |
 
 - [x] Documented in `docs/24-nextjs-architecture.md` §8.1 and `apps/web/AGENTS.md`
-- [x] BFF only for API-key-only orchestration/events routes
-- [ ] Optional later: httpOnly-only JWT + Next proxy (security hardening — separate decision)
-- [ ] Optional later: Go accepts JWT on orchestration/events (would shrink BFF surface)
+- [x] httpOnly JWT + Next proxy
+- [x] Go accepts JWT on orchestration/events (`MachineOrJWTMiddleware`)
 
 ---
 
@@ -53,21 +52,15 @@ Hybrid BFF — **do not** route all browser traffic through Next.js.
 
 ---
 
-## Phase 1 — BFF for API-key-only routes
+## Phase 1 — Auth proxy + orchestration JWT
 
-> Scope: intents / executions / events only. JWT CRUD stays browser → Go.
-> Policy: see **API access policy (frozen)** above.
+> Supersedes the earlier API-key BFF for the dashboard UI.
 
-- [x] Mint + cache workspace API key server-side (`lib/api/bff.ts`, httpOnly cookie)
-- [x] `POST /api/intents` (+ `Idempotency-Key`)
-- [x] `GET /api/intents/[intentId]`
-- [x] `GET /api/executions/[executionId]`
-- [x] `GET /api/executions/[executionId]/timeline`
-- [x] `POST /api/executions/[executionId]/cancel`
-- [x] `POST /api/executions/[executionId]/retry`
-- [x] `GET /api/events`
-- [x] Browser `bff` client (`lib/api/bff-client.ts`)
-
+- [x] `/api/auth/login|register|logout|session` (httpOnly cookies)
+- [x] Catch-all `/api/go/[...path]` JWT proxy
+- [x] Feature clients use `lib/api/client` → `/api/go` (including intents/executions/events)
+- [x] Legacy `/api/intents|executions|events` routes rewired to JWT proxy
+- [~] Legacy `lib/api/bff.ts` minting kept deprecated
 ---
 
 ## Phase 2 — Shared feature infrastructure

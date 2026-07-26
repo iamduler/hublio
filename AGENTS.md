@@ -369,13 +369,14 @@ truth; it is not a competing spec and is not backend codegen. Whenever the spec 
 regenerate with `pnpm --filter @hublio/sdk generate` and commit `packages/sdk/src/schema.d.ts`
 in the same change. Frontend apps import DTO types from `@hublio/sdk`.
 
-**Frontend API access (hybrid BFF — frozen):** Not every browser call goes through Next.js.
+**Frontend API access (httpOnly JWT proxy):** Browser never holds JWT or workspace API keys.
 
-* JWT Identity / Integration CRUD → browser → Go (`NEXT_PUBLIC_API_URL`) via `lib/api/client`.
-* Intent / Execution / Events (API-key-only) → browser → Next BFF (`app/api/*`) → Go with
-  server-held `X-API-KEY`. Workspace API keys must never reach the browser.
-* Use BFF only when Next holds a secret or performs useful server orchestration.
-  Do not proxy all JWT CRUD through Next for consistency.
+* Auth → browser → Next `/api/auth/*` → Go `/auth/*` (Next sets httpOnly `hublio_session` /
+  `hublio_refresh`).
+* Dashboard Go APIs → browser → Next `/api/go/*` via `lib/api/client` → Go with Bearer +
+  `X-Workspace-ID` (identity, integration, intents, executions, events).
+* Machine / external clients may call Go directly with `X-API-KEY`. Orchestration/events
+  accept either API key or JWT + `X-Workspace-ID` (`MachineOrJWTMiddleware`).
 * Details: `docs/24-nextjs-architecture.md` §8.1 and `apps/web/AGENTS.md`.
 
 Agents and developers must apply this without being reminded.

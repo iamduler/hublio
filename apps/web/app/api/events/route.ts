@@ -1,22 +1,18 @@
 import { type NextRequest } from "next/server";
-import {
-  bffErrorResponse,
-  proxyToGo,
-  resolveWorkspaceContext,
-} from "@/lib/api/bff";
+import { proxyErrorResponse, proxyGoWithJWT } from "@/lib/api/proxy-go";
 
-/** GET /api/events?execution_id&limit → Go GET /events (workspace-scoped). */
+/** GET /api/events → Go (JWT + X-Workspace-ID). */
 export async function GET(request: NextRequest) {
   try {
-    const ctx = await resolveWorkspaceContext();
-    const { searchParams } = new URL(request.url);
-    return await proxyToGo(ctx, "/events", {
+    return await proxyGoWithJWT("/events", {
+      method: "GET",
       params: {
-        execution_id: searchParams.get("execution_id") ?? undefined,
-        limit: searchParams.get("limit") ?? undefined,
+        execution_id: request.nextUrl.searchParams.get("execution_id") ?? undefined,
+        limit: request.nextUrl.searchParams.get("limit") ?? undefined,
       },
+      requireWorkspace: true,
     });
   } catch (err) {
-    return bffErrorResponse(err);
+    return proxyErrorResponse(err);
   }
 }

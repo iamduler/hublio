@@ -1,9 +1,11 @@
+import { clearAuthCookies } from "@/lib/auth";
 import { ApiError } from "./client";
 import { unwrapData, type ErrorEnvelope } from "./types";
 
 /**
- * Browser client for the Next.js BFF (`/api/*`). Same-origin, cookie-based —
- * no Authorization header. Mirrors the Go envelope handling of `lib/api/client`.
+ * @deprecated Prefer `lib/api/client` (`/api/go`) after JWT is accepted on
+ * orchestration/events. Kept for any residual `/api/intents|executions|events`
+ * route aliases during migration.
  */
 async function bffFetch<T = unknown>(
   path: string,
@@ -15,6 +17,7 @@ async function bffFetch<T = unknown>(
   const res = await fetch(url, {
     ...rest,
     body,
+    credentials: "same-origin",
     headers: {
       Accept: "application/json",
       ...(body !== undefined && !(body instanceof FormData)
@@ -25,6 +28,10 @@ async function bffFetch<T = unknown>(
   });
 
   if (!res.ok) {
+    if (res.status === 401) {
+      clearAuthCookies();
+    }
+
     let code = "UNKNOWN";
     let message = res.statusText;
     try {

@@ -172,34 +172,36 @@ Hand-written feature clients remain the default; adopt SDK types incrementally.
 
 ---
 
-# 8.1 Browser → API access (hybrid BFF)
+# 8.1 Browser → API access (httpOnly JWT proxy)
 
-**Frozen rule for Version 1.** Not every browser call must go through Next.js.
+**Current rule (supersedes hybrid BFF for the dashboard).** Browser never holds
+access/refresh tokens or workspace API keys.
 
 ```text
 Browser
-  ├─ JWT routes ──────────────► Go API (NEXT_PUBLIC_API_URL)
-  │   auth, workspaces, connectors, connections,
-  │   sync-routes, team, api-keys, …
+  ├─ /api/auth/* ──► Go /auth/*   (Next sets httpOnly hublio_session / hublio_refresh)
   │
-  └─ API-key-only routes ─────► Next.js BFF (/api/…) ──► Go API (X-API-KEY)
-      intents, executions, events
+  └─ /api/go/*    ──► Go /api/v1/* (Next attaches Bearer + X-Workspace-ID)
+        identity, integration, intents, executions, events, …
+
+Machine / external clients may still call Go directly with X-API-KEY
+(orchestration, events, poll, platform). The dashboard does not mint UI API keys.
 ```
 
 | Path | Browser calls | Why |
 | --- | --- | --- |
-| JWT Identity / Integration CRUD | Go directly (`lib/api/client`) | User JWT already authorizes; Next adds no secret |
-| Intent / Execution / Events | Next BFF (`lib/api/bff-client` → `app/api/*`) | Go requires workspace API key; key must stay server-side |
+| Auth | Next `/api/auth/*` | Set/clear httpOnly JWT cookies |
+| All dashboard Go APIs | Next `/api/go/*` via `lib/api/client` | JWT stays httpOnly; proxy adds Bearer + workspace |
+| Machine orchestration | Go + `X-API-KEY` | External/ops; not used by the browser |
 
 Rules:
 
-* Use Next.js BFF **only** when Next adds security (hold secrets) or useful server orchestration.
-* Do **not** proxy all JWT CRUD through Next “for consistency”.
-* Workspace API keys must never be sent to the browser. Mint/cache them in
-  `lib/api/bff.ts` (httpOnly cookie) and forward as `X-API-KEY` to Go.
-* Browser JWT stays in cookies (`hublio_session` / `hublio_refresh`) for V1.
-  Moving to httpOnly-only JWT + full Next proxy is a separate security decision,
-  not the default architecture.
+* Access and refresh tokens are **httpOnly** (`hublio_session` / `hublio_refresh`).
+* Dashboard soft-gate in `proxy.ts` still reads the httpOnly session cookie on the request.
+* Go orchestration/events accept **either** `X-API-KEY` **or** Bearer JWT + `X-Workspace-ID`
+  (membership checked). See `MachineOrJWTMiddleware`.
+* Workspace API keys must never be sent to the browser.
+* Prefer `@hublio/sdk` types for request DTOs; keep hand-written feature `api.ts` clients.
 
 ---
 
@@ -230,10 +232,11 @@ Validation rules should match backend validation.
 
 # 11. Authentication
 
-Dashboard **user** authentication uses JWT (browser → Go).
+Dashboard **user** authentication uses httpOnly JWT cookies set by Next
+`/api/auth/*`. The browser never reads access/refresh tokens.
 
-Workspace **API keys** are used only by the Next.js BFF (server → Go) for
-routes that do not accept JWT. The browser never holds those API keys.
+Workspace **API keys** remain for machine/external clients calling Go directly.
+The dashboard UI does not mint or hold those keys.
 
 ---
 

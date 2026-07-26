@@ -1,24 +1,20 @@
 import { type NextRequest } from "next/server";
-import {
-  bffErrorResponse,
-  proxyToGo,
-  resolveWorkspaceContext,
-} from "@/lib/api/bff";
+import { proxyErrorResponse, proxyGoWithJWT } from "@/lib/api/proxy-go";
 
-/** POST /api/intents → Go POST /intents (X-API-KEY, requires Idempotency-Key). */
+/** POST /api/intents → Go POST /intents (JWT + X-Workspace-ID). */
 export async function POST(request: NextRequest) {
   try {
-    const ctx = await resolveWorkspaceContext();
     const body = (await request.json()) as unknown;
     const idempotencyKey =
       request.headers.get("Idempotency-Key") ?? crypto.randomUUID();
 
-    return await proxyToGo(ctx, "/intents", {
+    return await proxyGoWithJWT("/intents", {
       method: "POST",
       body,
       headers: { "Idempotency-Key": idempotencyKey },
+      requireWorkspace: true,
     });
   } catch (err) {
-    return bffErrorResponse(err);
+    return proxyErrorResponse(err);
   }
 }

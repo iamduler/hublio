@@ -16,9 +16,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// Handler serves the Platform (machine) Orchestration API: Intents and Executions.
-// Every route is Workspace-scoped API-Key auth (simplest option that meets the Phase D
-// exit criteria); a JWT + workspace-membership variant is deferred (see checklist).
+// Handler serves the Platform Orchestration API: Intents and Executions.
+// Auth: workspace API key (X-API-KEY) or user JWT + X-Workspace-ID (membership checked).
 type Handler struct {
 	svc  *application.Services
 	pool *pgxpool.Pool

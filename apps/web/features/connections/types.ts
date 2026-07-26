@@ -1,9 +1,6 @@
-export type CredentialType =
-  | "api_key"
-  | "oauth2"
-  | "bearer_token"
-  | "basic_auth"
-  | "jwt";
+import type { Schemas } from "@/lib/api/sdk";
+
+export type CredentialType = Schemas["CreateConnectionRequest"]["credential_type"];
 
 export type ConnectionStatus =
   | "draft"
@@ -12,6 +9,7 @@ export type ConnectionStatus =
   | "verification_failed"
   | "disabled";
 
+/** Response entity — not yet a named OpenAPI schema. */
 export interface Connection {
   id: string;
   workspace_id: string;
@@ -28,14 +26,19 @@ export interface Connection {
   updated_at?: string;
 }
 
-export interface CreateConnectionPayload {
-  connector_id: string;
-  name: string;
-  environment: string;
-  credential_type: CredentialType;
-  secret: Record<string, string>;
-  description?: string;
+export type CreateConnectionPayload = Omit<
+  Schemas["CreateConnectionRequest"],
+  "config" | "retry_policy" | "secret" | "is_default" | "timeout_seconds"
+> & {
   is_default?: boolean;
-  config?: Record<string, unknown>;
   timeout_seconds?: number;
-}
+  config?: Record<string, unknown>;
+  secret: Record<string, string>;
+};
+
+export type RotateCredentialPayload = Omit<
+  Schemas["RotateCredentialRequest"],
+  "secret"
+> & {
+  secret: Record<string, string>;
+};

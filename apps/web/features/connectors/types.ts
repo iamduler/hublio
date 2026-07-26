@@ -1,8 +1,7 @@
+import type { Schemas } from "@/lib/api/sdk";
+
 export type ConnectorCategory =
-  | "source"
-  | "destination"
-  | "bidirectional"
-  | "utility";
+  Schemas["RegisterConnectorRequest"]["category"];
 
 export type ConnectorStatus =
   | "registered"
@@ -19,6 +18,7 @@ export interface ConnectorCapability {
   is_async?: boolean;
 }
 
+/** Response entity — not yet a named OpenAPI schema. */
 export interface Connector {
   id: string;
   code: string;
@@ -34,3 +34,5 @@ export interface Connector {
   created_at?: string;
   updated_at?: string;
 }
+
+export type RegisterConnectorPayload = Schemas["RegisterConnectorRequest"];

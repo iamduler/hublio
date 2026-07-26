@@ -8,21 +8,19 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 - Product: Hublio user workspace (Integration + Orchestration).
 - Backend: Go API in this monorepo at `apps/api` — OpenAPI `api/openapi/openapi.yaml`.
-- Frontend architecture: `docs/24-nextjs-architecture.md` (hybrid BFF rule).
+- Frontend architecture: `docs/24-nextjs-architecture.md` (§8.1 httpOnly JWT proxy).
 - Business rules belong on the Go backend. This app is presentation + API integration only.
 - Do not invent API endpoints. Only call paths documented in OpenAPI.
 - Stack: Next.js 16, React 19, Tailwind v4, next-intl, TanStack Query, shadcn via `@hublio/ui`.
-- Auth: JWT Bearer in cookies `hublio_session` / `hublio_refresh`. Dashboard soft-gated in `proxy.ts`.
+- Auth: httpOnly JWT cookies `hublio_session` / `hublio_refresh` set by `/api/auth/*`. Dashboard soft-gated in `proxy.ts`.
 
 ## API access (do not change without explicit approval)
 
-Hybrid — **not** “everything through Next.js”:
-
 | Browser calls | Mechanism | Routes |
 | --- | --- | --- |
-| Go API directly | `lib/api/client` + JWT | auth, workspaces, connectors, connections, sync-routes, team, api-keys |
-| Next BFF then Go | `lib/api/bff-client` → `app/api/*` → `X-API-KEY` | intents, executions, events |
+| Next `/api/auth/*` | sets httpOnly cookies | login, register, logout, session |
+| Next `/api/go/*` via `lib/api/client` | server Bearer + `X-Workspace-ID` | identity, integration, intents, executions, events |
 
-- BFF exists to keep workspace API keys server-side. Do not expose them to the browser.
-- Do not add BFF proxies for JWT CRUD unless there is a new secret or orchestration need.
-- Prefer `@hublio/sdk` types for DTOs; keep hand-written feature `api.ts` clients (no full typed SDK client rewrite unless requested).
+- Browser never reads JWT or workspace API keys.
+- Go still accepts `X-API-KEY` for machine clients on orchestration/events.
+- Prefer `@hublio/sdk` types for request DTOs; keep hand-written feature `api.ts` clients (no full typed SDK client rewrite unless requested).

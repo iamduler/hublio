@@ -639,7 +639,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Submit a Business Intent (Workspace-scoped, API Key)
+         * Submit a Business Intent (Workspace-scoped; API key or JWT + X-Workspace-ID)
          * @description Resolves the Connection (must be Active), creates the Intent (Submitted), then
          *     Accepts or Rejects it based on payload/capability validity. On Accept, creates and
          *     Queues one Execution (direct submit) and enqueues the `orchestration.execution`
@@ -754,7 +754,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List persisted Platform Events (Observability, F3; Workspace-scoped)
+         * List persisted Platform Events (Observability, F3; API key or JWT + X-Workspace-ID)
          * @description Append-only PlatformEvent facts (`events` table) published after a successful
          *     Identity/Integration/Orchestration commit. Never used to schedule work (Event
          *     Platform is not a work queue).
@@ -1098,6 +1098,11 @@ export interface components {
         };
     };
     parameters: {
+        /**
+         * @description Required when authenticating with bearerAuth (user JWT).
+         *     Ignored when using apiKeyAuth (workspace is implied by the key).
+         */
+        workspaceIdHeader: string;
         organizationId: string;
         workspaceId: string;
         apiKeyId: string;
@@ -2079,7 +2084,13 @@ export interface operations {
     triggerSyncRoutePoll: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /**
+                 * @description Required when authenticating with bearerAuth (user JWT).
+                 *     Ignored when using apiKeyAuth (workspace is implied by the key).
+                 */
+                "X-Workspace-ID"?: components["parameters"]["workspaceIdHeader"];
+            };
             path: {
                 syncRouteId: components["parameters"]["syncRouteId"];
             };
@@ -2111,6 +2122,11 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
+                /**
+                 * @description Required when authenticating with bearerAuth (user JWT).
+                 *     Ignored when using apiKeyAuth (workspace is implied by the key).
+                 */
+                "X-Workspace-ID"?: components["parameters"]["workspaceIdHeader"];
                 "Idempotency-Key": string;
             };
             path?: never;
@@ -2147,7 +2163,13 @@ export interface operations {
     getIntent: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /**
+                 * @description Required when authenticating with bearerAuth (user JWT).
+                 *     Ignored when using apiKeyAuth (workspace is implied by the key).
+                 */
+                "X-Workspace-ID"?: components["parameters"]["workspaceIdHeader"];
+            };
             path: {
                 intentId: components["parameters"]["intentId"];
             };
@@ -2169,7 +2191,13 @@ export interface operations {
     getExecution: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /**
+                 * @description Required when authenticating with bearerAuth (user JWT).
+                 *     Ignored when using apiKeyAuth (workspace is implied by the key).
+                 */
+                "X-Workspace-ID"?: components["parameters"]["workspaceIdHeader"];
+            };
             path: {
                 executionId: components["parameters"]["executionId"];
             };
@@ -2191,7 +2219,13 @@ export interface operations {
     cancelExecution: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /**
+                 * @description Required when authenticating with bearerAuth (user JWT).
+                 *     Ignored when using apiKeyAuth (workspace is implied by the key).
+                 */
+                "X-Workspace-ID"?: components["parameters"]["workspaceIdHeader"];
+            };
             path: {
                 executionId: components["parameters"]["executionId"];
             };
@@ -2214,7 +2248,13 @@ export interface operations {
     retryExecution: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /**
+                 * @description Required when authenticating with bearerAuth (user JWT).
+                 *     Ignored when using apiKeyAuth (workspace is implied by the key).
+                 */
+                "X-Workspace-ID"?: components["parameters"]["workspaceIdHeader"];
+            };
             path: {
                 executionId: components["parameters"]["executionId"];
             };
@@ -2237,7 +2277,13 @@ export interface operations {
     getExecutionTimeline: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /**
+                 * @description Required when authenticating with bearerAuth (user JWT).
+                 *     Ignored when using apiKeyAuth (workspace is implied by the key).
+                 */
+                "X-Workspace-ID"?: components["parameters"]["workspaceIdHeader"];
+            };
             path: {
                 executionId: components["parameters"]["executionId"];
             };
@@ -2262,7 +2308,13 @@ export interface operations {
                 execution_id?: string;
                 limit?: number;
             };
-            header?: never;
+            header?: {
+                /**
+                 * @description Required when authenticating with bearerAuth (user JWT).
+                 *     Ignored when using apiKeyAuth (workspace is implied by the key).
+                 */
+                "X-Workspace-ID"?: components["parameters"]["workspaceIdHeader"];
+            };
             path?: never;
             cookie?: never;
         };

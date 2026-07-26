@@ -1,23 +1,17 @@
 import { type NextRequest } from "next/server";
-import {
-  bffErrorResponse,
-  proxyToGo,
-  resolveWorkspaceContext,
-} from "@/lib/api/bff";
+import { proxyErrorResponse, proxyGoWithJWT } from "@/lib/api/proxy-go";
 
-/** POST /api/executions/:id/cancel → Go POST /executions/:id/cancel */
-export async function POST(
-  _request: NextRequest,
-  { params }: { params: Promise<{ executionId: string }> },
-) {
+type Ctx = { params: Promise<{ executionId: string }> };
+
+export async function POST(_request: NextRequest, context: Ctx) {
   try {
-    const { executionId } = await params;
-    const ctx = await resolveWorkspaceContext();
-    return await proxyToGo(ctx, `/executions/${executionId}/cancel`, {
+    const { executionId } = await context.params;
+    return await proxyGoWithJWT(`/executions/${executionId}/cancel`, {
       method: "POST",
       body: {},
+      requireWorkspace: true,
     });
   } catch (err) {
-    return bffErrorResponse(err);
+    return proxyErrorResponse(err);
   }
 }

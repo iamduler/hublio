@@ -783,7 +783,9 @@ paths:
       operationId: triggerSyncRoutePoll
       security:
         - apiKeyAuth: []
+        - bearerAuth: []
       parameters:
+        - $ref: "#/components/parameters/workspaceIdHeader"
         - $ref: "#/components/parameters/syncRouteId"
       requestBody:
         required: true
@@ -811,7 +813,7 @@ paths:
   /api/v1/intents:
     post:
       tags: [Orchestration]
-      summary: Submit a Business Intent (Workspace-scoped, API Key)
+      summary: Submit a Business Intent (Workspace-scoped; API key or JWT + X-Workspace-ID)
       description: |
         Resolves the Connection (must be Active), creates the Intent (Submitted), then
         Accepts or Rejects it based on payload/capability validity. On Accept, creates and
@@ -821,7 +823,9 @@ paths:
       operationId: submitIntent
       security:
         - apiKeyAuth: []
+        - bearerAuth: []
       parameters:
+        - $ref: "#/components/parameters/workspaceIdHeader"
         - name: Idempotency-Key
           in: header
           required: true
@@ -858,7 +862,9 @@ paths:
       operationId: getIntent
       security:
         - apiKeyAuth: []
+        - bearerAuth: []
       parameters:
+        - $ref: "#/components/parameters/workspaceIdHeader"
         - $ref: "#/components/parameters/intentId"
       responses:
         "200":
@@ -875,7 +881,9 @@ paths:
       operationId: getExecution
       security:
         - apiKeyAuth: []
+        - bearerAuth: []
       parameters:
+        - $ref: "#/components/parameters/workspaceIdHeader"
         - $ref: "#/components/parameters/executionId"
       responses:
         "200":
@@ -892,7 +900,9 @@ paths:
       operationId: cancelExecution
       security:
         - apiKeyAuth: []
+        - bearerAuth: []
       parameters:
+        - $ref: "#/components/parameters/workspaceIdHeader"
         - $ref: "#/components/parameters/executionId"
       responses:
         "200":
@@ -914,7 +924,9 @@ paths:
       operationId: retryExecution
       security:
         - apiKeyAuth: []
+        - bearerAuth: []
       parameters:
+        - $ref: "#/components/parameters/workspaceIdHeader"
         - $ref: "#/components/parameters/executionId"
       responses:
         "200":
@@ -936,7 +948,9 @@ paths:
       operationId: getExecutionTimeline
       security:
         - apiKeyAuth: []
+        - bearerAuth: []
       parameters:
+        - $ref: "#/components/parameters/workspaceIdHeader"
         - $ref: "#/components/parameters/executionId"
       responses:
         "200":
@@ -949,7 +963,7 @@ paths:
   /api/v1/events:
     get:
       tags: [Events]
-      summary: List persisted Platform Events (Observability, F3; Workspace-scoped)
+      summary: List persisted Platform Events (Observability, F3; API key or JWT + X-Workspace-ID)
       description: |
         Append-only PlatformEvent facts (`events` table) published after a successful
         Identity/Integration/Orchestration commit. Never used to schedule work (Event
@@ -957,7 +971,9 @@ paths:
       operationId: listEvents
       security:
         - apiKeyAuth: []
+        - bearerAuth: []
       parameters:
+        - $ref: "#/components/parameters/workspaceIdHeader"
         - name: execution_id
           in: query
           required: false
@@ -1045,6 +1061,16 @@ components:
       description: Workspace API key plaintext (prefix.secret)
 
   parameters:
+    workspaceIdHeader:
+      name: X-Workspace-ID
+      in: header
+      required: false
+      description: |
+        Required when authenticating with bearerAuth (user JWT).
+        Ignored when using apiKeyAuth (workspace is implied by the key).
+      schema:
+        type: string
+        format: uuid
     organizationId:
       name: organizationId
       in: path
