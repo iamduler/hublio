@@ -27,6 +27,10 @@ func (e *AppError) Error() string {
 	return fmt.Sprintf("Code: %s, Message: %s, Error: %v", e.Code, e.Message, e.Err)
 }
 
+func (e *AppError) Unwrap() error {
+	return e.Err
+}
+
 func New(message string, code ErrorCode) error {
 	return &AppError{
 		Message: message,

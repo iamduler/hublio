@@ -3,9 +3,11 @@ package persistence
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"hublio/internal/platform/config"
+	"hublio/internal/platform/env"
 	"hublio/internal/platform/logging"
 	"hublio/internal/platform/persistence/sqlc"
 
@@ -27,12 +29,16 @@ func NewDatabase(cfg *config.Config) (*Database, error) {
 	}
 
 	sqlLogger := logging.NewLoggerWithPath("sql.log", "info")
+	logLevel := tracelog.LogLevelDebug
+	if strings.EqualFold(env.GetEnv("DEVELOPMENT_MODE", "development"), "production") {
+		logLevel = tracelog.LogLevelWarn
+	}
 	poolConfig.ConnConfig.Tracer = &tracelog.TraceLog{
 		Logger: &PgxZerologTracer{
 			Logger:         *sqlLogger,
 			SlowQueryLimit: 500 * time.Millisecond,
 		},
-		LogLevel: tracelog.LogLevelDebug,
+		LogLevel: logLevel,
 	}
 
 	poolConfig.MaxConns = 50

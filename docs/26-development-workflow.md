@@ -104,16 +104,47 @@ One commit should represent one logical change.
 
 # 6. Commit Messages
 
-Use Conventional Commits.
+Use **Conventional Commits**.
 
-Examples
+Format:
 
-* feat:
-* fix:
-* refactor:
-* test:
-* docs:
-* chore:
+```text
+<type>(<optional-scope>): <short summary in imperative mood>
+
+[optional body — why, not what]
+```
+
+### Types
+
+* `feat` — new capability
+* `fix` — bug fix
+* `refactor` — internal change, same behavior
+* `test` — tests only
+* `docs` — documentation only
+* `chore` — tooling, deps, repo hygiene
+* `perf` — performance
+* `build` — build / Docker / Makefile
+* `ci` — CI workflows
+
+### Scopes (optional, monorepo)
+
+* `api` — `apps/api`
+* `web` — `apps/web`
+* `admin` — `apps/admin`
+* `ui` / `sdk` — shared packages
+* `deploy` — `deploy/`
+* `docs` — documentation
+
+### Examples
+
+```text
+feat(api): wrap HTTP listen address conflicts as CONFLICT
+fix(web): correct NEXT_PUBLIC_API_URL for local BFF
+docs: add monorepo Quick start steps
+chore: migrate repository to apps/ + packages/ layout
+```
+
+Cursor IDE **Generate Commit Message** follows `.cursor/rules/commit-messages.mdc`.
 
 ---
 

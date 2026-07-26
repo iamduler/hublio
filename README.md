@@ -2,10 +2,10 @@
 
 Business Integration Platform + Business Orchestration Platform.
 
-Hublio kết nối hệ thống nghiệp vụ và điều phối Intent → Execution qua Canonical Model + Connectors.
+Hublio kết nối hệ thống nghiệp vụ và điều phối Intent → Execution qua Canonical Model + Connectors.  
 Không phải Workflow Engine / ERP / CRM.
 
-Chi tiết kiến trúc: [`AGENTS.md`](AGENTS.md), [`docs/`](docs/), checklist backend [`docs/29-backend-implementation-checklist.md`](docs/29-backend-implementation-checklist.md).
+Chi tiết kiến trúc: [`AGENTS.md`](AGENTS.md), [`docs/`](docs/).
 
 ---
 
@@ -18,33 +18,28 @@ Chi tiết kiến trúc: [`AGENTS.md`](AGENTS.md), [`docs/`](docs/), checklist b
 | Cache / Work queue | Redis |
 | Messaging (optional) | RabbitMQ |
 | Frontend | Next.js 16 (`apps/web`, `apps/admin`) |
-| Shared TS packages | `packages/ui`, `packages/config`, `packages/sdk` |
+| Shared TS | `packages/ui`, `packages/config`, `packages/sdk` |
 
 ---
 
 ## Project layout
 
-Monorepo: Go backend under `apps/api` (module `hublio`), Next.js apps and shared
-TypeScript alongside. pnpm workspaces + Turborepo for JS; `go.work` for Go.
-
 ```text
 apps/
-  api/                 # Go backend (module: hublio)
-    cmd/api/           # REST API entrypoint
-    cmd/worker/        # background worker entrypoint
-    internal/          # bounded contexts: identity, integration,
-                       #   orchestration, transformation, events, platform
+  api/          # Go backend (module path: hublio)
+    cmd/api/
+    cmd/worker/
+    internal/
     migrations/
-    sqlc.yml
-  web/                 # Next.js user workspace (@hublio/web)
-  admin/               # Next.js admin console (@hublio/admin)
+  web/          # @hublio/web — user workspace
+  admin/        # @hublio/admin — admin scaffold
 packages/
-  ui/                  # @hublio/ui — shared components + design theme
-  config/              # @hublio/config — shared tsconfig base
-  sdk/                 # @hublio/sdk — types generated from openapi.yaml
-api/openapi/           # OpenAPI spec (source of truth)
-deploy/                # Dockerfiles + docker-compose
-system/                # infra config (redis.conf)
+  ui/           # @hublio/ui
+  config/       # @hublio/config
+  sdk/          # @hublio/sdk (OpenAPI types)
+api/openapi/    # OpenAPI source of truth
+deploy/         # Dockerfiles + compose
+system/         # redis.conf, …
 scripts/
 docs/
 ```
@@ -53,151 +48,181 @@ docs/
 
 ## Prerequisites
 
-* Go 1.25+
-* PostgreSQL 16+ (local WSL hoặc Docker)
-* Redis (bắt buộc cho cache + work queue)
-* Docker / Docker Compose (tuỳ chọn, cho infra hoặc full stack)
-* Make
+| Tool | Version |
+| --- | --- |
+| Go | 1.25+ |
+| Node.js | 20+ |
+| pnpm | 10+ |
+| Make | any |
+| PostgreSQL | 16+ |
+| Redis | 7/8 |
+| Docker Compose | optional |
 
-Cài CLI tools một lần:
+Enable pnpm once:
 
 ```bash
-make install_tools
+corepack enable
+corepack prepare pnpm@10.32.1 --activate
 ```
-
-Cài đặt:
-
-* `migrate` — golang-migrate (postgres tag)
-* `sqlc` — generate typed queries
-
-Đảm bảo `$(go env GOPATH)/bin` có trong `PATH` (Makefile đã tự thêm khi chạy `make`).
 
 ---
 
-## Configuration
+## Setup & run — step by step
+
+Làm lần lượt từ **root** của repo.
+
+### 1. Backend `.env`
 
 ```bash
 cp .env.sample .env
 ```
 
-Biến quan trọng:
+Chỉnh `.env` cho chạy trên **host** (không trong Docker):
 
-| Variable | Meaning |
-| --- | --- |
-| `DB_*` | Kết nối app tới PostgreSQL |
-| `DB_ADMIN_*` | Superuser dùng bởi `scripts/create-db.sh` (tạo role/DB) |
-| `REDIS_ADDRESS` | Redis host (work queue + cache) |
-| `API_KEY` | Bootstrap API key cho machine routes `/api/v1/health`, queue, … |
-| `JWT_SECRET_KEY` / `JWT_ENCRYPT_KEY` | JWT (32-byte key cho encrypt) |
-| `ENABLE_API_DOCS` | Bật/tắt Scalar UI tại `/docs` (mặc định bật khi `DEVELOPMENT_MODE=development`) |
-| `CREDENTIAL_ENCRYPTION_KEY` | Đúng 32 bytes — mã hóa credential Connection (AES-GCM) |
-| `SERVER_PORT` | HTTP port (default `8080`) |
+```env
+DEVELOPMENT_MODE=development
+SERVER_PORT=8080
 
-### Ghi chú WSL + Navicat
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=hublio
+DB_PASSWORD=hublio
+DB_NAME=hublio
+DB_SSLMODE=disable
 
-* User Navicat thường **không** có `CREATEROLE`.
-* Dùng riêng app DB: `DB_USER=hublio`, `DB_NAME=hublio`.
-* `DB_ADMIN_USER=postgres` với password trống → script fallback `sudo -u postgres` (peer auth trên Ubuntu/WSL).
+DB_ADMIN_USER=postgres
+DB_ADMIN_PASSWORD=
+DB_ADMIN_DB=postgres
 
----
+REDIS_ADDRESS=localhost:6379
+REDIS_DB=0
 
-## Local development
+API_KEY=dev-api-key-change-me
+JWT_SECRET_KEY=hublio-jwt-secret-key
+JWT_ENCRYPT_KEY=12345678901234567890123456789012
+CREDENTIAL_ENCRYPTION_KEY=dev-only-insecure-32-byte-key!!!
 
-### 1) Database
-
-**Postgres trên WSL (đang dùng):**
-
-```bash
-make db_create      # tạo role + database nếu chưa có
-make migrate_up     # chạy migrations
-make migrate_status # xem version hiện tại
+FRONTEND_URL=http://localhost:3000
+RABBITMQ_URL=amqp://guest:guest@localhost:5672/
 ```
 
-Hoặc gộp:
+> Nếu chạy `make server` trên host: dùng `localhost`.  
+> Hostname `db` / `redis` / `rabbitmq` chỉ dùng khi process nằm trong Docker Compose.
+
+### 2. Cài Go tools (một lần)
 
 ```bash
-make db_setup
+make install_tools
 ```
 
-**Postgres / Redis / RabbitMQ qua Docker (không chạy app trong container):**
+### 3. Start Postgres + Redis
+
+**Option A — Docker infra only:**
 
 ```bash
-# Trong .env cho Compose: DB_HOST=db, REDIS_ADDRESS=redis:6379 (từ trong network)
-# Từ host API: thường map port và dùng localhost
 make noapp
-make db_setup
 ```
 
-### 2) Redis
-
-Work queue + cache cần Redis. Ví dụ:
+**Option B — đã có sẵn trên host:** đảm bảo Postgres + Redis đang chạy. Redis mẫu:
 
 ```bash
-# Docker Redis (hoặc máy đã cài redis-server)
 docker run -d --name redis -p 6379:6379 redis:8.0-alpine
 ```
 
-Đặt `REDIS_ADDRESS=localhost:6379` trong `.env` khi chạy API/worker trên host.
-
-### 3) Generate SQL / build / test
+### 4. Tạo DB + migrate
 
 ```bash
-make sqlc
-make vet
-make test
-make build
-make check          # vet + test + build
+make db_setup
+make migrate_status
 ```
 
-### 4) Chạy API + Worker
-
-Hai terminal:
+### 5. Start API + Worker
 
 ```bash
+# Terminal 1
 make server
+
+# Terminal 2
 make worker
 ```
 
-Health:
+Verify:
 
 ```bash
 curl -s http://localhost:8080/health
-
-### API docs (Scalar — gần Scramble)
-
-Khi `DEVELOPMENT_MODE=development` (hoặc `ENABLE_API_DOCS=true`):
-
-* UI: [http://localhost:8080/docs](http://localhost:8080/docs)
-* Spec: [http://localhost:8080/docs/openapi.yaml](http://localhost:8080/docs/openapi.yaml)
-
-Spec nguồn / quy ước cập nhật: `api/openapi/openapi.yaml` — mỗi lần đổi HTTP route phải cập nhật file này cùng thay đổi (xem `AGENTS.md` → OpenAPI / API Docs). Không dùng codegen trừ khi được yêu cầu rõ.
 curl -s http://localhost:8080/ready
 ```
 
-Enqueue job kiểm tra worker (cần `API_KEY` trong `.env`):
+Smoke queue (cần `API_KEY`):
 
 ```bash
 make enqueue_health
-# tương đương:
-curl -sS -X POST -H "X-API-KEY: $API_KEY" http://localhost:8080/api/v1/platform/queue/health
 ```
 
-### 5) Full stack Docker (API + Worker + infra)
+### 6. Cài frontend packages
 
 ```bash
-# .env: DB_HOST=db, REDIS_ADDRESS=redis:6379, RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
-make dev            # docker compose.dev up --build
-# hoặc
-make prod           # docker compose.prod up -d --build
-make logs_prod
-make stop_prod
+pnpm install
 ```
 
-Vào shell container API:
+### 7. Frontend env
 
 ```bash
-make bash
+cp apps/web/.env.example apps/web/.env.local
 ```
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+### 8. Start web
+
+```bash
+pnpm --filter @hublio/web dev
+```
+
+→ http://localhost:3000/en
+
+Admin (tuỳ chọn):
+
+```bash
+pnpm --filter @hublio/admin dev
+```
+
+→ http://localhost:3001
+
+### 9. Checklist URL
+
+| Service | URL |
+| --- | --- |
+| Web | http://localhost:3000/en |
+| API health | http://localhost:8080/health |
+| API ready | http://localhost:8080/ready |
+| API docs | http://localhost:8080/docs |
+| Admin | http://localhost:3001 |
+
+---
+
+## Mỗi ngày (sau lần setup đầu)
+
+```bash
+make noapp                          # nếu dùng Docker infra
+make server                         # terminal 1
+make worker                         # terminal 2
+pnpm --filter @hublio/web dev       # terminal 3
+```
+
+---
+
+## API access (hybrid BFF)
+
+Không bắt buộc mọi request qua Next.js.
+
+* **JWT routes** → `lib/api/client` → Go  
+* **API-key routes** (intents, executions, events) → `lib/api/bff-client` → Next `app/api/*` → Go  
+
+Chi tiết: [`docs/24-nextjs-architecture.md`](docs/24-nextjs-architecture.md) §8.1.
 
 ---
 
@@ -206,112 +231,84 @@ make bash
 | Command | Mô tả |
 | --- | --- |
 | `make install_tools` | Cài `migrate`, `sqlc` |
-| `make db_create` | Tạo role/DB PostgreSQL |
-| `make migrate_up` | Apply migrations |
-| `make migrate_down` | Rollback 1 step |
-| `make migrate_status` | In version hiện tại |
-| `make db_setup` | `db_create` + `migrate_up` |
-| `make sqlc` | Generate Go từ SQL |
+| `make db_setup` | Tạo DB + migrate |
 | `make server` | Chạy API |
-| `make worker` | Chạy worker (Redis queue) |
-| `make check` | `vet` + `test` + `build` |
-| `make build` | Binary `apps/api/bin/api`, `apps/api/bin/worker` |
-| `make enqueue_health` | Push job `platform.health` |
+| `make worker` | Chạy worker |
+| `make check` | vet + test + build |
+| `make build` | Build binaries vào `apps/api/bin/` |
 | `make noapp` | Chỉ infra Docker |
-| `make dev` / `make prod` | Compose đầy đủ |
-| `make stop_noapp` / `make stop_prod` | Dừng compose |
+| `make dev` / `make prod` | Full compose |
+| `make stop_noapp` / `make stop_prod` | Stop compose |
+| `make bash` | Shell container `go-api` |
 
 ---
 
-## Frontend (Next.js)
+## Frontend notes
 
-Managed with **pnpm workspaces** + **Turborepo** from the repo root.
+* UI dùng chung: `@hublio/ui`
+* Types OpenAPI: `@hublio/sdk`
 
 ```bash
-pnpm install                 # install all workspaces
-pnpm dev                     # run dev servers (turbo)
-pnpm --filter @hublio/web dev    # user workspace  (http://localhost:3000)
-pnpm --filter @hublio/admin dev  # admin console   (http://localhost:3001)
-
-pnpm build                   # build web + admin + packages
-pnpm lint                    # lint all
-pnpm test                    # unit tests (vitest)
+pnpm --filter @hublio/sdk generate
 ```
-
-Shared packages:
-
-* `@hublio/ui` — shadcn components, common components, and the design theme
-  (`packages/ui/src/styles/theme.css`), consumed by both apps.
-* `@hublio/config` — shared `tsconfig.base.json`.
-* `@hublio/sdk` — TypeScript types generated from `api/openapi/openapi.yaml`.
-  Regenerate after changing the spec:
-
-  ```bash
-  pnpm --filter @hublio/sdk generate
-  ```
-
-Set `NEXT_PUBLIC_API_URL` (e.g. `http://localhost:8080/api/v1`) for the web app.
-
-**API access (hybrid):** JWT CRUD from the browser hits Go directly; Intent /
-Execution / Events go through the Next.js BFF so workspace API keys stay
-server-side. See [`docs/24-nextjs-architecture.md`](docs/24-nextjs-architecture.md)
-§8.1.
 
 ---
 
-## Deployment (Version 1)
+## Troubleshooting
 
-Nguyên tắc (xem [`docs/25-deployment-guide.md`](docs/25-deployment-guide.md)):
+### `failed to load ... apps/api/.env`
 
-* Modular monolith: một binary API + process Worker riêng.
-* PostgreSQL là source of truth; Redis không phải SoT.
-* Work queue thuộc Platform Infrastructure (Redis → Worker), **không** thuộc Event Platform.
+`make server` chạy với cwd = `apps/api`, nên `godotenv` tìm `.env` ở đó. Root `.env` vẫn được Makefile `export`, nên app vẫn nhận biến.
 
-### Recommended flow
-
-```text
-1. Prepare .env (secrets, DB, Redis)
-2. make install_tools
-3. Provision Postgres + Redis
-4. make db_setup
-5. make build   (hoặc image Docker)
-6. Start api + worker
-7. Verify /health + /ready
-```
-
-### Production compose
+Hết warning:
 
 ```bash
-cp .env.sample .env
-# điền JWT_*, DB_*, REDIS_*, API_KEY, ...
-
-make prod
-make logs_prod
-
-# migrate từ host (nếu DB expose) hoặc trong container:
-make migrate_up
+ln -sf ../../.env apps/api/.env
 ```
 
-### Manual binary deploy
+### Redis `context deadline exceeded`
+
+1. Redis chưa chạy.  
+2. `.env` còn `redis:6379` trong khi chạy `make server` trên host → đổi thành `localhost:6379`.
+
+### `DEVELOPMENT_MODE=production` — terminal gần như trống rồi `exit status 1`
+
+Không phải lỗi `tracelog`. Ở production, log app ghi vào `apps/api/logs/app.log` (JSON).  
+Error/Fatal vẫn in ra **stderr** (sau fix logger). Xem thêm:
 
 ```bash
-make build
-./apps/api/bin/api
-./apps/api/bin/worker
+tail -n 50 apps/api/logs/app.log
 ```
 
-Chạy sau reverse proxy (Nginx), expose health/readiness cho orchestration:
+SQL tracer (`github.com/jackc/pgx/v5/tracelog`) ghi `apps/api/logs/sql.log` — field `"trace-id"` trống là bình thường khi chưa có request correlation id.
 
-* `GET /health` — liveness
-* `GET /ready` — Postgres + Redis
+### `address already in use` / port conflict (vd. `:8080`)
 
-### Rollback migration
+Port đang bị process khác giữ (trên máy này thường là **Apache** trên `8080`).
 
 ```bash
-make migrate_down
-# hoặc
-make migrate_goto version=N
+ss -tlnp | rg ':8080'
 ```
+
+Cách xử lý khuyến nghị — đổi port API:
+
+```env
+# .env / apps/api/.env
+SERVER_PORT=8081
+```
+
+```env
+# apps/web/.env.local
+NEXT_PUBLIC_API_URL=http://localhost:8081/api/v1
+```
+
+Rồi chạy lại `make server`.
+
+### Frontend không gọi được API
+
+1. `curl http://localhost:8080/health` đã OK chưa?  
+2. `apps/web/.env.local` đúng `NEXT_PUBLIC_API_URL` chưa?  
+3. Restart `pnpm --filter @hublio/web dev` sau khi sửa env.
 
 ---
 
@@ -320,11 +317,14 @@ make migrate_goto version=N
 | Doc | Nội dung |
 | --- | --- |
 | [`AGENTS.md`](AGENTS.md) | Engineering constitution |
+| [`docs/24-nextjs-architecture.md`](docs/24-nextjs-architecture.md) | Frontend + hybrid BFF |
+| [`apps/web/docs/00_START_HERE.md`](apps/web/docs/00_START_HERE.md) | Web start here |
+| [`apps/web/docs/CHECKLIST.md`](apps/web/docs/CHECKLIST.md) | UI checklist |
 | [`docs/01-product-definition.md`](docs/01-product-definition.md) | Product scope |
-| [`docs/03-platform-architecture.md`](docs/03-platform-architecture.md) | Component architecture |
+| [`docs/03-platform-architecture.md`](docs/03-platform-architecture.md) | Architecture |
 | [`docs/20-database-schema.dbml`](docs/20-database-schema.dbml) | Schema |
-| [`docs/25-deployment-guide.md`](docs/25-deployment-guide.md) | Deployment principles |
-| [`docs/29-backend-implementation-checklist.md`](docs/29-backend-implementation-checklist.md) | Backend implementation phases |
+| [`docs/25-deployment-guide.md`](docs/25-deployment-guide.md) | Deployment |
+| [`docs/29-backend-implementation-checklist.md`](docs/29-backend-implementation-checklist.md) | Backend checklist |
 
 ---
 

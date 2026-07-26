@@ -53,7 +53,7 @@ func NewLogger(config LoggerConfig) *zerolog.Logger {
 			writer = &PrettyJSONWriter{Writer: os.Stdout}
 		}
 	} else {
-		writer = &lumberjack.Logger{
+		fileWriter := &lumberjack.Logger{
 			Filename:   config.Filename,
 			MaxSize:    config.MaxSize,
 			MaxBackups: config.MaxBackups,
@@ -61,11 +61,35 @@ func NewLogger(config LoggerConfig) *zerolog.Logger {
 			Compress:   config.Compress,
 			LocalTime:  config.LocalTime,
 		}
+		// File gets all levels; Error/Fatal/Panic also go to stderr so
+		// `make server` / process supervisors still surface crashes.
+		writer = zerolog.MultiLevelWriter(
+			fileWriter,
+			levelFilterWriter{Writer: os.Stderr, MinLevel: zerolog.ErrorLevel},
+		)
 	}
 
 	logger := zerolog.New(writer).With().Timestamp().Logger()
 
 	return &logger
+}
+
+// levelFilterWriter implements zerolog.LevelWriter and only forwards
+// entries at or above MinLevel to the underlying writer.
+type levelFilterWriter struct {
+	Writer   io.Writer
+	MinLevel zerolog.Level
+}
+
+func (w levelFilterWriter) Write(p []byte) (int, error) {
+	return w.Writer.Write(p)
+}
+
+func (w levelFilterWriter) WriteLevel(level zerolog.Level, p []byte) (int, error) {
+	if level < w.MinLevel {
+		return len(p), nil
+	}
+	return w.Writer.Write(p)
 }
 
 type PrettyJSONWriter struct {

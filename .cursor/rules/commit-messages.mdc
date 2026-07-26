@@ -1,0 +1,87 @@
+---
+description: Git commit message standard (Conventional Commits) — used when generating or writing commits
+alwaysApply: true
+---
+
+# Commit messages (Hublio)
+
+When generating or writing a git commit message for this repository, **always** follow Conventional Commits as defined in `docs/26-development-workflow.md`.
+
+## Format
+
+```text
+<type>(<optional-scope>): <short summary in imperative mood>
+
+[optional body — why, not what]
+
+[optional footer]
+```
+
+### Rules
+
+* Subject line ≤ ~72 characters.
+* Imperative mood: “add”, “fix”, “wrap” — not “added” / “fixes”.
+* Focus the subject on **why** / outcome; put file lists only in the body if needed.
+* One logical change per commit.
+* Do **not** mention Cursor, Copilot, or that the message was AI-generated.
+* Do **not** wrap the subject in quotes or markdown code fences.
+* English preferred (matches existing history and docs). Vietnamese only if the user explicitly asks.
+
+### Types
+
+| Type | Use for |
+| --- | --- |
+| `feat` | New user-facing capability |
+| `fix` | Bug fix |
+| `refactor` | Internal change, same behavior |
+| `test` | Tests only |
+| `docs` | Documentation only |
+| `chore` | Tooling, deps, CI, repo hygiene |
+| `perf` | Performance |
+| `build` | Build system / Docker / Makefile |
+| `ci` | CI workflow only |
+| `style` | Formatting only (no logic) |
+
+### Scopes (monorepo — use when clear)
+
+| Scope | Area |
+| --- | --- |
+| `api` | `apps/api` Go backend |
+| `web` | `apps/web` Next.js workspace |
+| `admin` | `apps/admin` |
+| `ui` | `packages/ui` |
+| `sdk` | `packages/sdk` |
+| `deploy` | `deploy/` Docker/compose |
+| `docs` | `docs/`, root README/AGENTS |
+| `ci` | `.github/workflows` |
+
+Omit scope when the change spans multiple areas or is purely repo-wide.
+
+### Examples
+
+```text
+feat(api): wrap HTTP listen address conflicts as CONFLICT
+```
+
+```text
+fix(web): point BFF clients at workspace-scoped API keys
+```
+
+```text
+chore: migrate Go module and Next apps into monorepo layout
+```
+
+```text
+docs: document hybrid BFF API access and local Quick start
+```
+
+```text
+fix(api): surface fatal logs on stderr in production mode
+
+Production previously wrote only to apps/api/logs/app.log, so
+`make server` failures looked like a silent exit status 1.
+```
+
+## IDE “Generate Commit Message”
+
+Cursor / VS Code Source Control generate-commit must produce a message that matches this format exactly — single subject line first; body only when the diff needs rationale.

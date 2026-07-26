@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -127,6 +128,10 @@ func NewApplication(cfg *config.Config) (*Application, error) {
 		orchestration: orchestrationSvc,
 		events:        eventsSvc,
 		metrics:       metricsCounters,
+	}
+
+	if strings.EqualFold(env.GetEnv("DEVELOPMENT_MODE", "development"), "production") {
+		gin.SetMode(gin.ReleaseMode)
 	}
 
 	router := gin.New()
@@ -438,18 +443,24 @@ func (a *Application) Run() error {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 
+	errCh := make(chan error, 1)
 	go func() {
 		if logging.Log != nil {
 			logging.Log.Info().Msgf("starting server on %s", a.config.ServerAddress)
 		}
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			if logging.Log != nil {
-				logging.Log.Fatal().Err(err).Msg("failed to start server")
-			}
+			errCh <- wrapListenError(a.config.ServerAddress, err)
 		}
 	}()
 
-	<-quit
+	select {
+	case err := <-errCh:
+		a.db.Close()
+		_ = a.redis.Close()
+		return err
+	case <-quit:
+	}
+
 	if logging.Log != nil {
 		logging.Log.Info().Msg("shutting down server")
 	}
@@ -458,7 +469,7 @@ func (a *Application) Run() error {
 	defer cancel()
 
 	if err := server.Shutdown(ctx); err != nil {
-		return err
+		return apperr.Wrap(err, "failed to shut down HTTP server", apperr.ErrCodeInternal)
 	}
 
 	a.db.Close()
