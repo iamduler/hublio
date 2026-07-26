@@ -21,6 +21,8 @@ sql:
             go_type: "string"
           - db_type: "user_status"
             go_type: "string"
+          - db_type: "oauth_provider"
+            go_type: "string"
           - db_type: "workspace_role"
             go_type: "string"
           - db_type: "api_key_status"

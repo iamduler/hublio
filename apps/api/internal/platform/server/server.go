@@ -36,6 +36,7 @@ import (
 	"hublio/internal/platform/docsui"
 	"hublio/internal/platform/env"
 	"hublio/internal/platform/logging"
+	"hublio/internal/platform/mail"
 	"hublio/internal/platform/metrics"
 	"hublio/internal/platform/middleware"
 	"hublio/internal/platform/persistence"
@@ -89,14 +90,24 @@ func NewApplication(cfg *config.Config) (*Application, error) {
 	userRepo := identityinfra.NewUserRepository(db.Pool)
 	memRepo := identityinfra.NewMembershipRepository(db.Pool)
 	keyRepo := identityinfra.NewAPIKeyRepository(db.Pool)
+	oauthRepo := identityinfra.NewOAuthIdentityRepository(db.Pool)
+	mfaRepo := identityinfra.NewMFARepository(db.Pool)
 
 	identitySvc := &identityapp.Services{
-		Orgs:        orgRepo,
-		Workspaces:  wsRepo,
-		Users:       userRepo,
-		Memberships: memRepo,
-		APIKeys:     keyRepo,
-		Passwords:   identityinfra.NewBcryptPasswordHasher(),
+		Orgs:            orgRepo,
+		Workspaces:      wsRepo,
+		Users:           userRepo,
+		Memberships:     memRepo,
+		APIKeys:         keyRepo,
+		OAuthIdentities: oauthRepo,
+		MFA:             mfaRepo,
+		Passwords:       identityinfra.NewBcryptPasswordHasher(),
+		OAuth:           identityinfra.NewOAuthExchanger(),
+		TOTP:            identityinfra.NewTOTPAdapter(),
+		MFASecrets:      newMFASecretCipher(cfg),
+		Cache:           cacheSvc,
+		Mail:            newIdentityMailer(cfg),
+		WebAppURL:       cfg.WebAppURL,
 	}
 
 	dbAuth := identityinfra.NewDBAuthenticator(keyRepo, wsRepo, orgRepo)
@@ -140,6 +151,43 @@ func NewApplication(cfg *config.Config) (*Application, error) {
 	app.router = router
 
 	return app, nil
+}
+
+// newIdentityMailer builds the identity Mailer from the configured mail provider. Wiring is
+// best-effort: if the provider is not configured (e.g. local dev without Mailtrap creds), it
+// logs and falls back to a no-op mailer so startup and non-mail flows are never blocked.
+func newIdentityMailer(cfg *config.Config) identityapp.Mailer {
+	factory, err := mail.NewProviderFactory(mail.ProviderType(cfg.MailProviderType))
+	if err != nil {
+		if logging.Log != nil {
+			logging.Log.Warn().Err(err).Msg("mail provider not configured; using no-op mailer")
+		}
+		return identityapp.NoopMailer{}
+	}
+	mailLogger := logging.NewLoggerWithPath("mail.log", "info")
+	svc, err := mail.NewMailService(cfg, mailLogger, factory)
+	if err != nil {
+		if logging.Log != nil {
+			logging.Log.Warn().Err(err).Msg("failed to initialize mail service; using no-op mailer")
+		}
+		return identityapp.NoopMailer{}
+	}
+	return identityinfra.NewMailerAdapter(svc)
+}
+
+// newMFASecretCipher builds the TOTP secret cipher from MFA_ENCRYPTION_KEY (falling back to
+// CREDENTIAL_ENCRYPTION_KEY). Without a usable key MFA stays unconfigured — returning a nil
+// interface so the Application layer rejects MFA endpoints instead of storing secrets with a
+// guessable key. Every other flow keeps working.
+func newMFASecretCipher(cfg *config.Config) identityapp.MFASecretCipher {
+	cipher, err := identityinfra.NewAESMFASecretCipher(cfg.MFAEncryptionKey)
+	if err != nil {
+		if logging.Log != nil {
+			logging.Log.Warn().Err(err).Msg("mfa encryption key not configured; mfa endpoints disabled")
+		}
+		return nil
+	}
+	return cipher
 }
 
 func newAPIKeyAuthenticator(dbAuth apikey.Authenticator) apikey.Authenticator {

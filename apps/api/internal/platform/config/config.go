@@ -19,6 +19,10 @@ type Config struct {
 	DB                 DatabaseConfig
 	MailProviderType   string
 	MailProviderConfig map[string]any
+	WebAppURL          string
+	// MFAEncryptionKey protects TOTP secrets at rest (32 bytes: raw, 64 hex chars, or base64).
+	// Falls back to CREDENTIAL_ENCRYPTION_KEY so a single key can cover both in development.
+	MFAEncryptionKey string
 }
 
 func NewConfig() *Config {
@@ -53,6 +57,8 @@ func NewConfig() *Config {
 
 		MailProviderType:   mailProviderType,
 		MailProviderConfig: mailProviderConfig,
+		WebAppURL:          env.GetEnv("APP_WEB_URL", "http://localhost:3000"),
+		MFAEncryptionKey:   env.GetEnv("MFA_ENCRYPTION_KEY", env.GetEnv("CREDENTIAL_ENCRYPTION_KEY", "")),
 	}
 }
 

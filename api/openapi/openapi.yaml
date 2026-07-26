@@ -7,7 +7,7 @@ info:
 
     Interactive docs (Scalar) are served at `/docs` in development.
 servers:
-  - url: http://localhost:8080
+  - url: http://localhost:8081
     description: Local
   - url: /api/v1
     description: Relative (when browsing via /docs)
@@ -82,7 +82,11 @@ paths:
   /api/v1/auth/login:
     post:
       tags: [Auth]
-      summary: Login and issue JWT + refresh token
+      summary: Login and issue JWT + refresh token (or an MFA challenge)
+      description: >
+        When the account has MFA enabled and the device is not trusted, no tokens are issued:
+        `data` is `{ "mfa_required": true, "mfa_token": "..." }` and the client must call
+        POST /api/v1/auth/mfa/verify. Otherwise `data` is `{ access_token, refresh_token, user }`.
       operationId: authLogin
       security: []
       requestBody:
@@ -93,12 +97,143 @@ paths:
               $ref: "#/components/schemas/LoginRequest"
       responses:
         "200":
+          description: Logged in, or MFA challenge issued
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/LoginSuccessEnvelope"
+                  - $ref: "#/components/schemas/MFAChallengeEnvelope"
+        "401":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/auth/mfa/verify:
+    post:
+      tags: [Auth]
+      summary: Complete an MFA login challenge
+      description: >
+        Consumes the challenge from POST /api/v1/auth/login and issues login tokens. Provide
+        exactly one of `code` (TOTP) or `recovery_code` (single use). A challenge lives 5 minutes
+        and allows 5 attempts.
+      operationId: authMFAVerify
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MFAVerifyRequest"
+      responses:
+        "200":
           description: Logged in
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SuccessEnvelope"
+                $ref: "#/components/schemas/LoginSuccessEnvelope"
+        "400":
+          $ref: "#/components/responses/Error"
         "401":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/auth/mfa/status:
+    get:
+      tags: [Auth]
+      summary: MFA enrollment status for the current user
+      description: >
+        Returns whether MFA is enabled or pending enrollment. Never includes secrets
+        or recovery codes.
+      operationId: authMFAStatus
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: MFA status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MFAStatusEnvelope"
+        "401":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/auth/mfa/setup:
+    post:
+      tags: [Auth]
+      summary: Start TOTP enrollment for the current user
+      description: >
+        Provisions a TOTP secret (stored encrypted, `enabled_at` NULL) and 10 single-use recovery
+        codes. The secret and recovery codes are returned in plaintext exactly once. MFA is not
+        active until POST /api/v1/auth/mfa/enable succeeds.
+      operationId: authMFASetup
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Enrollment started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MFASetupEnvelope"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/auth/mfa/enable:
+    post:
+      tags: [Auth]
+      summary: Enable MFA by confirming a TOTP code
+      operationId: authMFAEnable
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MFAEnableRequest"
+      responses:
+        "200":
+          description: MFA enabled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/auth/mfa/disable:
+    post:
+      tags: [Auth]
+      summary: Disable MFA after a password confirmation
+      operationId: authMFADisable
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MFADisableRequest"
+      responses:
+        "200":
+          description: MFA disabled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "409":
           $ref: "#/components/responses/Error"
 
   /api/v1/auth/logout:
@@ -121,6 +256,196 @@ paths:
         "200":
           description: Logged out
         "400":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/auth/forgot-password:
+    post:
+      tags: [Auth]
+      summary: Request a password reset link
+      description: >
+        Always returns a generic success response regardless of whether the email exists
+        (anti-enumeration). When the email belongs to an active password user, a one-time reset
+        link (valid for 1 hour) is emailed.
+      operationId: authForgotPassword
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForgotPasswordRequest"
+      responses:
+        "200":
+          description: Generic success (never reveals if the email exists)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "400":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/auth/reset-password:
+    post:
+      tags: [Auth]
+      summary: Reset password using a one-time token
+      operationId: authResetPassword
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordRequest"
+      responses:
+        "200":
+          description: Password updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "400":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/auth/verify-email/request:
+    post:
+      tags: [Auth]
+      summary: Request (or resend) a 6-digit email verification code
+      description: >
+        Always returns a generic success response (anti-enumeration). When the email belongs to a
+        user whose email is not yet verified, a 6-digit code (valid for 15 minutes) is emailed.
+      operationId: authRequestEmailVerification
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestEmailVerificationRequest"
+      responses:
+        "200":
+          description: Generic success (never reveals if the email exists)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "400":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/auth/verify-email:
+    post:
+      tags: [Auth]
+      summary: Verify email with a 6-digit code
+      operationId: authVerifyEmail
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyEmailRequest"
+      responses:
+        "200":
+          description: Email verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "400":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/auth/oauth/providers:
+    get:
+      tags: [Auth]
+      summary: List configured OAuth providers
+      operationId: authOAuthProviders
+      security: []
+      responses:
+        "200":
+          description: Configured providers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+
+  /api/v1/auth/oauth/callback:
+    post:
+      tags: [Auth]
+      summary: Complete OAuth code exchange (hybrid login / onboarding)
+      operationId: authOAuthCallback
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OAuthCallbackRequest"
+      responses:
+        "200":
+          description: Authenticated or onboarding required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/auth/oauth/onboarding:
+    get:
+      tags: [Auth]
+      summary: Preview OAuth onboarding session
+      operationId: authOAuthOnboardingPreview
+      security: []
+      parameters:
+        - name: token
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: X-OAuth-Onboarding-Token
+          in: header
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Onboarding preview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "401":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/auth/oauth/complete-registration:
+    post:
+      tags: [Auth]
+      summary: Complete OAuth registration with Organization name
+      operationId: authOAuthCompleteRegistration
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OAuthCompleteRegistrationRequest"
+      responses:
+        "201":
+          description: Registered and logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessEnvelope"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "409":
           $ref: "#/components/responses/Error"
 
   /api/v1/identity/organizations/{organizationId}:
@@ -1189,6 +1514,191 @@ components:
           format: email
         password:
           type: string
+        device_id:
+          type: string
+          description: >
+            Opaque client device identifier. When it matches a device previously trusted via
+            POST /api/v1/auth/mfa/verify, the MFA challenge is skipped for 30 days.
+
+    LoginSuccessEnvelope:
+      allOf:
+        - $ref: "#/components/schemas/SuccessEnvelope"
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [access_token, refresh_token, user]
+              properties:
+                access_token:
+                  type: string
+                refresh_token:
+                  type: string
+                user:
+                  type: object
+
+    MFAChallengeEnvelope:
+      allOf:
+        - $ref: "#/components/schemas/SuccessEnvelope"
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [mfa_required, mfa_token]
+              properties:
+                mfa_required:
+                  type: boolean
+                  const: true
+                mfa_token:
+                  type: string
+                  description: Single-use challenge token, valid for 5 minutes
+
+    MFAVerifyRequest:
+      type: object
+      required: [mfa_token]
+      properties:
+        mfa_token:
+          type: string
+        code:
+          type: string
+          description: 6-digit TOTP code (mutually exclusive with recovery_code)
+        recovery_code:
+          type: string
+          description: Single-use recovery code, format xxxx-xxxx-xxxx
+        device_id:
+          type: string
+        trust_device:
+          type: boolean
+          description: Remember device_id for 30 days so future logins skip the challenge
+
+    MFAStatusEnvelope:
+      allOf:
+        - $ref: "#/components/schemas/SuccessEnvelope"
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [enabled, pending_enrollment, remaining_recovery_codes, can_enroll]
+              properties:
+                enabled:
+                  type: boolean
+                pending_enrollment:
+                  type: boolean
+                  description: Secret provisioned but enable not confirmed yet
+                remaining_recovery_codes:
+                  type: integer
+                can_enroll:
+                  type: boolean
+                  description: False for OAuth-only accounts (password required to enroll)
+
+    MFASetupEnvelope:
+      allOf:
+        - $ref: "#/components/schemas/SuccessEnvelope"
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [secret, otpauth_url, recovery_codes]
+              properties:
+                secret:
+                  type: string
+                  description: Base32 TOTP secret (shown once)
+                otpauth_url:
+                  type: string
+                  description: otpauth:// URL for QR enrollment (shown once)
+                recovery_codes:
+                  type: array
+                  items:
+                    type: string
+                  description: Single-use recovery codes (shown once)
+                warning:
+                  type: string
+
+    MFAEnableRequest:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+          minLength: 6
+          maxLength: 6
+          description: 6-digit TOTP code from the authenticator app
+
+    MFADisableRequest:
+      type: object
+      required: [password]
+      properties:
+        password:
+          type: string
+
+    ForgotPasswordRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+
+    ResetPasswordRequest:
+      type: object
+      required: [token, password]
+      properties:
+        token:
+          type: string
+          description: One-time reset token from the emailed link
+        password:
+          type: string
+          minLength: 8
+
+    RequestEmailVerificationRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+
+    VerifyEmailRequest:
+      type: object
+      required: [email, code]
+      properties:
+        email:
+          type: string
+          format: email
+        code:
+          type: string
+          minLength: 6
+          maxLength: 6
+          description: 6-digit numeric verification code
+
+    OAuthCallbackRequest:
+      type: object
+      required: [provider, code, code_verifier, redirect_uri]
+      properties:
+        provider:
+          type: string
+          enum: [google, microsoft, github]
+        code:
+          type: string
+        code_verifier:
+          type: string
+        redirect_uri:
+          type: string
+          format: uri
+
+    OAuthCompleteRegistrationRequest:
+      type: object
+      required: [onboarding_token, organization_name]
+      properties:
+        onboarding_token:
+          type: string
+        organization_name:
+          type: string
+        workspace_name:
+          type: string
+          default: default
+        environment:
+          type: string
+          default: production
 
     RegisterConnectorRequest:
       type: object

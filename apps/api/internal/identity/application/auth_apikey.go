@@ -17,12 +17,19 @@ import (
 type LoginInput struct {
 	Email    string
 	Password string
+	// DeviceID is an opaque client-provided device identifier used to skip the second factor
+	// on devices the user previously chose to trust. Empty means "unknown device".
+	DeviceID string
 }
 
+// LoginResult is either a completed login (tokens + user) or an MFA challenge. When
+// MFARequired is true no tokens are issued and only MFAToken is meaningful to the client.
 type LoginResult struct {
 	AccessToken  string
 	RefreshToken string
 	User         *domain.User
+	MFARequired  bool
+	MFAToken     string
 }
 
 func (s *Services) Login(ctx context.Context, tokens auth.TokenService, in LoginInput) (*LoginResult, error) {
@@ -30,44 +37,26 @@ func (s *Services) Login(ctx context.Context, tokens auth.TokenService, in Login
 	if err != nil {
 		return nil, apperr.New("invalid email or password", apperr.ErrCodeUnauthorized)
 	}
-	if !user.CanLogin() {
+	if !user.CanLogin() || !user.HasPassword() {
 		return nil, apperr.New("invalid email or password", apperr.ErrCodeUnauthorized)
 	}
 	if err := s.Passwords.Compare(user.PasswordHash(), in.Password); err != nil {
 		return nil, apperr.New("invalid email or password", apperr.ErrCodeUnauthorized)
 	}
 
-	now := s.clock().Now()
-	if err := user.RecordLogin(now); err != nil {
-		return nil, mapDomainErr(err)
+	mfaEnabled, err := s.mfaEnabledFor(ctx, user.ID())
+	if err != nil {
+		return nil, err
 	}
-	if err := s.Users.Update(ctx, user); err != nil {
-		return nil, mapRepoErr(err)
+	if mfaEnabled && !s.deviceTrusted(user.ID(), in.DeviceID) {
+		token, err := s.storeMFAChallenge(user.ID())
+		if err != nil {
+			return nil, err
+		}
+		return &LoginResult{MFARequired: true, MFAToken: token, User: user}, nil
 	}
 
-	subject := auth.TokenSubject{
-		UserID:         user.ID().String(),
-		Email:          user.Email(),
-		Role:           "member",
-		OrganizationID: user.OrganizationID().String(),
-	}
-	access, err := tokens.GenerateAccessToken(subject)
-	if err != nil {
-		return nil, apperr.Wrap(err, "failed to issue access token", apperr.ErrCodeInternal)
-	}
-	refresh, err := tokens.GenerateRefreshToken(subject)
-	if err != nil {
-		return nil, apperr.Wrap(err, "failed to issue refresh token", apperr.ErrCodeInternal)
-	}
-	if err := tokens.StoreRefreshToken(refresh); err != nil {
-		return nil, apperr.Wrap(err, "failed to store refresh token", apperr.ErrCodeInternal)
-	}
-
-	return &LoginResult{
-		AccessToken:  access,
-		RefreshToken: refresh.Token,
-		User:         user,
-	}, nil
+	return s.issueLoginTokens(ctx, tokens, user)
 }
 
 func (s *Services) Logout(ctx context.Context, tokens auth.TokenService, refreshToken string) error {

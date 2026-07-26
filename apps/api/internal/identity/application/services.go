@@ -2,9 +2,11 @@ package application
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"hublio/internal/identity/domain"
+	"hublio/internal/platform/cache"
 
 	"github.com/google/uuid"
 )
@@ -59,16 +61,41 @@ func (NoopAuditor) Record(ctx context.Context, rec AuditEvent) error {
 	return nil
 }
 
+// Mailer sends transactional emails. Infrastructure adapts the platform mail service; the
+// Application layer stays free of provider/transport concerns.
+type Mailer interface {
+	Send(ctx context.Context, to, subject, body string) error
+}
+
+// NoopMailer discards emails (wiring default until mail is composed / in tests).
+type NoopMailer struct{}
+
+func (NoopMailer) Send(ctx context.Context, to, subject, body string) error {
+	_, _, _, _ = ctx, to, subject, body
+	return nil
+}
+
 type Services struct {
-	Orgs        domain.OrganizationRepository
-	Workspaces  domain.WorkspaceRepository
-	Users       domain.UserRepository
-	Memberships domain.MembershipRepository
-	APIKeys     domain.APIKeyRepository
-	Passwords   domain.PasswordHasher
-	Events      EventPublisher
-	Audit       AuditRecorder
-	Clock       Clock
+	Orgs            domain.OrganizationRepository
+	Workspaces      domain.WorkspaceRepository
+	Users           domain.UserRepository
+	Memberships     domain.MembershipRepository
+	APIKeys         domain.APIKeyRepository
+	OAuthIdentities domain.OAuthIdentityRepository
+	MFA             domain.MFARepository
+	Passwords       domain.PasswordHasher
+	OAuth           OAuthExchange
+	TOTP            TOTPVerifier
+	MFASecrets      MFASecretCipher
+	Cache           cache.RedisCacheService
+	Events          EventPublisher
+	Audit           AuditRecorder
+	Mail            Mailer
+	Clock           Clock
+
+	// WebAppURL is the public base URL of the web frontend, used to build links (e.g. the
+	// password reset URL). Falls back to a localhost dev default when empty.
+	WebAppURL string
 }
 
 func (s *Services) clock() Clock {
@@ -90,6 +117,20 @@ func (s *Services) PublishAfterCommit(ctx context.Context, events ...domain.Even
 		return
 	}
 	_ = s.events().Publish(ctx, events...)
+}
+
+func (s *Services) mailer() Mailer {
+	if s.Mail != nil {
+		return s.Mail
+	}
+	return NoopMailer{}
+}
+
+func (s *Services) webAppURL() string {
+	if strings.TrimSpace(s.WebAppURL) != "" {
+		return strings.TrimRight(s.WebAppURL, "/")
+	}
+	return "http://localhost:3000"
 }
 
 func (s *Services) audit() AuditRecorder {

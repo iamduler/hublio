@@ -12,7 +12,7 @@ Related: [00-foundation](./00-foundation.md) · [02-user-workspace](./02-user-wo
 
 - [x] Next.js 16 + Tailwind + next-intl + `@hublio/ui`
 - [x] Placeholder home page
-- [ ] Auth gate for platform admins (JWT + role check)
+- [~] Auth gate for platform admins (JWT + role check) — backend now issues `is_platform_admin` claim + seed `admin@hublio.local`; admin app gate still pending
 - [ ] Admin shell: top bar, nav, org context
 - [ ] Feature-first layout `features/<name>/` (mirror web)
 - [ ] `lib/api/client` (JWT → Go) — reuse pattern từ web; **không** cần BFF orchestration trừ khi admin chạy intents

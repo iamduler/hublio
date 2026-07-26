@@ -232,7 +232,7 @@ type User struct {
 	Email             string             `json:"email"`
 	FullName          string             `json:"full_name"`
 	IsActive          bool               `json:"is_active"`
-	PasswordHash      string             `json:"password_hash"`
+	PasswordHash      *string            `json:"password_hash"`
 	EmailVerifiedAt   pgtype.Timestamptz `json:"email_verified_at"`
 	PasswordChangedAt pgtype.Timestamptz `json:"password_changed_at"`
 	LastLoginAt       pgtype.Timestamptz `json:"last_login_at"`
@@ -240,6 +240,28 @@ type User struct {
 	CreatedAt         pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
 	DeletedAt         pgtype.Timestamptz `json:"deleted_at"`
+	IsPlatformAdmin   bool               `json:"is_platform_admin"`
+}
+
+type UserMfa struct {
+	UserID              uuid.UUID          `json:"user_id"`
+	TotpSecretEncrypted string             `json:"totp_secret_encrypted"`
+	EnabledAt           pgtype.Timestamptz `json:"enabled_at"`
+	RecoveryCodesHash   []byte             `json:"recovery_codes_hash"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
+}
+
+type UserOauthIdentity struct {
+	ID              uuid.UUID          `json:"id"`
+	UserID          uuid.UUID          `json:"user_id"`
+	Provider        string             `json:"provider"`
+	ProviderSubject string             `json:"provider_subject"`
+	Email           string             `json:"email"`
+	LinkedAt        pgtype.Timestamptz `json:"linked_at"`
+	LastLoginAt     pgtype.Timestamptz `json:"last_login_at"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Workspace struct {

@@ -11,10 +11,14 @@ type TokenPayload = {
   access_token?: string;
   refresh_token?: string;
   user?: unknown;
+  mfa_required?: boolean;
+  mfa_token?: string;
   data?: {
     access_token?: string;
     refresh_token?: string;
     user?: unknown;
+    mfa_required?: boolean;
+    mfa_token?: string;
   };
 };
 
@@ -45,6 +49,12 @@ function extractTokens(json: TokenPayload) {
   return { access, refresh, user };
 }
 
+function extractMFAChallenge(json: TokenPayload) {
+  const required = json.data?.mfa_required ?? json.mfa_required;
+  const token = json.data?.mfa_token ?? json.mfa_token;
+  return required && token ? token : undefined;
+}
+
 /** POST /api/auth/login — sets httpOnly JWT cookies; returns envelope without tokens. */
 export async function POST(request: NextRequest) {
   try {
@@ -54,6 +64,17 @@ export async function POST(request: NextRequest) {
       return new NextResponse(text, {
         status: res.status,
         headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    // MFA enabled: no tokens yet, so no cookies. The client must complete the challenge via
+    // POST /api/auth/mfa/verify.
+    const mfaToken = extractMFAChallenge(json);
+    if (mfaToken) {
+      return NextResponse.json({
+        status: "success",
+        message: "mfa required",
+        data: { mfa_required: true, mfa_token: mfaToken },
       });
     }
 

@@ -45,14 +45,14 @@ SET name = $2,
 WHERE id = $1;
 
 -- name: GetUserByID :one
-SELECT id, organization_id, email, full_name, is_active, password_hash,
+SELECT id, organization_id, email, full_name, is_active, is_platform_admin, password_hash,
        email_verified_at, password_changed_at, last_login_at, status,
        created_at, updated_at, deleted_at
 FROM users
 WHERE id = $1 AND deleted_at IS NULL;
 
 -- name: GetUserByEmail :one
-SELECT id, organization_id, email, full_name, is_active, password_hash,
+SELECT id, organization_id, email, full_name, is_active, is_platform_admin, password_hash,
        email_verified_at, password_changed_at, last_login_at, status,
        created_at, updated_at, deleted_at
 FROM users
@@ -60,13 +60,13 @@ WHERE email = $1 AND deleted_at IS NULL;
 
 -- name: InsertUser :exec
 INSERT INTO users (
-  id, organization_id, email, full_name, is_active, password_hash,
+  id, organization_id, email, full_name, is_active, is_platform_admin, password_hash,
   email_verified_at, password_changed_at, last_login_at, status,
   created_at, updated_at, deleted_at
 ) VALUES (
-  $1, $2, $3, $4, $5, $6,
-  $7, $8, $9, $10,
-  $11, $12, $13
+  $1, $2, $3, $4, $5, $6, $7,
+  $8, $9, $10, $11,
+  $12, $13, $14
 );
 
 -- name: UpdateUser :exec
@@ -74,10 +74,12 @@ UPDATE users
 SET full_name = $2,
     is_active = $3,
     password_hash = $4,
-    last_login_at = $5,
-    status = $6,
-    updated_at = $7,
-    deleted_at = $8
+    email_verified_at = $5,
+    password_changed_at = $6,
+    last_login_at = $7,
+    status = $8,
+    updated_at = $9,
+    deleted_at = $10
 WHERE id = $1;
 
 -- name: InsertWorkspaceUser :exec
@@ -100,6 +102,54 @@ SELECT workspace_id, user_id, role, created_at
 FROM workspace_users
 WHERE user_id = $1
 ORDER BY created_at ASC;
+
+-- name: GetOAuthIdentityByProviderSubject :one
+SELECT id, user_id, provider, provider_subject, email, linked_at, last_login_at, created_at, updated_at
+FROM user_oauth_identities
+WHERE provider = $1 AND provider_subject = $2;
+
+-- name: InsertOAuthIdentity :exec
+INSERT INTO user_oauth_identities (
+  id, user_id, provider, provider_subject, email, linked_at, last_login_at, created_at, updated_at
+) VALUES (
+  $1, $2, $3, $4, $5, $6, $7, $8, $9
+);
+
+-- name: UpdateOAuthIdentity :exec
+UPDATE user_oauth_identities
+SET email = $2,
+    last_login_at = $3,
+    updated_at = $4
+WHERE id = $1;
+
+-- name: GetUserMFA :one
+SELECT user_id, totp_secret_encrypted, enabled_at, recovery_codes_hash, created_at, updated_at
+FROM user_mfa
+WHERE user_id = $1;
+
+-- name: UpsertUserMFA :exec
+INSERT INTO user_mfa (
+  user_id, totp_secret_encrypted, enabled_at, recovery_codes_hash, created_at, updated_at
+) VALUES (
+  $1, $2, $3, $4, $5, $6
+)
+ON CONFLICT (user_id) DO UPDATE
+SET totp_secret_encrypted = EXCLUDED.totp_secret_encrypted,
+    enabled_at = EXCLUDED.enabled_at,
+    recovery_codes_hash = EXCLUDED.recovery_codes_hash,
+    updated_at = EXCLUDED.updated_at;
+
+-- name: UpdateUserMFA :exec
+UPDATE user_mfa
+SET totp_secret_encrypted = $2,
+    enabled_at = $3,
+    recovery_codes_hash = $4,
+    updated_at = $5
+WHERE user_id = $1;
+
+-- name: DeleteUserMFA :exec
+DELETE FROM user_mfa
+WHERE user_id = $1;
 
 -- name: GetAPIKeyByID :one
 SELECT id, workspace_id, name, key_hash, last_used_at, expires_at, status, prefix,

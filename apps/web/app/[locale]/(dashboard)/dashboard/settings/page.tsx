@@ -1,6 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { PageHeader } from "@hublio/ui/common/page-header";
-import { WorkspaceSettings } from "@/features/workspaces/components/workspace-settings";
+import { SettingsTabs } from "@/features/settings/components/settings-tabs";
 
 export default async function SettingsPage({
   params,
@@ -14,7 +14,7 @@ export default async function SettingsPage({
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <PageHeader title={t("settings.title")} description={t("settings.subtitle")} />
-      <WorkspaceSettings />
+      <SettingsTabs />
     </div>
   );
 }

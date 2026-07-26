@@ -34,6 +34,24 @@ func (h *Handler) RegisterRoutes(api *gin.RouterGroup, jwtAuth gin.HandlerFunc) 
 		authGroup.POST("/register", h.register)
 		authGroup.POST("/login", h.login)
 		authGroup.POST("/logout", h.logout)
+		authGroup.POST("/forgot-password", h.forgotPassword)
+		authGroup.POST("/reset-password", h.resetPassword)
+		authGroup.POST("/verify-email/request", h.requestEmailVerification)
+		authGroup.POST("/verify-email", h.verifyEmail)
+		authGroup.GET("/oauth/providers", h.oauthProviders)
+		authGroup.POST("/oauth/callback", h.oauthCallback)
+		authGroup.GET("/oauth/onboarding", h.oauthOnboardingPreview)
+		authGroup.POST("/oauth/complete-registration", h.oauthCompleteRegistration)
+		authGroup.POST("/mfa/verify", h.mfaVerify)
+	}
+
+	mfaGroup := api.Group("/auth/mfa")
+	mfaGroup.Use(jwtAuth)
+	{
+		mfaGroup.GET("/status", h.mfaStatus)
+		mfaGroup.POST("/setup", h.mfaSetup)
+		mfaGroup.POST("/enable", h.mfaEnable)
+		mfaGroup.POST("/disable", h.mfaDisable)
 	}
 
 	identity := api.Group("/identity")
@@ -100,6 +118,14 @@ func (h *Handler) register(c *gin.Context) {
 		)...,
 	)
 
+	// Best-effort: send the email verification code after a successful registration. Run it
+	// detached from the request so mail latency never delays the response, and never fail
+	// registration if mail (or the code store) is unavailable; failures are logged downstream.
+	email := result.User.Email()
+	go func() {
+		_ = h.svc.RequestEmailVerification(context.Background(), email)
+	}()
+
 	httpx.ResponseSuccess(c, http.StatusCreated, "registered", gin.H{
 		"organization": organizationDTO(result.Organization),
 		"workspace":    workspaceDTO(result.Workspace),
@@ -110,6 +136,7 @@ func (h *Handler) register(c *gin.Context) {
 type loginRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
+	DeviceID string `json:"device_id"`
 }
 
 func (h *Handler) login(c *gin.Context) {
@@ -125,6 +152,7 @@ func (h *Handler) login(c *gin.Context) {
 		result, innerErr = h.svc.Login(ctx, h.tokens, application.LoginInput{
 			Email:    req.Email,
 			Password: req.Password,
+			DeviceID: req.DeviceID,
 		})
 		return innerErr
 	})
@@ -133,20 +161,181 @@ func (h *Handler) login(c *gin.Context) {
 		return
 	}
 
-	auditCtx := requestctx.With(c.Request.Context(), requestctx.KeyOrganizationID, result.User.OrganizationID().String())
+	if result.MFARequired {
+		h.recordLoginAudit(c, result.User, "user.mfa_challenged")
+		httpx.ResponseSuccess(c, http.StatusOK, "mfa required", gin.H{
+			"mfa_required": true,
+			"mfa_token":    result.MFAToken,
+		})
+		return
+	}
+
+	h.recordLoginAudit(c, result.User, "user.login")
+	httpx.ResponseSuccess(c, http.StatusOK, "logged in", loginDTO(result))
+}
+
+// recordLoginAudit stamps the user's organization onto the audit context, which is not yet
+// available from the request (login happens before any JWT/workspace scoping).
+func (h *Handler) recordLoginAudit(c *gin.Context, user *domain.User, action string) {
+	auditCtx := requestctx.With(c.Request.Context(), requestctx.KeyOrganizationID, user.OrganizationID().String())
 	h.svc.RecordAudit(auditCtx, application.AuditEvent{
 		ActorType:    "user",
-		ActorID:      result.User.ID(),
-		Action:       "user.login",
+		ActorID:      user.ID(),
+		Action:       action,
 		ResourceType: "user",
-		ResourceID:   result.User.ID(),
+		ResourceID:   user.ID(),
 	})
+}
 
-	httpx.ResponseSuccess(c, http.StatusOK, "logged in", gin.H{
-		"access_token":  result.AccessToken,
-		"refresh_token": result.RefreshToken,
-		"user":          userDTO(result.User),
+type mfaVerifyRequest struct {
+	MFAToken     string `json:"mfa_token" binding:"required"`
+	Code         string `json:"code"`
+	RecoveryCode string `json:"recovery_code"`
+	DeviceID     string `json:"device_id"`
+	TrustDevice  bool   `json:"trust_device"`
+}
+
+func (h *Handler) mfaVerify(c *gin.Context) {
+	var req mfaVerifyRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		httpx.ResponseError(c, apperr.New(err.Error(), apperr.ErrCodeBadRequest))
+		return
+	}
+
+	var result *application.LoginResult
+	err := persistence.WithinTransaction(c.Request.Context(), h.pool, func(ctx context.Context) error {
+		var innerErr error
+		result, innerErr = h.svc.VerifyMFA(ctx, h.tokens, application.VerifyMFAInput{
+			Token:        req.MFAToken,
+			Code:         req.Code,
+			RecoveryCode: req.RecoveryCode,
+			DeviceID:     req.DeviceID,
+			TrustDevice:  req.TrustDevice,
+		})
+		return innerErr
 	})
+	if err != nil {
+		httpx.ResponseError(c, err)
+		return
+	}
+
+	h.recordLoginAudit(c, result.User, "user.login")
+	httpx.ResponseSuccess(c, http.StatusOK, "logged in", loginDTO(result))
+}
+
+func (h *Handler) mfaStatus(c *gin.Context) {
+	actorID, ok := actorUserID(c)
+	if !ok {
+		return
+	}
+	var status *application.MFAStatus
+	err := persistence.WithinTransaction(c.Request.Context(), h.pool, func(ctx context.Context) error {
+		var innerErr error
+		status, innerErr = h.svc.GetMFAStatus(ctx, actorID)
+		return innerErr
+	})
+	if err != nil {
+		httpx.ResponseError(c, err)
+		return
+	}
+	httpx.ResponseSuccess(c, http.StatusOK, "mfa status", gin.H{
+		"enabled":                   status.Enabled,
+		"pending_enrollment":        status.PendingEnrollment,
+		"remaining_recovery_codes":  status.RemainingRecoveryCodes,
+		"can_enroll":                status.CanEnroll,
+	})
+}
+
+func (h *Handler) mfaSetup(c *gin.Context) {
+	actorID, ok := actorUserID(c)
+	if !ok {
+		return
+	}
+	var result *application.MFASetupResult
+	err := persistence.WithinTransaction(c.Request.Context(), h.pool, func(ctx context.Context) error {
+		var innerErr error
+		result, innerErr = h.svc.SetupMFA(ctx, actorID)
+		return innerErr
+	})
+	if err != nil {
+		httpx.ResponseError(c, err)
+		return
+	}
+	h.svc.RecordAudit(c.Request.Context(), application.AuditEvent{
+		ActorType:    "user",
+		ActorID:      actorID,
+		Action:       "user.mfa_setup",
+		ResourceType: "user",
+		ResourceID:   actorID,
+	})
+	httpx.ResponseSuccess(c, http.StatusOK, "mfa enrollment started", gin.H{
+		"secret":         result.Secret,
+		"otpauth_url":    result.OTPAuthURL,
+		"recovery_codes": result.RecoveryCodes,
+		"warning":        "store the recovery codes now; they will not be shown again",
+	})
+}
+
+type mfaEnableRequest struct {
+	Code string `json:"code" binding:"required,len=6"`
+}
+
+func (h *Handler) mfaEnable(c *gin.Context) {
+	actorID, ok := actorUserID(c)
+	if !ok {
+		return
+	}
+	var req mfaEnableRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		httpx.ResponseError(c, apperr.New(err.Error(), apperr.ErrCodeBadRequest))
+		return
+	}
+	err := persistence.WithinTransaction(c.Request.Context(), h.pool, func(ctx context.Context) error {
+		return h.svc.EnableMFA(ctx, actorID, req.Code)
+	})
+	if err != nil {
+		httpx.ResponseError(c, err)
+		return
+	}
+	h.svc.RecordAudit(c.Request.Context(), application.AuditEvent{
+		ActorType:    "user",
+		ActorID:      actorID,
+		Action:       "user.mfa_enabled",
+		ResourceType: "user",
+		ResourceID:   actorID,
+	})
+	httpx.ResponseSuccess(c, http.StatusOK, "mfa enabled", nil)
+}
+
+type mfaDisableRequest struct {
+	Password string `json:"password" binding:"required"`
+}
+
+func (h *Handler) mfaDisable(c *gin.Context) {
+	actorID, ok := actorUserID(c)
+	if !ok {
+		return
+	}
+	var req mfaDisableRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		httpx.ResponseError(c, apperr.New(err.Error(), apperr.ErrCodeBadRequest))
+		return
+	}
+	err := persistence.WithinTransaction(c.Request.Context(), h.pool, func(ctx context.Context) error {
+		return h.svc.DisableMFA(ctx, actorID, req.Password)
+	})
+	if err != nil {
+		httpx.ResponseError(c, err)
+		return
+	}
+	h.svc.RecordAudit(c.Request.Context(), application.AuditEvent{
+		ActorType:    "user",
+		ActorID:      actorID,
+		Action:       "user.mfa_disabled",
+		ResourceType: "user",
+		ResourceID:   actorID,
+	})
+	httpx.ResponseSuccess(c, http.StatusOK, "mfa disabled", nil)
 }
 
 type logoutRequest struct {
@@ -164,6 +353,243 @@ func (h *Handler) logout(c *gin.Context) {
 		return
 	}
 	httpx.ResponseSuccess(c, http.StatusOK, "logged out", nil)
+}
+
+type forgotPasswordRequest struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
+func (h *Handler) forgotPassword(c *gin.Context) {
+	var req forgotPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		httpx.ResponseError(c, apperr.New(err.Error(), apperr.ErrCodeBadRequest))
+		return
+	}
+	// Anti-enumeration: RequestPasswordReset never reveals whether the email exists.
+	if err := h.svc.RequestPasswordReset(c.Request.Context(), req.Email); err != nil {
+		httpx.ResponseError(c, err)
+		return
+	}
+	httpx.ResponseSuccess(c, http.StatusOK, "if an account exists for that email, a reset link has been sent", nil)
+}
+
+type resetPasswordRequest struct {
+	Token    string `json:"token" binding:"required"`
+	Password string `json:"password" binding:"required,min=8"`
+}
+
+func (h *Handler) resetPassword(c *gin.Context) {
+	var req resetPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		httpx.ResponseError(c, apperr.New(err.Error(), apperr.ErrCodeBadRequest))
+		return
+	}
+	err := persistence.WithinTransaction(c.Request.Context(), h.pool, func(ctx context.Context) error {
+		return h.svc.ResetPassword(ctx, application.ResetPasswordInput{
+			Token:    req.Token,
+			Password: req.Password,
+		})
+	})
+	if err != nil {
+		httpx.ResponseError(c, err)
+		return
+	}
+	httpx.ResponseSuccess(c, http.StatusOK, "password updated", nil)
+}
+
+type requestEmailVerificationRequest struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
+func (h *Handler) requestEmailVerification(c *gin.Context) {
+	var req requestEmailVerificationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		httpx.ResponseError(c, apperr.New(err.Error(), apperr.ErrCodeBadRequest))
+		return
+	}
+	// Anti-enumeration: RequestEmailVerification never reveals whether the email exists.
+	if err := h.svc.RequestEmailVerification(c.Request.Context(), req.Email); err != nil {
+		httpx.ResponseError(c, err)
+		return
+	}
+	httpx.ResponseSuccess(c, http.StatusOK, "if an account exists for that email, a verification code has been sent", nil)
+}
+
+type verifyEmailRequest struct {
+	Email string `json:"email" binding:"required,email"`
+	Code  string `json:"code" binding:"required,len=6"`
+}
+
+func (h *Handler) verifyEmail(c *gin.Context) {
+	var req verifyEmailRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		httpx.ResponseError(c, apperr.New(err.Error(), apperr.ErrCodeBadRequest))
+		return
+	}
+	err := persistence.WithinTransaction(c.Request.Context(), h.pool, func(ctx context.Context) error {
+		return h.svc.VerifyEmail(ctx, req.Email, req.Code)
+	})
+	if err != nil {
+		httpx.ResponseError(c, err)
+		return
+	}
+	httpx.ResponseSuccess(c, http.StatusOK, "email verified", nil)
+}
+
+type oauthCallbackRequest struct {
+	Provider     string `json:"provider" binding:"required"`
+	Code         string `json:"code" binding:"required"`
+	CodeVerifier string `json:"code_verifier" binding:"required"`
+	RedirectURI  string `json:"redirect_uri" binding:"required"`
+}
+
+func (h *Handler) oauthProviders(c *gin.Context) {
+	providers := []string{}
+	if h.svc.OAuth != nil {
+		for _, p := range []domain.OAuthProvider{
+			domain.OAuthProviderGoogle,
+			domain.OAuthProviderMicrosoft,
+			domain.OAuthProviderGitHub,
+		} {
+			if h.svc.OAuth.Configured(p) {
+				providers = append(providers, string(p))
+			}
+		}
+	}
+	httpx.ResponseSuccess(c, http.StatusOK, "oauth providers", gin.H{
+		"providers": providers,
+	})
+}
+
+func (h *Handler) oauthCallback(c *gin.Context) {
+	var req oauthCallbackRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		httpx.ResponseError(c, apperr.New(err.Error(), apperr.ErrCodeBadRequest))
+		return
+	}
+
+	var result *application.OAuthCallbackResult
+	err := persistence.WithinTransaction(c.Request.Context(), h.pool, func(ctx context.Context) error {
+		var innerErr error
+		result, innerErr = h.svc.OAuthCallback(ctx, h.tokens, application.OAuthCallbackInput{
+			Provider:     req.Provider,
+			Code:         req.Code,
+			CodeVerifier: req.CodeVerifier,
+			RedirectURI:  req.RedirectURI,
+		})
+		return innerErr
+	})
+	if err != nil {
+		httpx.ResponseError(c, err)
+		return
+	}
+
+	if result.Status == "onboarding_required" {
+		httpx.ResponseSuccess(c, http.StatusOK, "onboarding required", gin.H{
+			"status":           result.Status,
+			"onboarding_token": result.OnboardingToken,
+			"email":            result.Email,
+			"full_name":        result.FullName,
+		})
+		return
+	}
+
+	auditCtx := requestctx.With(c.Request.Context(), requestctx.KeyOrganizationID, result.User.OrganizationID().String())
+	h.svc.RecordAudit(auditCtx, application.AuditEvent{
+		ActorType:    "user",
+		ActorID:      result.User.ID(),
+		Action:       "user.oauth_login",
+		ResourceType: "user",
+		ResourceID:   result.User.ID(),
+	})
+
+	httpx.ResponseSuccess(c, http.StatusOK, "logged in", gin.H{
+		"status":        result.Status,
+		"access_token":  result.AccessToken,
+		"refresh_token": result.RefreshToken,
+		"user":          userDTO(result.User),
+	})
+}
+
+func (h *Handler) oauthOnboardingPreview(c *gin.Context) {
+	token := strings.TrimSpace(c.GetHeader("X-OAuth-Onboarding-Token"))
+	if token == "" {
+		token = strings.TrimSpace(c.Query("token"))
+	}
+	preview, err := h.svc.PeekOAuthOnboarding(token)
+	if err != nil {
+		httpx.ResponseError(c, err)
+		return
+	}
+	httpx.ResponseSuccess(c, http.StatusOK, "onboarding preview", gin.H{
+		"email":     preview.Email,
+		"full_name": preview.FullName,
+		"provider":  preview.Provider,
+	})
+}
+
+type oauthCompleteRequest struct {
+	OnboardingToken  string `json:"onboarding_token" binding:"required"`
+	OrganizationName string `json:"organization_name" binding:"required"`
+	WorkspaceName    string `json:"workspace_name"`
+	Environment      string `json:"environment"`
+}
+
+func (h *Handler) oauthCompleteRegistration(c *gin.Context) {
+	var req oauthCompleteRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		httpx.ResponseError(c, apperr.New(err.Error(), apperr.ErrCodeBadRequest))
+		return
+	}
+
+	var (
+		login    *application.LoginResult
+		org      *domain.Organization
+		ws       *domain.Workspace
+		mem      *domain.Membership
+		identity *domain.OAuthIdentity
+	)
+	err := persistence.WithinTransaction(c.Request.Context(), h.pool, func(ctx context.Context) error {
+		var innerErr error
+		login, org, ws, mem, identity, innerErr = h.svc.CompleteOAuthRegistration(ctx, h.tokens, application.CompleteOAuthRegistrationInput{
+			OnboardingToken:  req.OnboardingToken,
+			OrganizationName: req.OrganizationName,
+			WorkspaceName:    req.WorkspaceName,
+			Environment:      req.Environment,
+		})
+		return innerErr
+	})
+	if err != nil {
+		httpx.ResponseError(c, err)
+		return
+	}
+
+	h.svc.PublishAfterCommit(c.Request.Context(),
+		appendMany(
+			org.PullEvents(),
+			login.User.PullEvents(),
+			ws.PullEvents(),
+			mem.PullEvents(),
+		)...,
+	)
+	_ = identity
+
+	auditCtx := requestctx.With(c.Request.Context(), requestctx.KeyOrganizationID, login.User.OrganizationID().String())
+	h.svc.RecordAudit(auditCtx, application.AuditEvent{
+		ActorType:    "user",
+		ActorID:      login.User.ID(),
+		Action:       "user.oauth_register",
+		ResourceType: "user",
+		ResourceID:   login.User.ID(),
+	})
+
+	httpx.ResponseSuccess(c, http.StatusCreated, "registered", gin.H{
+		"access_token":  login.AccessToken,
+		"refresh_token": login.RefreshToken,
+		"organization":  organizationDTO(org),
+		"workspace":     workspaceDTO(ws),
+		"user":          userDTO(login.User),
+	})
 }
 
 func (h *Handler) getOrganization(c *gin.Context) {
@@ -551,13 +977,23 @@ func workspaceDTO(w *domain.Workspace) gin.H {
 	}
 }
 
+// loginDTO is the completed-login payload shared by password login and MFA verification.
+func loginDTO(result *application.LoginResult) gin.H {
+	return gin.H{
+		"access_token":  result.AccessToken,
+		"refresh_token": result.RefreshToken,
+		"user":          userDTO(result.User),
+	}
+}
+
 func userDTO(u *domain.User) gin.H {
 	return gin.H{
-		"id":              u.ID().String(),
-		"organization_id": u.OrganizationID().String(),
-		"email":           u.Email(),
-		"full_name":       u.FullName(),
-		"status":          string(u.Status()),
+		"id":                u.ID().String(),
+		"organization_id":   u.OrganizationID().String(),
+		"email":             u.Email(),
+		"full_name":         u.FullName(),
+		"status":            string(u.Status()),
+		"is_platform_admin": u.IsPlatformAdmin(),
 	}
 }
 

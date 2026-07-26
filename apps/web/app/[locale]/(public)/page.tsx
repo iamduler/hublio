@@ -1,6 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { Button } from "@hublio/ui/ui/button";
+import { buttonVariants } from "@hublio/ui/ui/button-variants";
 
 export default async function LandingPage({
   params,
@@ -22,12 +22,15 @@ export default async function LandingPage({
           {t("meta.description")}
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <Button asChild size="lg">
-            <Link href="/login">{t("nav.signIn")}</Link>
-          </Button>
-          <Button asChild size="lg" variant="outline">
-            <Link href="/register">{t("nav.getStarted")}</Link>
-          </Button>
+          <Link href="/login" className={buttonVariants({ size: "lg" })}>
+            {t("nav.signIn")}
+          </Link>
+          <Link
+            href="/register"
+            className={buttonVariants({ size: "lg", variant: "outline" })}
+          >
+            {t("nav.getStarted")}
+          </Link>
         </div>
       </div>
     </section>

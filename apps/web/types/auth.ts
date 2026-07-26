@@ -4,6 +4,7 @@ export interface User {
   email: string;
   full_name: string;
   status: string;
+  is_platform_admin?: boolean;
 }
 
 export interface AuthSession {

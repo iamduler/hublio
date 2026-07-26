@@ -1,27 +1,46 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSearchParams } from "next/navigation";
 import { Link, useRouter } from "@/i18n/navigation";
-import { authApi } from "@/lib/api/auth";
+import { authApi, isMFAChallenge } from "@/lib/api/auth";
 import { useAuth } from "@/providers/auth-provider";
 import { useApiErrorMessage } from "@/hooks/use-api-error";
 import { makeLoginSchema, type LoginValues } from "@/features/auth/schemas";
-import { Button } from "@hublio/ui/ui/button";
-import { Input } from "@hublio/ui/ui/input";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@hublio/ui/ui/form";
-import { Card, CardContent, CardHeader, CardTitle } from "@hublio/ui/ui/card";
+  AuthCard,
+  AuthDivider,
+  AuthFieldLabel,
+  Logo,
+  PasswordField,
+  SSOButton,
+  cx,
+  inputBase,
+} from "@/features/auth/auth-ui";
+import { getOrCreateDeviceId, storeMFAToken } from "@/lib/mfa-device";
 import { toast } from "@/lib/toast";
+
+const DEMO_ACCOUNTS = [
+  {
+    id: "demo",
+    email: "demo@hublio.local",
+    password: "Demo123!",
+  },
+  {
+    id: "admin",
+    email: "admin@hublio.local",
+    password: "Admin123!",
+  },
+] as const;
+
+const showDemoLogin =
+  process.env.NODE_ENV === "development" ||
+  process.env.NEXT_PUBLIC_DEMO_LOGIN === "true";
+
+type OAuthProvider = "google" | "microsoft" | "github";
 
 export function LoginForm() {
   const t = useTranslations("auth.login");
@@ -30,6 +49,7 @@ export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const getError = useApiErrorMessage();
+  const [providers, setProviders] = useState<OAuthProvider[]>([]);
 
   const schema = useMemo(() => makeLoginSchema(tv), [tv]);
   const form = useForm<LoginValues>({
@@ -37,9 +57,43 @@ export function LoginForm() {
     defaultValues: { email: "", password: "" },
   });
 
+  useEffect(() => {
+    const oauthError = searchParams.get("oauth_error");
+    if (oauthError) {
+      toast.error(oauthError);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    let cancelled = false;
+    authApi
+      .oauthProviders()
+      .then((list) => {
+        if (!cancelled) setProviders(list);
+      })
+      .catch(() => {
+        if (!cancelled) setProviders([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   async function onSubmit(values: LoginValues) {
     try {
-      const data = await authApi.login(values.email, values.password);
+      const data = await authApi.login(
+        values.email,
+        values.password,
+        getOrCreateDeviceId(),
+      );
+      if (isMFAChallenge(data)) {
+        storeMFAToken(data.mfa_token);
+        const callback = searchParams.get("callbackUrl") || "/dashboard";
+        router.replace(
+          `/mfa?callbackUrl=${encodeURIComponent(callback)}`,
+        );
+        return;
+      }
       await establishSession(data);
       const callback = searchParams.get("callbackUrl") || "/dashboard";
       router.replace(callback);
@@ -48,72 +102,137 @@ export function LoginForm() {
     }
   }
 
+  function fillDemo(account: (typeof DEMO_ACCOUNTS)[number]) {
+    form.setValue("email", account.email, { shouldValidate: true });
+    form.setValue("password", account.password, { shouldValidate: true });
+  }
+
   return (
-    <Card className="w-full max-w-md shadow-md">
-      <CardHeader>
-        <CardTitle>{t("title")}</CardTitle>
-        <p className="text-sm text-[var(--muted-clr)]">{t("subtitle")}</p>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form
-            className="space-y-4"
-            onSubmit={form.handleSubmit(onSubmit)}
-            noValidate
-          >
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("email")}</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="email"
-                      autoComplete="email"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+    <AuthCard>
+      <div className="mb-7 flex flex-col items-center">
+        <Logo size="lg" />
+        <div className="mt-5 text-center">
+          <h1 className="text-[17px] font-semibold tracking-tight text-[var(--ink)]">
+            {t("title")}
+          </h1>
+          <p className="mt-1.5 text-[13px] text-[var(--muted-clr)]">{t("subtitle")}</p>
+        </div>
+      </div>
+
+      {showDemoLogin && (
+        <div className="mb-4 space-y-2">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--faint)]">
+            {t("quickLogin")}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {DEMO_ACCOUNTS.map((account) => (
+              <button
+                key={account.id}
+                type="button"
+                onClick={() => fillDemo(account)}
+                className="rounded-md border border-[var(--line)] bg-[var(--line-2)] px-2.5 py-1 text-[12px] font-medium text-[var(--ink-2)] hover:border-[var(--line-3)] hover:bg-[var(--white)]"
+              >
+                {t(`demo.${account.id}`)}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="mb-4 space-y-2.5">
+        {(["google", "microsoft", "github"] as const).map((provider) => {
+          const enabled = providers.includes(provider);
+          return (
+            <SSOButton
+              key={provider}
+              provider={provider}
+              label={t(`oauth.${provider}`)}
+              disabled={!enabled}
+              onClick={() => {
+                if (!enabled) {
+                  toast.error(t("oauthUnavailable"));
+                  return;
+                }
+                window.location.href = `/api/auth/oauth/start?provider=${provider}`;
+              }}
             />
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("password")}</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      autoComplete="current-password"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={form.formState.isSubmitting}
+          );
+        })}
+      </div>
+
+      <AuthDivider label={t("or")} />
+
+      <form
+        className="mt-1 space-y-4"
+        onSubmit={form.handleSubmit(onSubmit)}
+        noValidate
+      >
+        <div>
+          <AuthFieldLabel htmlFor="email" required>
+            {t("email")}
+          </AuthFieldLabel>
+          <input
+            id="email"
+            type="email"
+            autoComplete="email"
+            autoFocus
+            placeholder="you@company.com"
+            className={cx(
+              inputBase,
+              form.formState.errors.email
+                ? "border-red-300 bg-red-50/40"
+                : "border-[var(--line)] hover:border-[var(--line-3)]",
+            )}
+            {...form.register("email")}
+          />
+          {form.formState.errors.email && (
+            <p className="mt-1 text-[12px] text-red-600">
+              {form.formState.errors.email.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <div className="mb-1.5 flex items-center justify-between">
+            <label
+              htmlFor="password"
+              className="text-[13px] font-medium text-[var(--ink-2)]"
             >
-              {t("submit")}
-            </Button>
-          </form>
-        </Form>
-        <p className="mt-4 text-center text-sm text-[var(--ink-2)]">
-          {t("noAccount")}{" "}
-          <Link
-            href="/register"
-            className="text-primary no-underline hover:underline"
-          >
-            {t("registerLink")}
-          </Link>
-        </p>
-      </CardContent>
-    </Card>
+              {t("password")} <span className="text-red-500">*</span>
+            </label>
+            <Link
+              href="/forgot-password"
+              className="text-[13px] font-medium text-blue-600 hover:text-blue-700 hover:underline"
+            >
+              {t("forgotPassword")}
+            </Link>
+          </div>
+          <PasswordField
+            id="password"
+            autoComplete="current-password"
+            error={form.formState.errors.password?.message}
+            {...form.register("password")}
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={form.formState.isSubmitting}
+          className="flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-blue-600 text-[13px] font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {form.formState.isSubmitting ? t("submitting") : t("submit")}
+        </button>
+      </form>
+
+      <p className="mt-5 text-center text-[13px] text-[var(--muted-clr)]">
+        {t("noAccount")}{" "}
+        <Link
+          href="/register"
+          className="font-medium text-blue-600 hover:text-blue-700 hover:underline"
+        >
+          {t("registerLink")}
+        </Link>
+      </p>
+    </AuthCard>
   );
 }

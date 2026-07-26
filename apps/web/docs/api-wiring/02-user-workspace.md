@@ -10,6 +10,30 @@ Related: [00-foundation](./00-foundation.md) · [01-admin-workspace](./01-admin-
 
 ## 1. Ma trận endpoint ↔ FE
 
+### Auth — MFA/2FA (BFF `/api/auth/*` → Go `/auth/*`)
+
+- [x] `POST /auth/login` — trả `{ mfa_required, mfa_token }` khi user bật MFA (BFF **không** set cookie)
+- [x] `POST /auth/mfa/verify` — TOTP `code` hoặc `recovery_code`; BFF set cookie khi thành công
+- [x] `POST /auth/mfa/setup` (JWT) — secret + `otpauth_url` + recovery codes, hiện **1 lần**
+- [x] `POST /auth/mfa/enable` (JWT) — xác nhận `code` 6 số
+- [x] `POST /auth/mfa/disable` (JWT) — cần `password`
+- [x] `GET /auth/mfa/status` (JWT) — enabled / pending / recovery count
+- [x] Settings → Security — MFA enrollment UI
+
+> BFF: `app/api/auth/login` (pass-through challenge) + `app/api/auth/mfa/{status,setup,enable,disable,verify}`.
+
+### Auth — Password reset & email verify
+
+- [x] `POST /auth/forgot-password` + UI `/(auth)/forgot-password`
+- [x] `POST /auth/reset-password` + UI `/(auth)/reset-password?token=`
+- [x] `POST /auth/verify-email/request` + `POST /auth/verify-email` + UI `/(auth)/verify-email?email=`
+- [x] Register → redirect verify-email (OTP gửi best-effort sau register)
+
+### Auth — Onboarding wizard (OAuth hybrid)
+
+- [x] Organization → Workspace → Invite team (Skip) → Complete
+- [x] Routes: `/onboarding/organization|workspace|invite|complete`
+
 ### Identity (JWT → Go)
 
 - [x] `GET /identity/organizations/:orgId` — bootstrap
@@ -88,7 +112,10 @@ Related: [00-foundation](./00-foundation.md) · [01-admin-workspace](./01-admin-
 | Area | Status |
 | --- | --- |
 | Auth login/register | [x] |
-| Forgot / verify / MFA | [~] stub / chưa backend |
+| Forgot / reset / verify | [x] |
+| MFA challenge (login) | [x] |
+| MFA enrol (Settings → Security) | [x] |
+| Onboarding wizard (org→ws→invite→complete) | [x] |
 | Create workspace | [x] |
 | Dashboard KPIs + activity | [x] |
 | Connectors list/detail | [x] · enable/disable UI [~] |
@@ -107,7 +134,6 @@ Related: [00-foundation](./00-foundation.md) · [01-admin-workspace](./01-admin-
 
 - [ ] Intent list, Execution list → deep-link từ result / events
 - [ ] List workspace members
-- [ ] Forgot/reset password, verify email, MFA
 - [ ] Replay event, billing → Admin-phase / chưa backend
 
 ---

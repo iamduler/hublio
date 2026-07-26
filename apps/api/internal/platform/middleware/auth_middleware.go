@@ -55,6 +55,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		c.Set("user_email", payload.Email)
 		c.Set("user_role", payload.Role)
 		c.Set("organization_id", payload.OrganizationID)
+		c.Set("is_platform_admin", payload.IsPlatformAdmin)
 		c.Set("access_token", tokenString)
 
 		ctx := c.Request.Context()

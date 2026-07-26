@@ -30,7 +30,16 @@ func LoggerMiddleware(httpLogger *zerolog.Logger) gin.HandlerFunc {
 		contentType := c.GetHeader("Content-Type")
 		requestBody := make(map[string]any)
 		var formFiles []map[string]any
-		var sensitiveFields = []string{"password", "pass", "confirm_password"}
+		// Requests and responses need different redaction lists: an error envelope's "code" is
+		// worth logging, a TOTP "code" is not.
+		var sensitiveRequestFields = []string{
+			"password", "pass", "confirm_password",
+			"code", "code_verifier", "recovery_code", "mfa_token", "token", "refresh_token", "api_key",
+		}
+		var sensitiveResponseFields = []string{
+			"password", "secret", "otpauth_url", "recovery_codes", "plaintext",
+			"access_token", "refresh_token", "mfa_token", "token",
+		}
 
 		if strings.HasPrefix(contentType, "multipart/form-data") {
 			// Content-Type is multipart/form-data
@@ -147,8 +156,8 @@ func LoggerMiddleware(httpLogger *zerolog.Logger) gin.HandlerFunc {
 			Str("remote-addr", c.Request.RemoteAddr).
 			Str("request-uri", c.Request.RequestURI).
 			Interface("headers", c.Request.Header).
-			Interface("request-body", senitizeRequestBody(requestBody, sensitiveFields)).
-			Interface("response-body", responseBodyParsed).
+			Interface("request-body", senitizeRequestBody(requestBody, sensitiveRequestFields)).
+			Interface("response-body", senitizeLoggedBody(responseBodyParsed, sensitiveResponseFields)).
 			Str("resquest-content-type", contentType).
 			Str("response-content-type", responseContentType).
 			Int("status-code", statusCode).
@@ -167,6 +176,23 @@ func formatFileSize(size int64) string {
 		return fmt.Sprintf("%.2f MB", float64(size)/(1024*1024))
 	default:
 		return fmt.Sprintf("%.2f GB", float64(size)/(1024*1024*1024))
+	}
+}
+
+// senitizeLoggedBody redacts sensitive fields from any decoded JSON body (object, array or
+// scalar) before it is written to the HTTP log.
+func senitizeLoggedBody(body any, sensitiveFields []string) any {
+	switch v := body.(type) {
+	case map[string]any:
+		return senitizeRequestBody(v, sensitiveFields)
+	case []any:
+		out := make([]any, 0, len(v))
+		for _, item := range v {
+			out = append(out, senitizeLoggedBody(item, sensitiveFields))
+		}
+		return out
+	default:
+		return body
 	}
 }
 
@@ -194,11 +220,7 @@ func senitizeRequestBody(requestBody map[string]any, sensitiveFields []string) m
 				var senitizedSlice []any
 
 				for _, item := range v {
-					if m, ok := item.(map[string]any); ok {
-						senitizedSlice = append(senitizedSlice, senitizeRequestBody(m, sensitiveFields))
-					} else {
-						senitizedSlice = append(senitizedSlice, item)
-					}
+					senitizedSlice = append(senitizedSlice, senitizeLoggedBody(item, sensitiveFields))
 				}
 
 				senitizedBody[key] = senitizedSlice

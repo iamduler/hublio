@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@hublio/ui/ui/table";
 import { Card } from "@hublio/ui/ui/card";
-import { Button } from "@hublio/ui/ui/button";
+import { buttonVariants } from "@hublio/ui/ui/button";
 import { Badge } from "@hublio/ui/ui/badge";
 import { StatusBadge } from "@hublio/ui/common/status-badge";
 import { EmptyState } from "@hublio/ui/ui/empty-state";
@@ -43,12 +43,13 @@ export function SyncRoutesList() {
         title={t("empty")}
         description={t("emptyBody")}
         action={
-          <Button asChild size="sm">
-            <Link href="/dashboard/sync-routes/new">
-              <Plus size={14} />
-              {t("create")}
-            </Link>
-          </Button>
+          <Link
+            href="/dashboard/sync-routes/new"
+            className={buttonVariants({ size: "sm" })}
+          >
+            <Plus size={14} />
+            {t("create")}
+          </Link>
         }
       />
     );

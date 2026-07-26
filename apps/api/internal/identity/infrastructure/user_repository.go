@@ -8,6 +8,7 @@ import (
 	"hublio/internal/platform/persistence/sqlc"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -23,6 +24,21 @@ func (r *UserRepository) q(ctx context.Context) *sqlc.Queries {
 	return sqlc.New(persistence.Conn(ctx, r.pool))
 }
 
+func passwordHashPtr(hash string) *string {
+	if hash == "" {
+		return nil
+	}
+	h := hash
+	return &h
+}
+
+func passwordHashValue(hash *string) string {
+	if hash == nil {
+		return ""
+	}
+	return *hash
+}
+
 func (r *UserRepository) Save(ctx context.Context, user *domain.User) error {
 	return mapUnique(r.q(ctx).InsertUser(ctx, sqlc.InsertUserParams{
 		ID:                user.ID(),
@@ -30,9 +46,10 @@ func (r *UserRepository) Save(ctx context.Context, user *domain.User) error {
 		Email:             user.Email(),
 		FullName:          user.FullName(),
 		IsActive:          user.IsActive(),
-		PasswordHash:      user.PasswordHash(),
-		EmailVerifiedAt:   timestamptzPtr(nil),
-		PasswordChangedAt: timestamptzPtr(nil),
+		IsPlatformAdmin:   user.IsPlatformAdmin(),
+		PasswordHash:      passwordHashPtr(user.PasswordHash()),
+		EmailVerifiedAt:   timestamptzPtr(user.EmailVerifiedAt()),
+		PasswordChangedAt: timestamptzPtr(user.PasswordChangedAt()),
 		LastLoginAt:       timestamptzPtr(user.LastLoginAt()),
 		Status:            string(user.Status()),
 		CreatedAt:         timestamptz(user.CreatedAt()),
@@ -43,14 +60,16 @@ func (r *UserRepository) Save(ctx context.Context, user *domain.User) error {
 
 func (r *UserRepository) Update(ctx context.Context, user *domain.User) error {
 	return mapUnique(r.q(ctx).UpdateUser(ctx, sqlc.UpdateUserParams{
-		ID:           user.ID(),
-		FullName:     user.FullName(),
-		IsActive:     user.IsActive(),
-		PasswordHash: user.PasswordHash(),
-		LastLoginAt:  timestamptzPtr(user.LastLoginAt()),
-		Status:       string(user.Status()),
-		UpdatedAt:    timestamptz(user.UpdatedAt()),
-		DeletedAt:    timestamptzPtr(user.DeletedAt()),
+		ID:                user.ID(),
+		FullName:          user.FullName(),
+		IsActive:          user.IsActive(),
+		PasswordHash:      passwordHashPtr(user.PasswordHash()),
+		EmailVerifiedAt:   timestamptzPtr(user.EmailVerifiedAt()),
+		PasswordChangedAt: timestamptzPtr(user.PasswordChangedAt()),
+		LastLoginAt:       timestamptzPtr(user.LastLoginAt()),
+		Status:            string(user.Status()),
+		UpdatedAt:         timestamptz(user.UpdatedAt()),
+		DeletedAt:         timestamptzPtr(user.DeletedAt()),
 	}))
 }
 
@@ -59,7 +78,22 @@ func (r *UserRepository) FindByID(ctx context.Context, id uuid.UUID) (*domain.Us
 	if err != nil {
 		return nil, mapNotFound(err)
 	}
-	return mapUser(row), nil
+	return reconstituteUser(
+		row.ID,
+		row.OrganizationID,
+		row.Email,
+		row.FullName,
+		row.PasswordHash,
+		row.IsActive,
+		row.IsPlatformAdmin,
+		row.Status,
+		row.CreatedAt,
+		row.UpdatedAt,
+		row.LastLoginAt,
+		row.DeletedAt,
+		row.EmailVerifiedAt,
+		row.PasswordChangedAt,
+	), nil
 }
 
 func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
@@ -67,21 +101,46 @@ func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*domain
 	if err != nil {
 		return nil, mapNotFound(err)
 	}
-	return mapUser(row), nil
-}
-
-func mapUser(row sqlc.User) *domain.User {
-	return domain.ReconstituteUser(
+	return reconstituteUser(
 		row.ID,
 		row.OrganizationID,
 		row.Email,
 		row.FullName,
 		row.PasswordHash,
 		row.IsActive,
-		domain.UserStatus(row.Status),
-		timeFrom(row.CreatedAt),
-		timeFrom(row.UpdatedAt),
-		timePtrFrom(row.LastLoginAt),
-		timePtrFrom(row.DeletedAt),
+		row.IsPlatformAdmin,
+		row.Status,
+		row.CreatedAt,
+		row.UpdatedAt,
+		row.LastLoginAt,
+		row.DeletedAt,
+		row.EmailVerifiedAt,
+		row.PasswordChangedAt,
+	), nil
+}
+
+func reconstituteUser(
+	id, organizationID uuid.UUID,
+	email, fullName string,
+	passwordHash *string,
+	isActive, isPlatformAdmin bool,
+	status string,
+	createdAt, updatedAt, lastLoginAt, deletedAt, emailVerifiedAt, passwordChangedAt pgtype.Timestamptz,
+) *domain.User {
+	return domain.ReconstituteUser(
+		id,
+		organizationID,
+		email,
+		fullName,
+		passwordHashValue(passwordHash),
+		isActive,
+		isPlatformAdmin,
+		domain.UserStatus(status),
+		timeFrom(createdAt),
+		timeFrom(updatedAt),
+		timePtrFrom(lastLoginAt),
+		timePtrFrom(deletedAt),
+		timePtrFrom(emailVerifiedAt),
+		timePtrFrom(passwordChangedAt),
 	)
 }

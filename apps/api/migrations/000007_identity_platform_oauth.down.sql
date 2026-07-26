@@ -1,0 +1,35 @@
+DELETE FROM workspace_users
+WHERE user_id IN (
+  '01900000-0000-7000-8000-000000000011',
+  '01900000-0000-7000-8000-000000000012'
+);
+
+DELETE FROM users
+WHERE id IN (
+  '01900000-0000-7000-8000-000000000011',
+  '01900000-0000-7000-8000-000000000012'
+);
+
+DELETE FROM workspaces
+WHERE id IN (
+  '01900000-0000-7000-8000-000000000021',
+  '01900000-0000-7000-8000-000000000022'
+);
+
+DELETE FROM organizations
+WHERE id IN (
+  '01900000-0000-7000-8000-000000000001',
+  '01900000-0000-7000-8000-000000000002'
+);
+
+DROP TABLE IF EXISTS user_oauth_identities;
+
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_platform_admin_password_check;
+
+-- Restore NOT NULL only when every row has a password (seed/dev expected).
+UPDATE users SET password_hash = '' WHERE password_hash IS NULL;
+ALTER TABLE users ALTER COLUMN password_hash SET NOT NULL;
+
+ALTER TABLE users DROP COLUMN IF EXISTS is_platform_admin;
+
+DROP TYPE IF EXISTS oauth_provider;

@@ -123,9 +123,35 @@ API Keys
 
 Service Accounts
 
+Human social login (partial)
+
+- Google / Microsoft / GitHub OAuth for **non-platform-admin** users
+- Hybrid: link existing tenant user by verified email, or Organization onboarding for first login
+- Platform admins use password login only (`users.is_platform_admin`)
+
+MFA / 2FA (TOTP)
+
+- Second factor for password login, stored per user in `user_mfa` (Identity configuration
+  entity, not a Runtime Aggregate)
+- The TOTP secret is encrypted at rest with AES-GCM (`MFA_ENCRYPTION_KEY`, falling back to
+  `CREDENTIAL_ENCRYPTION_KEY`); recovery codes are stored only as bcrypt hashes
+- Login with MFA enabled issues **no tokens**: it returns a challenge
+  (`{ "mfa_required": true, "mfa_token": "..." }`) backed by a 5 minute Redis key
+  `mfa_challenge:<sha256(token)>`, allowing 5 attempts
+- `POST /auth/mfa/verify` accepts either a TOTP code (30s period, ±1 step of skew) or a
+  single-use recovery code, then issues the normal login tokens
+- `trust_device` stores `mfa_trust:<user_id>:<sha256(device_id)>` for 30 days so the challenge
+  is skipped on that device
+- Enrollment: `POST /auth/mfa/setup` (JWT) returns the secret, `otpauth://` URL and recovery
+  codes **once**, with `enabled_at` NULL; `POST /auth/mfa/enable` confirms a code and activates
+  it; `POST /auth/mfa/disable` requires the account password
+- Seeded demo accounts ship without MFA — enable it per account through the setup + enable
+  endpoints
+- OAuth-only accounts cannot enrol: MFA guards password login
+
 Future
 
-OIDC
+OIDC (enterprise IdP)
 
 SAML
 
@@ -435,9 +461,11 @@ Device Tracking
 
 Concurrent Session Management
 
+MFA (TOTP + recovery codes, see §5)
+
 Future
 
-MFA
+Passkeys
 
 ---
 

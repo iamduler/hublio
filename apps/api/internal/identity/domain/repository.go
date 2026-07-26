@@ -41,6 +41,19 @@ type MembershipRepository interface {
 	ListByUser(ctx context.Context, userID uuid.UUID) ([]*Membership, error)
 }
 
+type OAuthIdentityRepository interface {
+	Save(ctx context.Context, identity *OAuthIdentity) error
+	Update(ctx context.Context, identity *OAuthIdentity) error
+	FindByProviderSubject(ctx context.Context, provider OAuthProvider, subject string) (*OAuthIdentity, error)
+}
+
+type MFARepository interface {
+	Save(ctx context.Context, cfg *MFAConfig) error
+	Update(ctx context.Context, cfg *MFAConfig) error
+	FindByUserID(ctx context.Context, userID uuid.UUID) (*MFAConfig, error)
+	Delete(ctx context.Context, userID uuid.UUID) error
+}
+
 type APIKeyRepository interface {
 	Save(ctx context.Context, key *APIKey) error
 	Update(ctx context.Context, key *APIKey) error

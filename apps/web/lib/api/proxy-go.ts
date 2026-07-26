@@ -74,12 +74,21 @@ export async function setAuthCookiesOnStore(opts: {
     path: "/",
     maxAge: opts.refreshMaxAge ?? REFRESH_MAX_AGE,
   });
+  // Client-visible presence flag for soft-gate / AuthProvider.
+  store.set("hublio_auth", "1", {
+    httpOnly: false,
+    sameSite: "lax",
+    secure,
+    path: "/",
+    maxAge: opts.refreshMaxAge ?? REFRESH_MAX_AGE,
+  });
 }
 
 export async function clearAuthCookiesOnStore(): Promise<void> {
   const store = await cookies();
   store.delete(SESSION_COOKIE);
   store.delete(REFRESH_COOKIE);
+  store.delete("hublio_auth");
 }
 
 /**

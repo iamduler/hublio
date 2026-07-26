@@ -64,8 +64,85 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Login and issue JWT + refresh token */
+        /**
+         * Login and issue JWT + refresh token (or an MFA challenge)
+         * @description When the account has MFA enabled and the device is not trusted, no tokens are issued: `data` is `{ "mfa_required": true, "mfa_token": "..." }` and the client must call POST /api/v1/auth/mfa/verify. Otherwise `data` is `{ access_token, refresh_token, user }`.
+         */
         post: operations["authLogin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/mfa/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Complete an MFA login challenge
+         * @description Consumes the challenge from POST /api/v1/auth/login and issues login tokens. Provide exactly one of `code` (TOTP) or `recovery_code` (single use). A challenge lives 5 minutes and allows 5 attempts.
+         */
+        post: operations["authMFAVerify"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/mfa/setup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start TOTP enrollment for the current user
+         * @description Provisions a TOTP secret (stored encrypted, `enabled_at` NULL) and 10 single-use recovery codes. The secret and recovery codes are returned in plaintext exactly once. MFA is not active until POST /api/v1/auth/mfa/enable succeeds.
+         */
+        post: operations["authMFASetup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/mfa/enable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Enable MFA by confirming a TOTP code */
+        post: operations["authMFAEnable"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/mfa/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Disable MFA after a password confirmation */
+        post: operations["authMFADisable"];
         delete?: never;
         options?: never;
         head?: never;
@@ -83,6 +160,148 @@ export interface paths {
         put?: never;
         /** Revoke refresh token */
         post: operations["authLogout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/forgot-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request a password reset link
+         * @description Always returns a generic success response regardless of whether the email exists (anti-enumeration). When the email belongs to an active password user, a one-time reset link (valid for 1 hour) is emailed.
+         */
+        post: operations["authForgotPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reset password using a one-time token */
+        post: operations["authResetPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/verify-email/request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request (or resend) a 6-digit email verification code
+         * @description Always returns a generic success response (anti-enumeration). When the email belongs to a user whose email is not yet verified, a 6-digit code (valid for 15 minutes) is emailed.
+         */
+        post: operations["authRequestEmailVerification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/verify-email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Verify email with a 6-digit code */
+        post: operations["authVerifyEmail"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/oauth/providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List configured OAuth providers */
+        get: operations["authOAuthProviders"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/oauth/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Complete OAuth code exchange (hybrid login / onboarding) */
+        post: operations["authOAuthCallback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/oauth/onboarding": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Preview OAuth onboarding session */
+        get: operations["authOAuthOnboardingPreview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/oauth/complete-registration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Complete OAuth registration with Organization name */
+        post: operations["authOAuthCompleteRegistration"];
         delete?: never;
         options?: never;
         head?: never;
@@ -873,6 +1092,86 @@ export interface components {
             /** Format: email */
             email: string;
             password: string;
+            /** @description Opaque client device identifier. When it matches a device previously trusted via POST /api/v1/auth/mfa/verify, the MFA challenge is skipped for 30 days. */
+            device_id?: string;
+        };
+        LoginSuccessEnvelope: components["schemas"]["SuccessEnvelope"] & {
+            data?: {
+                access_token: string;
+                refresh_token: string;
+                user: Record<string, never>;
+            };
+        };
+        MFAChallengeEnvelope: components["schemas"]["SuccessEnvelope"] & {
+            data?: {
+                /** @constant */
+                mfa_required: true;
+                /** @description Single-use challenge token, valid for 5 minutes */
+                mfa_token: string;
+            };
+        };
+        MFAVerifyRequest: {
+            mfa_token: string;
+            /** @description 6-digit TOTP code (mutually exclusive with recovery_code) */
+            code?: string;
+            /** @description Single-use recovery code, format xxxx-xxxx-xxxx */
+            recovery_code?: string;
+            device_id?: string;
+            /** @description Remember device_id for 30 days so future logins skip the challenge */
+            trust_device?: boolean;
+        };
+        MFASetupEnvelope: components["schemas"]["SuccessEnvelope"] & {
+            data?: {
+                /** @description Base32 TOTP secret (shown once) */
+                secret: string;
+                /** @description otpauth:// URL for QR enrollment (shown once) */
+                otpauth_url: string;
+                /** @description Single-use recovery codes (shown once) */
+                recovery_codes: string[];
+                warning?: string;
+            };
+        };
+        MFAEnableRequest: {
+            /** @description 6-digit TOTP code from the authenticator app */
+            code: string;
+        };
+        MFADisableRequest: {
+            password: string;
+        };
+        ForgotPasswordRequest: {
+            /** Format: email */
+            email: string;
+        };
+        ResetPasswordRequest: {
+            /** @description One-time reset token from the emailed link */
+            token: string;
+            password: string;
+        };
+        RequestEmailVerificationRequest: {
+            /** Format: email */
+            email: string;
+        };
+        VerifyEmailRequest: {
+            /** Format: email */
+            email: string;
+            /** @description 6-digit numeric verification code */
+            code: string;
+        };
+        OAuthCallbackRequest: {
+            /** @enum {string} */
+            provider: "google" | "microsoft" | "github";
+            code: string;
+            code_verifier: string;
+            /** Format: uri */
+            redirect_uri: string;
+        };
+        OAuthCompleteRegistrationRequest: {
+            onboarding_token: string;
+            organization_name: string;
+            /** @default default */
+            workspace_name: string;
+            /** @default production */
+            environment: string;
         };
         RegisterConnectorRequest: {
             /**
@@ -1207,7 +1506,82 @@ export interface operations {
             };
         };
         responses: {
+            /** @description Logged in, or MFA challenge issued */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginSuccessEnvelope"] | components["schemas"]["MFAChallengeEnvelope"];
+                };
+            };
+            401: components["responses"]["Error"];
+        };
+    };
+    authMFAVerify: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MFAVerifyRequest"];
+            };
+        };
+        responses: {
             /** @description Logged in */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginSuccessEnvelope"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    authMFASetup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Enrollment started */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MFASetupEnvelope"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    authMFAEnable: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MFAEnableRequest"];
+            };
+        };
+        responses: {
+            /** @description MFA enabled */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -1216,7 +1590,36 @@ export interface operations {
                     "application/json": components["schemas"]["SuccessEnvelope"];
                 };
             };
+            400: components["responses"]["Error"];
             401: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    authMFADisable: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MFADisableRequest"];
+            };
+        };
+        responses: {
+            /** @description MFA disabled */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            409: components["responses"]["Error"];
         };
     };
     authLogout: {
@@ -1242,6 +1645,206 @@ export interface operations {
                 content?: never;
             };
             400: components["responses"]["Error"];
+        };
+    };
+    authForgotPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ForgotPasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Generic success (never reveals if the email exists) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"];
+                };
+            };
+            400: components["responses"]["Error"];
+        };
+    };
+    authResetPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetPasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Password updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"];
+                };
+            };
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    authRequestEmailVerification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RequestEmailVerificationRequest"];
+            };
+        };
+        responses: {
+            /** @description Generic success (never reveals if the email exists) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"];
+                };
+            };
+            400: components["responses"]["Error"];
+        };
+    };
+    authVerifyEmail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyEmailRequest"];
+            };
+        };
+        responses: {
+            /** @description Email verified */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"];
+                };
+            };
+            400: components["responses"]["Error"];
+        };
+    };
+    authOAuthProviders: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Configured providers */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"];
+                };
+            };
+        };
+    };
+    authOAuthCallback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OAuthCallbackRequest"];
+            };
+        };
+        responses: {
+            /** @description Authenticated or onboarding required */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    authOAuthOnboardingPreview: {
+        parameters: {
+            query?: {
+                token?: string;
+            };
+            header?: {
+                "X-OAuth-Onboarding-Token"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Onboarding preview */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"];
+                };
+            };
+            401: components["responses"]["Error"];
+        };
+    };
+    authOAuthCompleteRegistration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OAuthCompleteRegistrationRequest"];
+            };
+        };
+        responses: {
+            /** @description Registered and logged in */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            409: components["responses"]["Error"];
         };
     };
     getOrganization: {

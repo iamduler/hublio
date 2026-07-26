@@ -11,6 +11,7 @@ import (
 )
 
 type Querier interface {
+	DeleteUserMFA(ctx context.Context, userID uuid.UUID) error
 	GetAPIKeyByID(ctx context.Context, id uuid.UUID) (ApiKey, error)
 	GetAPIKeyByPrefix(ctx context.Context, prefix string) (ApiKey, error)
 	GetActiveCredentialByConnection(ctx context.Context, connectionID uuid.UUID) (Credential, error)
@@ -22,12 +23,14 @@ type Querier interface {
 	GetExecutionByIntentID(ctx context.Context, intentID uuid.UUID) (Execution, error)
 	GetIdempotencyKeyByOrgWorkspaceKey(ctx context.Context, arg GetIdempotencyKeyByOrgWorkspaceKeyParams) (IdempotencyKey, error)
 	GetIntentByID(ctx context.Context, id uuid.UUID) (Intent, error)
+	GetOAuthIdentityByProviderSubject(ctx context.Context, arg GetOAuthIdentityByProviderSubjectParams) (UserOauthIdentity, error)
 	GetOrganizationByID(ctx context.Context, id uuid.UUID) (Organization, error)
 	GetOrganizationByName(ctx context.Context, name string) (Organization, error)
 	GetSyncRouteByID(ctx context.Context, id uuid.UUID) (SyncRoute, error)
 	GetSyncRouteWatermark(ctx context.Context, arg GetSyncRouteWatermarkParams) (SyncRouteWatermark, error)
-	GetUserByEmail(ctx context.Context, email string) (User, error)
-	GetUserByID(ctx context.Context, id uuid.UUID) (User, error)
+	GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error)
+	GetUserByID(ctx context.Context, id uuid.UUID) (GetUserByIDRow, error)
+	GetUserMFA(ctx context.Context, userID uuid.UUID) (UserMfa, error)
 	GetWorkspaceByID(ctx context.Context, id uuid.UUID) (Workspace, error)
 	GetWorkspaceUser(ctx context.Context, arg GetWorkspaceUserParams) (WorkspaceUser, error)
 	InsertAPIKey(ctx context.Context, arg InsertAPIKeyParams) error
@@ -43,6 +46,7 @@ type Querier interface {
 	InsertExecutionTimeline(ctx context.Context, arg InsertExecutionTimelineParams) error
 	InsertIdempotencyKey(ctx context.Context, arg InsertIdempotencyKeyParams) error
 	InsertIntent(ctx context.Context, arg InsertIntentParams) error
+	InsertOAuthIdentity(ctx context.Context, arg InsertOAuthIdentityParams) error
 	InsertOrganization(ctx context.Context, arg InsertOrganizationParams) error
 	InsertSyncRoute(ctx context.Context, arg InsertSyncRouteParams) error
 	InsertUser(ctx context.Context, arg InsertUserParams) error
@@ -74,11 +78,14 @@ type Querier interface {
 	UpdateExecution(ctx context.Context, arg UpdateExecutionParams) error
 	UpdateExecutionStep(ctx context.Context, arg UpdateExecutionStepParams) error
 	UpdateIntent(ctx context.Context, arg UpdateIntentParams) error
+	UpdateOAuthIdentity(ctx context.Context, arg UpdateOAuthIdentityParams) error
 	UpdateOrganization(ctx context.Context, arg UpdateOrganizationParams) error
 	UpdateSyncRoute(ctx context.Context, arg UpdateSyncRouteParams) error
 	UpdateUser(ctx context.Context, arg UpdateUserParams) error
+	UpdateUserMFA(ctx context.Context, arg UpdateUserMFAParams) error
 	UpdateWorkspace(ctx context.Context, arg UpdateWorkspaceParams) error
 	UpsertSyncRouteWatermark(ctx context.Context, arg UpsertSyncRouteWatermarkParams) error
+	UpsertUserMFA(ctx context.Context, arg UpsertUserMFAParams) error
 }
 
 var _ Querier = (*Queries)(nil)

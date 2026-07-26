@@ -113,6 +113,12 @@ Enum user_status {
   archived
 }
 
+Enum oauth_provider {
+  google
+  microsoft
+  github
+}
+
 Enum api_key_status {
   active
   disabled
@@ -260,8 +266,9 @@ Table users {
   email varchar(255)
   full_name varchar(255)
   is_active boolean
+  is_platform_admin boolean [default: false, note: 'Platform console admin; OAuth forbidden']
 
-  password_hash varchar(255)
+  password_hash varchar(255) [null, note: 'NULL for OAuth-only tenant users']
   email_verified_at timestamptz
   password_changed_at timestamptz
   last_login_at timestamptz
@@ -274,6 +281,40 @@ Table users {
   indexes {
     email [unique]
   }
+}
+
+Table user_oauth_identities {
+  id uuid [pk]
+  user_id uuid
+  provider oauth_provider
+  provider_subject varchar(255)
+  email varchar(255)
+  linked_at timestamptz
+  last_login_at timestamptz
+  created_at timestamptz
+  updated_at timestamptz
+
+  indexes {
+    (provider, provider_subject) [unique]
+    (user_id, provider) [unique]
+  }
+
+  Note: 'Linked IdP identity for tenant users (Google/Microsoft/GitHub). Not a Runtime Aggregate.'
+}
+
+Table user_mfa {
+  user_id uuid [pk]
+  totp_secret_encrypted text [note: 'AES-GCM ciphertext of the TOTP shared secret']
+  enabled_at timestamptz [null, note: 'NULL = enrollment pending / MFA not enabled']
+  recovery_codes_hash jsonb [default: `'[]'`, note: 'Array of bcrypt hashes of unused recovery codes']
+  created_at timestamptz
+  updated_at timestamptz
+
+  indexes {
+    enabled_at
+  }
+
+  Note: 'Per-user TOTP/2FA configuration. Not a Runtime Aggregate.'
 }
 
 Table workspace_users {
@@ -737,6 +778,8 @@ Ref: workspaces.organization_id > organizations.id
 Ref: users.organization_id > organizations.id
 Ref: workspace_users.workspace_id > workspaces.id
 Ref: workspace_users.user_id > users.id
+Ref: user_oauth_identities.user_id > users.id
+Ref: user_mfa.user_id - users.id
 Ref: api_keys.workspace_id > workspaces.id
 Ref: connections.active_credential_id > credentials.id
 Ref: events.organization_id > organizations.id

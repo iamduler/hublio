@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { ThemeSwitcher } from "@/components/theme-switcher";
-import { Button } from "@hublio/ui/ui/button";
+import { buttonVariants } from "@hublio/ui/ui/button";
 
 export function AppTopBar() {
   const t = useTranslations("common");
@@ -18,9 +18,12 @@ export function AppTopBar() {
         <div className="flex items-center gap-2">
           <ThemeSwitcher variant="topbar" />
           <LocaleSwitcher variant="topbar" />
-          <Button asChild size="sm" variant="default">
-            <Link href="/login">{t("nav.signIn")}</Link>
-          </Button>
+          <Link
+            href="/login"
+            className={buttonVariants({ size: "sm", variant: "default" })}
+          >
+            {t("nav.signIn")}
+          </Link>
         </div>
       </div>
     </header>

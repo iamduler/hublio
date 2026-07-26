@@ -13,7 +13,7 @@ export default function AuthLayout({
         <ThemeSwitcher variant="auth" />
         <LocaleSwitcher variant="auth" />
       </div>
-      <div className="flex flex-1 items-center justify-center px-4 pb-16">
+      <div className="flex flex-1 items-center justify-center px-4 pb-8">
         <RedirectIfAuthenticated>{children}</RedirectIfAuthenticated>
       </div>
     </div>

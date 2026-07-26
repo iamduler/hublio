@@ -201,14 +201,24 @@ func mapDomainErr(err error) error {
 		errors.Is(err, domain.ErrInvalidEmail),
 		errors.Is(err, domain.ErrInvalidPassword),
 		errors.Is(err, domain.ErrInvalidEnvironment),
-		errors.Is(err, domain.ErrInvalidRole):
+		errors.Is(err, domain.ErrInvalidRole),
+		errors.Is(err, domain.ErrInvalidOAuthProvider),
+		errors.Is(err, domain.ErrInvalidOAuthIdentity),
+		errors.Is(err, domain.ErrInvalidMFAConfig):
 		return apperr.Wrap(err, err.Error(), apperr.ErrCodeBadRequest)
+	case errors.Is(err, domain.ErrInvalidMFACode):
+		return apperr.Wrap(err, "invalid mfa code", apperr.ErrCodeUnauthorized)
+	case errors.Is(err, domain.ErrOAuthEmailUnverified),
+		errors.Is(err, domain.ErrOAuthPlatformAdmin):
+		return apperr.Wrap(err, err.Error(), apperr.ErrCodeForbidden)
 	case errors.Is(err, domain.ErrInvalidTransition),
 		errors.Is(err, domain.ErrOrganizationBlocked),
 		errors.Is(err, domain.ErrWorkspaceDisabled),
 		errors.Is(err, domain.ErrUserCannotLogin),
 		errors.Is(err, domain.ErrAPIKeyDisabled),
-		errors.Is(err, domain.ErrAPIKeyExpired):
+		errors.Is(err, domain.ErrAPIKeyExpired),
+		errors.Is(err, domain.ErrMFAAlreadyEnabled),
+		errors.Is(err, domain.ErrMFANotEnabled):
 		return apperr.Wrap(err, err.Error(), apperr.ErrCodeConflict)
 	default:
 		return apperr.Wrap(err, "domain error", apperr.ErrCodeBadRequest)

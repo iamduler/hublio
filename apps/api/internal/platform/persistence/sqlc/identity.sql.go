@@ -13,6 +13,16 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const deleteUserMFA = `-- name: DeleteUserMFA :exec
+DELETE FROM user_mfa
+WHERE user_id = $1
+`
+
+func (q *Queries) DeleteUserMFA(ctx context.Context, userID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteUserMFA, userID)
+	return err
+}
+
 const getAPIKeyByID = `-- name: GetAPIKeyByID :one
 SELECT id, workspace_id, name, key_hash, last_used_at, expires_at, status, prefix,
        last_used_ip, last_used_user_agent, created_at, updated_at, deleted_at
@@ -69,6 +79,34 @@ func (q *Queries) GetAPIKeyByPrefix(ctx context.Context, prefix string) (ApiKey,
 	return i, err
 }
 
+const getOAuthIdentityByProviderSubject = `-- name: GetOAuthIdentityByProviderSubject :one
+SELECT id, user_id, provider, provider_subject, email, linked_at, last_login_at, created_at, updated_at
+FROM user_oauth_identities
+WHERE provider = $1 AND provider_subject = $2
+`
+
+type GetOAuthIdentityByProviderSubjectParams struct {
+	Provider        string `json:"provider"`
+	ProviderSubject string `json:"provider_subject"`
+}
+
+func (q *Queries) GetOAuthIdentityByProviderSubject(ctx context.Context, arg GetOAuthIdentityByProviderSubjectParams) (UserOauthIdentity, error) {
+	row := q.db.QueryRow(ctx, getOAuthIdentityByProviderSubject, arg.Provider, arg.ProviderSubject)
+	var i UserOauthIdentity
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Provider,
+		&i.ProviderSubject,
+		&i.Email,
+		&i.LinkedAt,
+		&i.LastLoginAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getOrganizationByID = `-- name: GetOrganizationByID :one
 SELECT id, name, status, created_at, updated_at, deleted_at
 FROM organizations
@@ -110,22 +148,40 @@ func (q *Queries) GetOrganizationByName(ctx context.Context, name string) (Organ
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, organization_id, email, full_name, is_active, password_hash,
+SELECT id, organization_id, email, full_name, is_active, is_platform_admin, password_hash,
        email_verified_at, password_changed_at, last_login_at, status,
        created_at, updated_at, deleted_at
 FROM users
 WHERE email = $1 AND deleted_at IS NULL
 `
 
-func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
+type GetUserByEmailRow struct {
+	ID                uuid.UUID          `json:"id"`
+	OrganizationID    uuid.UUID          `json:"organization_id"`
+	Email             string             `json:"email"`
+	FullName          string             `json:"full_name"`
+	IsActive          bool               `json:"is_active"`
+	IsPlatformAdmin   bool               `json:"is_platform_admin"`
+	PasswordHash      *string            `json:"password_hash"`
+	EmailVerifiedAt   pgtype.Timestamptz `json:"email_verified_at"`
+	PasswordChangedAt pgtype.Timestamptz `json:"password_changed_at"`
+	LastLoginAt       pgtype.Timestamptz `json:"last_login_at"`
+	Status            string             `json:"status"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt         pgtype.Timestamptz `json:"deleted_at"`
+}
+
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error) {
 	row := q.db.QueryRow(ctx, getUserByEmail, email)
-	var i User
+	var i GetUserByEmailRow
 	err := row.Scan(
 		&i.ID,
 		&i.OrganizationID,
 		&i.Email,
 		&i.FullName,
 		&i.IsActive,
+		&i.IsPlatformAdmin,
 		&i.PasswordHash,
 		&i.EmailVerifiedAt,
 		&i.PasswordChangedAt,
@@ -139,22 +195,40 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, organization_id, email, full_name, is_active, password_hash,
+SELECT id, organization_id, email, full_name, is_active, is_platform_admin, password_hash,
        email_verified_at, password_changed_at, last_login_at, status,
        created_at, updated_at, deleted_at
 FROM users
 WHERE id = $1 AND deleted_at IS NULL
 `
 
-func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
+type GetUserByIDRow struct {
+	ID                uuid.UUID          `json:"id"`
+	OrganizationID    uuid.UUID          `json:"organization_id"`
+	Email             string             `json:"email"`
+	FullName          string             `json:"full_name"`
+	IsActive          bool               `json:"is_active"`
+	IsPlatformAdmin   bool               `json:"is_platform_admin"`
+	PasswordHash      *string            `json:"password_hash"`
+	EmailVerifiedAt   pgtype.Timestamptz `json:"email_verified_at"`
+	PasswordChangedAt pgtype.Timestamptz `json:"password_changed_at"`
+	LastLoginAt       pgtype.Timestamptz `json:"last_login_at"`
+	Status            string             `json:"status"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt         pgtype.Timestamptz `json:"deleted_at"`
+}
+
+func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (GetUserByIDRow, error) {
 	row := q.db.QueryRow(ctx, getUserByID, id)
-	var i User
+	var i GetUserByIDRow
 	err := row.Scan(
 		&i.ID,
 		&i.OrganizationID,
 		&i.Email,
 		&i.FullName,
 		&i.IsActive,
+		&i.IsPlatformAdmin,
 		&i.PasswordHash,
 		&i.EmailVerifiedAt,
 		&i.PasswordChangedAt,
@@ -163,6 +237,26 @@ func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+	)
+	return i, err
+}
+
+const getUserMFA = `-- name: GetUserMFA :one
+SELECT user_id, totp_secret_encrypted, enabled_at, recovery_codes_hash, created_at, updated_at
+FROM user_mfa
+WHERE user_id = $1
+`
+
+func (q *Queries) GetUserMFA(ctx context.Context, userID uuid.UUID) (UserMfa, error) {
+	row := q.db.QueryRow(ctx, getUserMFA, userID)
+	var i UserMfa
+	err := row.Scan(
+		&i.UserID,
+		&i.TotpSecretEncrypted,
+		&i.EnabledAt,
+		&i.RecoveryCodesHash,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -257,6 +351,41 @@ func (q *Queries) InsertAPIKey(ctx context.Context, arg InsertAPIKeyParams) erro
 	return err
 }
 
+const insertOAuthIdentity = `-- name: InsertOAuthIdentity :exec
+INSERT INTO user_oauth_identities (
+  id, user_id, provider, provider_subject, email, linked_at, last_login_at, created_at, updated_at
+) VALUES (
+  $1, $2, $3, $4, $5, $6, $7, $8, $9
+)
+`
+
+type InsertOAuthIdentityParams struct {
+	ID              uuid.UUID          `json:"id"`
+	UserID          uuid.UUID          `json:"user_id"`
+	Provider        string             `json:"provider"`
+	ProviderSubject string             `json:"provider_subject"`
+	Email           string             `json:"email"`
+	LinkedAt        pgtype.Timestamptz `json:"linked_at"`
+	LastLoginAt     pgtype.Timestamptz `json:"last_login_at"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) InsertOAuthIdentity(ctx context.Context, arg InsertOAuthIdentityParams) error {
+	_, err := q.db.Exec(ctx, insertOAuthIdentity,
+		arg.ID,
+		arg.UserID,
+		arg.Provider,
+		arg.ProviderSubject,
+		arg.Email,
+		arg.LinkedAt,
+		arg.LastLoginAt,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+	)
+	return err
+}
+
 const insertOrganization = `-- name: InsertOrganization :exec
 INSERT INTO organizations (id, name, status, created_at, updated_at, deleted_at)
 VALUES ($1, $2, $3, $4, $5, $6)
@@ -285,13 +414,13 @@ func (q *Queries) InsertOrganization(ctx context.Context, arg InsertOrganization
 
 const insertUser = `-- name: InsertUser :exec
 INSERT INTO users (
-  id, organization_id, email, full_name, is_active, password_hash,
+  id, organization_id, email, full_name, is_active, is_platform_admin, password_hash,
   email_verified_at, password_changed_at, last_login_at, status,
   created_at, updated_at, deleted_at
 ) VALUES (
-  $1, $2, $3, $4, $5, $6,
-  $7, $8, $9, $10,
-  $11, $12, $13
+  $1, $2, $3, $4, $5, $6, $7,
+  $8, $9, $10, $11,
+  $12, $13, $14
 )
 `
 
@@ -301,7 +430,8 @@ type InsertUserParams struct {
 	Email             string             `json:"email"`
 	FullName          string             `json:"full_name"`
 	IsActive          bool               `json:"is_active"`
-	PasswordHash      string             `json:"password_hash"`
+	IsPlatformAdmin   bool               `json:"is_platform_admin"`
+	PasswordHash      *string            `json:"password_hash"`
 	EmailVerifiedAt   pgtype.Timestamptz `json:"email_verified_at"`
 	PasswordChangedAt pgtype.Timestamptz `json:"password_changed_at"`
 	LastLoginAt       pgtype.Timestamptz `json:"last_login_at"`
@@ -318,6 +448,7 @@ func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) error {
 		arg.Email,
 		arg.FullName,
 		arg.IsActive,
+		arg.IsPlatformAdmin,
 		arg.PasswordHash,
 		arg.EmailVerifiedAt,
 		arg.PasswordChangedAt,
@@ -589,6 +720,31 @@ func (q *Queries) UpdateAPIKey(ctx context.Context, arg UpdateAPIKeyParams) erro
 	return err
 }
 
+const updateOAuthIdentity = `-- name: UpdateOAuthIdentity :exec
+UPDATE user_oauth_identities
+SET email = $2,
+    last_login_at = $3,
+    updated_at = $4
+WHERE id = $1
+`
+
+type UpdateOAuthIdentityParams struct {
+	ID          uuid.UUID          `json:"id"`
+	Email       string             `json:"email"`
+	LastLoginAt pgtype.Timestamptz `json:"last_login_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) UpdateOAuthIdentity(ctx context.Context, arg UpdateOAuthIdentityParams) error {
+	_, err := q.db.Exec(ctx, updateOAuthIdentity,
+		arg.ID,
+		arg.Email,
+		arg.LastLoginAt,
+		arg.UpdatedAt,
+	)
+	return err
+}
+
 const updateOrganization = `-- name: UpdateOrganization :exec
 UPDATE organizations
 SET name = $2,
@@ -622,22 +778,26 @@ UPDATE users
 SET full_name = $2,
     is_active = $3,
     password_hash = $4,
-    last_login_at = $5,
-    status = $6,
-    updated_at = $7,
-    deleted_at = $8
+    email_verified_at = $5,
+    password_changed_at = $6,
+    last_login_at = $7,
+    status = $8,
+    updated_at = $9,
+    deleted_at = $10
 WHERE id = $1
 `
 
 type UpdateUserParams struct {
-	ID           uuid.UUID          `json:"id"`
-	FullName     string             `json:"full_name"`
-	IsActive     bool               `json:"is_active"`
-	PasswordHash string             `json:"password_hash"`
-	LastLoginAt  pgtype.Timestamptz `json:"last_login_at"`
-	Status       string             `json:"status"`
-	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
-	DeletedAt    pgtype.Timestamptz `json:"deleted_at"`
+	ID                uuid.UUID          `json:"id"`
+	FullName          string             `json:"full_name"`
+	IsActive          bool               `json:"is_active"`
+	PasswordHash      *string            `json:"password_hash"`
+	EmailVerifiedAt   pgtype.Timestamptz `json:"email_verified_at"`
+	PasswordChangedAt pgtype.Timestamptz `json:"password_changed_at"`
+	LastLoginAt       pgtype.Timestamptz `json:"last_login_at"`
+	Status            string             `json:"status"`
+	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt         pgtype.Timestamptz `json:"deleted_at"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
@@ -646,10 +806,40 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
 		arg.FullName,
 		arg.IsActive,
 		arg.PasswordHash,
+		arg.EmailVerifiedAt,
+		arg.PasswordChangedAt,
 		arg.LastLoginAt,
 		arg.Status,
 		arg.UpdatedAt,
 		arg.DeletedAt,
+	)
+	return err
+}
+
+const updateUserMFA = `-- name: UpdateUserMFA :exec
+UPDATE user_mfa
+SET totp_secret_encrypted = $2,
+    enabled_at = $3,
+    recovery_codes_hash = $4,
+    updated_at = $5
+WHERE user_id = $1
+`
+
+type UpdateUserMFAParams struct {
+	UserID              uuid.UUID          `json:"user_id"`
+	TotpSecretEncrypted string             `json:"totp_secret_encrypted"`
+	EnabledAt           pgtype.Timestamptz `json:"enabled_at"`
+	RecoveryCodesHash   []byte             `json:"recovery_codes_hash"`
+	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) UpdateUserMFA(ctx context.Context, arg UpdateUserMFAParams) error {
+	_, err := q.db.Exec(ctx, updateUserMFA,
+		arg.UserID,
+		arg.TotpSecretEncrypted,
+		arg.EnabledAt,
+		arg.RecoveryCodesHash,
+		arg.UpdatedAt,
 	)
 	return err
 }
@@ -681,6 +871,40 @@ func (q *Queries) UpdateWorkspace(ctx context.Context, arg UpdateWorkspaceParams
 		arg.Status,
 		arg.UpdatedAt,
 		arg.DeletedAt,
+	)
+	return err
+}
+
+const upsertUserMFA = `-- name: UpsertUserMFA :exec
+INSERT INTO user_mfa (
+  user_id, totp_secret_encrypted, enabled_at, recovery_codes_hash, created_at, updated_at
+) VALUES (
+  $1, $2, $3, $4, $5, $6
+)
+ON CONFLICT (user_id) DO UPDATE
+SET totp_secret_encrypted = EXCLUDED.totp_secret_encrypted,
+    enabled_at = EXCLUDED.enabled_at,
+    recovery_codes_hash = EXCLUDED.recovery_codes_hash,
+    updated_at = EXCLUDED.updated_at
+`
+
+type UpsertUserMFAParams struct {
+	UserID              uuid.UUID          `json:"user_id"`
+	TotpSecretEncrypted string             `json:"totp_secret_encrypted"`
+	EnabledAt           pgtype.Timestamptz `json:"enabled_at"`
+	RecoveryCodesHash   []byte             `json:"recovery_codes_hash"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) UpsertUserMFA(ctx context.Context, arg UpsertUserMFAParams) error {
+	_, err := q.db.Exec(ctx, upsertUserMFA,
+		arg.UserID,
+		arg.TotpSecretEncrypted,
+		arg.EnabledAt,
+		arg.RecoveryCodesHash,
+		arg.CreatedAt,
+		arg.UpdatedAt,
 	)
 	return err
 }

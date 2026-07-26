@@ -52,8 +52,6 @@ func (m *MailtrapProvider) SendMail(ctx context.Context, email *Email) error {
 	traceId := logging.GetTraceID(ctx)
 	start := time.Now()
 
-	time.Sleep(10 * time.Second)
-
 	email.From = Address{
 		Name:  m.config.NameSender,
 		Email: m.config.MailSender,
