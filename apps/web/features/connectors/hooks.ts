@@ -28,8 +28,11 @@ export function useToggleConnector() {
   return useMutation({
     mutationFn: ({ id, enable }: { id: string; enable: boolean }) =>
       enable ? connectorsApi.enable(id) : connectorsApi.disable(id),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.connectors() });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.connector(variables.id),
+      });
     },
   });
 }

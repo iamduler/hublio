@@ -3,11 +3,17 @@
   "subtitle": "Định tuyến sự kiện nguồn tới hệ thống đích.",
   "create": "Sync route mới",
   "createSubtitle": "Phân phối từ connection nguồn tới các đích.",
+  "edit": "Sửa sync route",
+  "editSubtitle": "Cập nhật cấu hình (tắt route trước nếu đang bật).",
+  "editBlockedTitle": "Không sửa được khi đang bật",
+  "editBlockedBody": "Tắt sync route trước khi sửa cấu hình.",
   "empty": "Chưa có sync route nào.",
   "emptyBody": "Tạo sync route để tự động hoá tích hợp.",
   "loadError": "Không thể tải sync route.",
   "created": "Đã tạo sync route.",
+  "updated": "Đã cập nhật sync route.",
   "deleted": "Đã xoá sync route.",
+  "pollNeedResource": "Chọn hoặc nhập loại tài nguyên để poll.",
   "columns": {
     "name": "Tên",
     "trigger": "Kích hoạt",
@@ -21,13 +27,18 @@
     "selectConnection": "Chọn connection",
     "resourceTypes": "Loại tài nguyên",
     "resourceTypesHint": "ngăn cách bằng dấu phẩy, ví dụ: order, invoice",
+    "resourceType": "Loại tài nguyên",
     "destinationStep": "Bước đích",
     "destination": "Connection đích",
     "capability": "Khả năng",
     "cancel": "Huỷ",
-    "submit": "Tạo sync route"
+    "submit": "Tạo sync route",
+    "submitEdit": "Lưu thay đổi"
   },
   "actions": {
+    "edit": "Sửa",
+    "poll": "Poll ngay",
+    "pollDone": "Đã chạy poll.",
     "enable": "Bật",
     "disable": "Tắt",
     "delete": "Xoá",
@@ -41,5 +52,11 @@
   "webhookSecret": "Webhook secret",
   "secretOnce": "Sao chép secret ngay — chỉ hiển thị một lần.",
   "watermarks": "Watermark",
-  "noWatermarks": "Chưa ghi nhận watermark nào."
+  "noWatermarks": "Chưa ghi nhận watermark nào.",
+  "watermarkAdd": "Thêm watermark",
+  "watermarkEdit": "Sửa",
+  "watermarkSave": "Lưu cursor",
+  "watermarkSaved": "Đã lưu watermark.",
+  "watermarkCursor": "Cursor (JSON)",
+  "watermarkCursorInvalid": "Cursor phải là JSON hợp lệ."
 }

@@ -2,7 +2,8 @@
 
 > Tracking sheet for the User Workspace phase.  
 > Legend: `[x]` done · `[~]` partial / stub · `[ ]` not started  
-> Last reviewed against codebase: 2026-07-25
+> Last reviewed against codebase: 2026-07-29  
+> API wiring detail: [API_WIRING_CHECKLIST.md](./API_WIRING_CHECKLIST.md)
 
 ---
 
@@ -79,28 +80,27 @@ httpOnly JWT proxy — browser never holds tokens or workspace API keys.
 
 ### Auth
 
-- [x] Login / register (wired to Go API)
-- [~] Forgot password — UI stub only (no backend endpoint)
-- [~] Verify email — UI stub only (no backend endpoint)
-- [ ] Reset password screen
-- [ ] MFA / OTP screen
+- [x] Login / register (wired to Go API via `/api/auth/*`)
+- [x] Forgot password + reset password (`/forgot-password`, `/reset-password?token=`)
+- [x] Verify email (`/verify-email`; register redirects here)
+- [x] MFA challenge on login + enroll/disable in Settings → Security
 
 ### Onboarding / workspaces
 
 - [x] Create workspace (`/dashboard/workspaces/new`)
 - [x] Workspace settings: enable / disable
-- [ ] Dedicated create-org onboarding flow (register already creates org)
-- [ ] Invite-team onboarding step + “complete” screen
+- [x] Onboarding wizard: org → workspace → invite (Skip) → complete
+- [x] Routes: `/onboarding/organization|workspace|invite|complete`
 
 ### Dashboard
 
 - [x] Overview KPIs (connections / connectors / sync routes / events)
-- [x] Recent activity feed from `GET /events` via BFF
+- [x] Recent activity feed from `GET /events` via JWT proxy
 
 ### Connectors
 
 - [x] Connector list + detail (capabilities)
-- [ ] Enable / disable connector actions in UI (API hooks exist)
+- [x] Enable / disable connector actions in UI
 - [ ] Public marketplace catalog (Admin-phase / no backend)
 
 ### Connections
@@ -113,9 +113,11 @@ httpOnly JWT proxy — browser never holds tokens or workspace API keys.
 ### Sync Routes
 
 - [x] List / create (single destination step) / detail
-- [x] Enable / disable / delete / rotate webhook secret / watermarks
+- [x] Enable / disable / delete / rotate webhook secret / watermarks GET
+- [x] PATCH edit existing route (`/sync-routes/[id]/edit`, draft|disabled only)
+- [x] Poll now button → `POST /sync-routes/:id/poll`
+- [x] Watermark editor UI → `PUT watermarks/:resourceType`
 - [ ] Multi-step / parallel activity editor
-- [ ] PATCH edit existing route
 
 ### Intents
 
@@ -132,7 +134,7 @@ httpOnly JWT proxy — browser never holds tokens or workspace API keys.
 ### Events
 
 - [x] Explorer table + payload inspector dialog
-- [ ] Filter by execution / category in UI
+- [x] Filter by execution ID (API) + category (client-side)
 - [ ] Replay event screen (no backend)
 
 ### API Keys / credentials
@@ -149,8 +151,9 @@ httpOnly JWT proxy — browser never holds tokens or workspace API keys.
 ### Workspace settings
 
 - [x] General: name / environment / status + enable/disable
+- [x] Security tab (MFA enroll / disable)
 - [ ] Members & roles tab (blocked on list-members)
-- [ ] Security / usage & billing tabs (no backend)
+- [ ] Usage & billing tabs (no backend)
 
 ---
 

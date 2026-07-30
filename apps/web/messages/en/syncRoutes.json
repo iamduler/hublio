@@ -3,11 +3,17 @@
   "subtitle": "Route source events to destination systems.",
   "create": "New sync route",
   "createSubtitle": "Fan out from a source connection to destinations.",
+  "edit": "Edit sync route",
+  "editSubtitle": "Update route configuration (disable first if currently enabled).",
+  "editBlockedTitle": "Cannot edit while enabled",
+  "editBlockedBody": "Disable the sync route before editing its configuration.",
   "empty": "No sync routes yet.",
   "emptyBody": "Create a sync route to automate integrations.",
   "loadError": "Could not load sync routes.",
   "created": "Sync route created.",
+  "updated": "Sync route updated.",
   "deleted": "Sync route deleted.",
+  "pollNeedResource": "Select or enter a resource type to poll.",
   "columns": {
     "name": "Name",
     "trigger": "Trigger",
@@ -21,13 +27,18 @@
     "selectConnection": "Select a connection",
     "resourceTypes": "Resource types",
     "resourceTypesHint": "comma-separated, e.g. order, invoice",
+    "resourceType": "Resource type",
     "destinationStep": "Destination step",
     "destination": "Destination connection",
     "capability": "Capability",
     "cancel": "Cancel",
-    "submit": "Create sync route"
+    "submit": "Create sync route",
+    "submitEdit": "Save changes"
   },
   "actions": {
+    "edit": "Edit",
+    "poll": "Poll now",
+    "pollDone": "Poll completed.",
     "enable": "Enable",
     "disable": "Disable",
     "delete": "Delete",
@@ -41,5 +52,11 @@
   "webhookSecret": "Webhook secret",
   "secretOnce": "Copy this secret now — it is shown only once.",
   "watermarks": "Watermarks",
-  "noWatermarks": "No watermarks recorded yet."
+  "noWatermarks": "No watermarks recorded yet.",
+  "watermarkAdd": "Add watermark",
+  "watermarkEdit": "Edit",
+  "watermarkSave": "Save cursor",
+  "watermarkSaved": "Watermark saved.",
+  "watermarkCursor": "Cursor (JSON)",
+  "watermarkCursorInvalid": "Cursor must be valid JSON."
 }

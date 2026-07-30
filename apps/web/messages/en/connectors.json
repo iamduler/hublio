@@ -6,6 +6,15 @@
   "docs": "Documentation",
   "capabilities": "Capabilities",
   "noCapabilities": "No capabilities declared.",
+  "disableTitle": "Disable connector?",
+  "disableBody": "New connections cannot use this connector while it is disabled.",
+  "actions": {
+    "enable": "Enable",
+    "disable": "Disable",
+    "cancel": "Cancel",
+    "enableDone": "Connector enabled.",
+    "disableDone": "Connector disabled."
+  },
   "columns": {
     "name": "Name",
     "vendor": "Vendor",

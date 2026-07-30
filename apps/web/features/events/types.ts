@@ -18,5 +18,7 @@ export interface DomainEvent {
 
 export interface EventsQuery {
   execution_id?: string;
+  /** Client-side filter — backend list API does not yet accept category. */
+  category?: EventCategory | "all";
   limit?: number;
 }

@@ -6,10 +6,12 @@
 
 Related: [01-admin-workspace](./01-admin-workspace.md) · [02-user-workspace](./02-user-workspace.md)
 
-> **Status (2026-07-26): Foundation DONE** — optional A (httpOnly JWT + proxy),
+> **Status (2026-07-29): Foundation DONE** — optional A (httpOnly JWT + proxy),
 > optional B (Go JWT on orchestration/events), soft gaps, and SDK request-DTO
 > adoption all shipped and verified (Go tests + web build/lint/test green).
+> Docs UI path fix (spec walk-up from `apps/api`) also shipped.
 > Only remaining item is a manual login → run-intent smoke test (§5).
+> Next workstream: [02-user-workspace §2 gaps](./02-user-workspace.md).
 
 ---
 
@@ -85,5 +87,5 @@ Last run: 2026-07-26.
 ## 6. Follow-ups (ngoài scope foundation)
 
 - [ ] Manual e2e smoke (mục trên)
-- [ ] Wire gaps user workspace → [02-user-workspace §2](./02-user-workspace.md) (connector enable/disable, sync-route poll/PATCH, watermark editor, events filters)
+- [x] Wire gaps user workspace → [02-user-workspace §2](./02-user-workspace.md) — done 2026-07-29
 - [ ] Dọn legacy `lib/api/bff.ts` + `bff-client.ts` sau khi mọi feature dùng `/api/go`

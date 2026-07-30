@@ -6,6 +6,15 @@
   "docs": "Tài liệu",
   "capabilities": "Khả năng",
   "noCapabilities": "Chưa khai báo khả năng nào.",
+  "disableTitle": "Tắt connector?",
+  "disableBody": "Không thể dùng connector này cho connection mới khi đang tắt.",
+  "actions": {
+    "enable": "Bật",
+    "disable": "Tắt",
+    "cancel": "Huỷ",
+    "enableDone": "Đã bật connector.",
+    "disableDone": "Đã tắt connector."
+  },
   "columns": {
     "name": "Tên",
     "vendor": "Nhà cung cấp",

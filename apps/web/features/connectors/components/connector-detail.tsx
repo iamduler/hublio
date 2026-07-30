@@ -1,21 +1,25 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Power } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@hublio/ui/ui/card";
 import { Badge } from "@hublio/ui/ui/badge";
+import { Button } from "@hublio/ui/ui/button";
 import { StatusBadge } from "@hublio/ui/common/status-badge";
 import { PageHeader } from "@hublio/ui/common/page-header";
+import { ConfirmDialog } from "@hublio/ui/common/confirm-dialog";
 import { ErrorState } from "@hublio/ui/ui/error-state";
 import { LoadingState } from "@hublio/ui/ui/loading-state";
+import { toast } from "@/lib/toast";
 import { useApiErrorMessage } from "@/hooks/use-api-error";
-import { useConnector } from "../hooks";
+import { useConnector, useToggleConnector } from "../hooks";
 
 export function ConnectorDetail({ connectorId }: { connectorId: string }) {
   const t = useTranslations("connectors");
   const getError = useApiErrorMessage();
   const { data, isLoading, isError, error, refetch } =
     useConnector(connectorId);
+  const toggle = useToggleConnector();
 
   if (isLoading) return <LoadingState rows={4} />;
   if (isError || !data) {
@@ -26,6 +30,18 @@ export function ConnectorDetail({ connectorId }: { connectorId: string }) {
         onRetry={() => void refetch()}
       />
     );
+  }
+
+  const isEnabled = data.status === "enabled";
+  const canToggle = data.status === "enabled" || data.status === "disabled" || data.status === "registered";
+
+  async function runToggle(enable: boolean) {
+    try {
+      await toggle.mutateAsync({ id: connectorId, enable });
+      toast.success(t(enable ? "actions.enableDone" : "actions.disableDone"));
+    } catch (err) {
+      toast.error(getError(err));
+    }
   }
 
   return (
@@ -39,17 +55,51 @@ export function ConnectorDetail({ connectorId }: { connectorId: string }) {
         }
         description={data.description ?? data.code}
         actions={
-          data.documentation_url ? (
-            <a
-              href={data.documentation_url}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-1.5 text-sm text-primary no-underline hover:underline"
-            >
-              {t("docs")}
-              <ExternalLink size={14} />
-            </a>
-          ) : null
+          <div className="flex items-center gap-2">
+            {data.documentation_url ? (
+              <a
+                href={data.documentation_url}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-1.5 text-sm text-primary no-underline hover:underline"
+              >
+                {t("docs")}
+                <ExternalLink size={14} />
+              </a>
+            ) : null}
+            {canToggle ? (
+              isEnabled ? (
+                <ConfirmDialog
+                  trigger={
+                    <Button
+                      variant="danger-soft"
+                      size="sm"
+                      disabled={toggle.isPending}
+                    >
+                      <Power size={14} />
+                      {t("actions.disable")}
+                    </Button>
+                  }
+                  title={t("disableTitle")}
+                  description={t("disableBody")}
+                  confirmLabel={t("actions.disable")}
+                  cancelLabel={t("actions.cancel")}
+                  destructive
+                  pending={toggle.isPending}
+                  onConfirm={() => runToggle(false)}
+                />
+              ) : (
+                <Button
+                  size="sm"
+                  disabled={toggle.isPending}
+                  onClick={() => void runToggle(true)}
+                >
+                  <Power size={14} />
+                  {t("actions.enable")}
+                </Button>
+              )
+            ) : null}
+          </div>
         }
       />
 

@@ -8,7 +8,10 @@ import {
 import { queryKeys } from "@/lib/query-keys";
 import { useActiveWorkspaceId } from "@/providers/workspace-provider";
 import { syncRoutesApi } from "./api";
-import type { CreateSyncRoutePayload } from "./types";
+import type {
+  CreateSyncRoutePayload,
+  UpdateSyncRoutePayload,
+} from "./types";
 
 export function useSyncRoutes() {
   const workspaceId = useActiveWorkspaceId();
@@ -44,6 +47,24 @@ export function useCreateSyncRoute() {
   });
 }
 
+export function useUpdateSyncRoute(syncRouteId: string) {
+  const workspaceId = useActiveWorkspaceId();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: UpdateSyncRoutePayload) =>
+      syncRoutesApi.update(workspaceId!, syncRouteId, payload),
+    onSuccess: () => {
+      if (!workspaceId) return;
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.syncRoutes(workspaceId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.syncRoute(workspaceId, syncRouteId),
+      });
+    },
+  });
+}
+
 type Action = "enable" | "disable" | "remove" | "rotate";
 
 export function useSyncRouteAction() {
@@ -69,6 +90,56 @@ export function useSyncRouteAction() {
       });
       void queryClient.invalidateQueries({
         queryKey: queryKeys.syncRoute(workspaceId, variables.id),
+      });
+    },
+  });
+}
+
+export function usePollSyncRoute(syncRouteId: string) {
+  const workspaceId = useActiveWorkspaceId();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (resourceType: string) =>
+      syncRoutesApi.poll(syncRouteId, resourceType),
+    onSuccess: () => {
+      if (!workspaceId) return;
+      void queryClient.invalidateQueries({
+        queryKey: [
+          ...queryKeys.syncRoute(workspaceId, syncRouteId),
+          "watermarks",
+        ],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.events(workspaceId),
+      });
+    },
+  });
+}
+
+export function useUpsertSyncRouteWatermark(syncRouteId: string) {
+  const workspaceId = useActiveWorkspaceId();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      resourceType,
+      cursor,
+    }: {
+      resourceType: string;
+      cursor: Record<string, unknown>;
+    }) =>
+      syncRoutesApi.upsertWatermark(
+        workspaceId!,
+        syncRouteId,
+        resourceType,
+        cursor,
+      ),
+    onSuccess: () => {
+      if (!workspaceId) return;
+      void queryClient.invalidateQueries({
+        queryKey: [
+          ...queryKeys.syncRoute(workspaceId, syncRouteId),
+          "watermarks",
+        ],
       });
     },
   });

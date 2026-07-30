@@ -36,13 +36,19 @@ export type CreateSyncRoutePayload = Omit<
 
 export type UpdateSyncRoutePayload = Omit<
   Schemas["UpdateSyncRouteRequest"],
-  "schedule" | "filter" | "idempotency_rule" | "retry_policy" | "activities"
+  | "schedule"
+  | "filter"
+  | "idempotency_rule"
+  | "retry_policy"
+  | "activities"
+  | "clear_reverse"
 > & {
   schedule?: Record<string, unknown>;
   filter?: Record<string, unknown>;
   idempotency_rule?: Record<string, unknown>;
   retry_policy?: Record<string, unknown>;
   activities?: SyncRouteActivity[];
+  clear_reverse?: boolean;
 };
 
 export interface SyncRouteWatermark {

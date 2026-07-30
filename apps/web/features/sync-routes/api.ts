@@ -3,6 +3,7 @@ import type {
   CreateSyncRoutePayload,
   SyncRoute,
   SyncRouteWatermark,
+  UpdateSyncRoutePayload,
 } from "./types";
 
 const base = (workspaceId: string) =>
@@ -25,6 +26,19 @@ export const syncRoutesApi = {
   create(workspaceId: string, payload: CreateSyncRoutePayload) {
     return api
       .post<SuccessEnvelope<SyncRoute>>(base(workspaceId), payload)
+      .then((res) => unwrapData<SyncRoute>(res));
+  },
+
+  update(
+    workspaceId: string,
+    syncRouteId: string,
+    payload: UpdateSyncRoutePayload,
+  ) {
+    return api
+      .patch<SuccessEnvelope<SyncRoute>>(
+        `${base(workspaceId)}/${syncRouteId}`,
+        payload,
+      )
       .then((res) => unwrapData<SyncRoute>(res));
   },
 
@@ -67,5 +81,28 @@ export const syncRoutesApi = {
         `${base(workspaceId)}/${syncRouteId}/watermarks`,
       )
       .then((res) => unwrapData<SyncRouteWatermark[]>(res));
+  },
+
+  upsertWatermark(
+    workspaceId: string,
+    syncRouteId: string,
+    resourceType: string,
+    cursor: Record<string, unknown>,
+  ) {
+    return api
+      .put<SuccessEnvelope<SyncRouteWatermark>>(
+        `${base(workspaceId)}/${syncRouteId}/watermarks/${encodeURIComponent(resourceType)}`,
+        { cursor },
+      )
+      .then((res) => unwrapData<SyncRouteWatermark>(res));
+  },
+
+  /** Orchestration poll tick — JWT + X-Workspace-ID via /api/go. */
+  poll(syncRouteId: string, resourceType: string) {
+    return api
+      .post<SuccessEnvelope<unknown>>(`/sync-routes/${syncRouteId}/poll`, {
+        resource_type: resourceType,
+      })
+      .then((res) => unwrapData(res));
   },
 };

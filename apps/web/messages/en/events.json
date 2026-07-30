@@ -10,6 +10,14 @@
     "execution": "Execution",
     "time": "Time"
   },
+  "filters": {
+    "executionId": "Execution ID",
+    "executionIdHint": "UUID (optional)",
+    "category": "Category",
+    "allCategories": "All categories",
+    "apply": "Apply",
+    "clear": "Clear"
+  },
   "detail": {
     "correlation": "Correlation ID",
     "publishedBy": "Published by",

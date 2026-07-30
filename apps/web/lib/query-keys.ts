@@ -31,8 +31,19 @@ export const queryKeys = {
   executionTimeline: (workspaceId: string, executionId: string) =>
     ["executions", workspaceId, executionId, "timeline"] as const,
 
-  events: (workspaceId: string, executionId?: string) =>
-    ["events", workspaceId, executionId ?? "all"] as const,
+  events: (
+    workspaceId: string,
+    executionId?: string,
+    category?: string,
+    limit?: number,
+  ) =>
+    [
+      "events",
+      workspaceId,
+      executionId ?? "all",
+      category ?? "all",
+      limit ?? "default",
+    ] as const,
 
   mfaStatus: () => ["mfa", "status"] as const,
 } as const;

@@ -10,6 +10,14 @@
     "execution": "Execution",
     "time": "Thời gian"
   },
+  "filters": {
+    "executionId": "Execution ID",
+    "executionIdHint": "UUID (tuỳ chọn)",
+    "category": "Loại",
+    "allCategories": "Tất cả loại",
+    "apply": "Áp dụng",
+    "clear": "Xoá lọc"
+  },
   "detail": {
     "correlation": "Correlation ID",
     "publishedBy": "Phát hành bởi",

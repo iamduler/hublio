@@ -2,7 +2,10 @@
 
 > Tenant user workspace — Integration + Orchestration UI.  
 > Legend: `[x]` wired end-to-end · `[~]` client/hook có nhưng thiếu UI · `[ ]` chưa wire  
-> App: `apps/web` (`@hublio/web`)
+> App: `apps/web` (`@hublio/web`)  
+> **Status (2026-07-29): Core CRUD + 5 UI gaps DONE** — auth/onboarding +
+> connector toggle, sync-route PATCH/poll/watermark, events filters shipped.
+> Remaining: list endpoints (members/intents/executions) blocked on backend.
 
 Related: [00-foundation](./00-foundation.md) · [01-admin-workspace](./01-admin-workspace.md)
 
@@ -53,8 +56,8 @@ Related: [00-foundation](./00-foundation.md) · [01-admin-workspace](./01-admin-
 
 - [x] `GET /integration/connectors`
 - [x] `GET /integration/connectors/:id`
-- [~] `POST .../connectors/:id/enable` — hook `useToggleConnector` có, **thiếu nút UI**
-- [~] `POST .../connectors/:id/disable` — như trên
+- [x] `POST .../connectors/:id/enable` — UI trên connector detail
+- [x] `POST .../connectors/:id/disable` — UI + ConfirmDialog
 
 ### Integration — Connections (JWT → Go)
 
@@ -71,13 +74,13 @@ Related: [00-foundation](./00-foundation.md) · [01-admin-workspace](./01-admin-
 - [x] `GET .../sync-routes`
 - [x] `POST .../sync-routes`
 - [x] `GET .../sync-routes/:sid`
-- [ ] `PATCH .../sync-routes/:sid` — edit chưa wire
+- [x] `PATCH .../sync-routes/:sid` — edit form (`/edit`, chỉ draft/disabled)
 - [x] `POST .../sync-routes/:sid/enable`
 - [x] `POST .../sync-routes/:sid/disable`
 - [x] `DELETE .../sync-routes/:sid`
 - [x] `POST .../sync-routes/:sid/webhook-secret/rotate`
 - [x] `GET .../sync-routes/:sid/watermarks`
-- [~] `PUT .../watermarks/:resourceType` — API có, **thiếu UI editor**
+- [x] `PUT .../watermarks/:resourceType` — editor dialog
 
 ### Orchestration (JWT proxy → Go; machines still use X-API-KEY)
 
@@ -87,23 +90,23 @@ Related: [00-foundation](./00-foundation.md) · [01-admin-workspace](./01-admin-
 - [x] `GET /executions/:id/timeline`
 - [x] `POST /executions/:id/cancel`
 - [x] `POST /executions/:id/retry`
-- [ ] `POST /sync-routes/:id/poll` — UI chưa wire (Go đã nhận JWT hoặc API key)
+- [x] `POST /sync-routes/:id/poll` — nút “Poll now” trên detail
 - [n/a] `POST /webhooks/sync-routes/:id` — inbound, không phải FE
 
 ### Events (JWT proxy → Go)
 
 - [x] `GET /events`
-- [ ] Filter UI theo `execution_id` / `category` (backend đã hỗ trợ query params)
+- [x] Filter UI: `execution_id` (API query) + `category` (client-side trên page)
 
 ---
 
 ## 2. Gaps ưu tiên wire tiếp
 
-- [ ] Connector enable/disable: action + confirm trên `connector-detail.tsx` (hook đã có)
-- [ ] Sync Route `PATCH` edit form
-- [ ] Sync Route poll: nút “Poll now” → `POST /sync-routes/:id/poll` qua `/api/go`
-- [ ] Watermark editor: UI cho `PUT watermarks/:resourceType`
-- [ ] Events filters: bind `execution_id`, `category`, cursor
+- [x] Connector enable/disable: action + confirm trên `connector-detail.tsx`
+- [x] Sync Route `PATCH` edit form
+- [x] Sync Route poll: nút “Poll now” → `POST /sync-routes/:id/poll` qua `/api/go`
+- [x] Watermark editor: UI cho `PUT watermarks/:resourceType`
+- [x] Events filters: bind `execution_id`, `category`
 
 ---
 
@@ -118,15 +121,15 @@ Related: [00-foundation](./00-foundation.md) · [01-admin-workspace](./01-admin-
 | Onboarding wizard (org→ws→invite→complete) | [x] |
 | Create workspace | [x] |
 | Dashboard KPIs + activity | [x] |
-| Connectors list/detail | [x] · enable/disable UI [~] |
+| Connectors list/detail + enable/disable | [x] |
 | Connections CRUD + verify | [x] |
-| Sync routes CRUD + webhook/watermarks GET | [x] · PATCH/poll/PUT watermark [ ] |
+| Sync routes CRUD + PATCH/poll/watermark | [x] |
 | Intents run + detail | [x] · list [ ] (no list API) |
 | Executions detail + cancel/retry | [x] · list [ ] (no list API) |
-| Events explorer | [x] · filters [ ] |
+| Events explorer + filters | [x] |
 | API keys | [x] |
 | Team invite | [x] · member list [ ] (no list API) |
-| Workspace settings | [x] general · members/security tabs [ ] |
+| Workspace settings | [x] general + security · members tab [ ] |
 
 ---
 
