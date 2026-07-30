@@ -1,6 +1,18 @@
 {
   "title": "Execution",
+  "listTitle": "Execution",
+  "listSubtitle": "Các execution gần đây trong workspace này.",
   "loadError": "Không thể tải execution.",
+  "listLoadError": "Không thể tải danh sách execution.",
+  "empty": "Chưa có execution",
+  "emptyBody": "Gửi một intent để tạo execution.",
+  "columns": {
+    "id": "Execution",
+    "intent": "Intent",
+    "status": "Trạng thái",
+    "step": "Bước",
+    "created": "Tạo lúc"
+  },
   "fromIntent": "Từ intent",
   "steps": "Các bước",
   "noSteps": "Chưa ghi nhận bước nào.",

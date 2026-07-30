@@ -7,7 +7,20 @@ import {
 } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { useActiveWorkspaceId } from "@/providers/workspace-provider";
-import { executionsApi } from "./api";
+import { executionsApi, type ExecutionsQuery } from "./api";
+
+export function useExecutions(query: ExecutionsQuery = {}) {
+  const workspaceId = useActiveWorkspaceId();
+  return useQuery({
+    queryKey: queryKeys.executions(
+      workspaceId ?? "none",
+      query.status,
+      query.limit,
+    ),
+    queryFn: () => executionsApi.list(query),
+    enabled: Boolean(workspaceId),
+  });
+}
 
 export function useExecution(executionId: string | undefined) {
   const workspaceId = useActiveWorkspaceId();
@@ -45,6 +58,9 @@ export function useExecutionAction(executionId: string) {
       });
       void queryClient.invalidateQueries({
         queryKey: queryKeys.executionTimeline(workspaceId, executionId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ["executions", workspaceId],
       });
     },
   });

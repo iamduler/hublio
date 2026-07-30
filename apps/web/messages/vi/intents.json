@@ -7,6 +7,14 @@
   "invalidJson": "Payload phải là JSON hợp lệ.",
   "noResult": "Gửi một intent để xem kết quả tại đây.",
   "loadError": "Không thể tải intent.",
+  "listLoadError": "Không thể tải danh sách intent.",
+  "empty": "Chưa có intent",
+  "emptyBody": "Chạy một intent bên dưới để bắt đầu điều phối.",
+  "columns": {
+    "capability": "Khả năng",
+    "status": "Trạng thái",
+    "created": "Tạo lúc"
+  },
   "form": {
     "connection": "Connection",
     "selectConnection": "Chọn connection",

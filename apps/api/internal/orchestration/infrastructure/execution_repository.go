@@ -174,6 +174,63 @@ func (r *ExecutionRepository) ListByIntentID(ctx context.Context, intentID uuid.
 	return out, nil
 }
 
+func (r *ExecutionRepository) ListByWorkspace(ctx context.Context, workspaceID uuid.UUID, status *string, limit int32) ([]*domain.Execution, error) {
+	var rows []sqlc.Execution
+	var err error
+	if status != nil {
+		rows, err = r.q(ctx).ListExecutionsByWorkspaceAndStatus(ctx, sqlc.ListExecutionsByWorkspaceAndStatusParams{
+			WorkspaceID: workspaceID,
+			Status:      *status,
+			Limit:       limit,
+		})
+	} else {
+		rows, err = r.q(ctx).ListExecutionsByWorkspace(ctx, sqlc.ListExecutionsByWorkspaceParams{
+			WorkspaceID: workspaceID,
+			Limit:       limit,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	out := make([]*domain.Execution, 0, len(rows))
+	for _, row := range rows {
+		exec, mapErr := mapExecutionSlim(row)
+		if mapErr != nil {
+			return nil, mapErr
+		}
+		out = append(out, exec)
+	}
+	return out, nil
+}
+
+func mapExecutionSlim(row sqlc.Execution) (*domain.Execution, error) {
+	execCtx, err := unmarshalJSONMap(row.Context)
+	if err != nil {
+		return nil, err
+	}
+	var result *domain.ExecutionResult
+	if s := nullableEnumPtr(row.Result); s != nil {
+		r := domain.ExecutionResult(*s)
+		result = &r
+	}
+	return domain.ReconstituteExecution(
+		row.ID,
+		row.IntentID,
+		domain.ExecutionStatus(row.Status),
+		result,
+		int(row.RetryAttempt),
+		int(row.CurrentStepNo),
+		execCtx,
+		row.FailureReason,
+		timePtrFrom(row.StartedAt),
+		timePtrFrom(row.CompletedAt),
+		timeFrom(row.CreatedAt),
+		nil,
+		nil,
+		nil,
+	), nil
+}
+
 func (r *ExecutionRepository) hydrate(ctx context.Context, row sqlc.Execution) (*domain.Execution, error) {
 	q := r.q(ctx)
 

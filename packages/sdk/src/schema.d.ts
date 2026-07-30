@@ -95,6 +95,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/mfa/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * MFA enrollment status for the current user
+         * @description Returns whether MFA is enabled or pending enrollment. Never includes secrets or recovery codes.
+         */
+        get: operations["authMFAStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/mfa/setup": {
         parameters: {
             query?: never;
@@ -418,7 +438,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** List workspace members */
+        get: operations["listWorkspaceMembers"];
         put?: never;
         /** Add user to workspace */
         post: operations["addWorkspaceMember"];
@@ -855,7 +876,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * List Intents (Workspace-scoped; API key or JWT + X-Workspace-ID)
+         * @description Returns Intents for the Workspace, newest first. Payload is omitted on list
+         *     responses (use getIntent for full detail). Optional status filter; limit defaults
+         *     to 50 (max 200).
+         */
+        get: operations["listIntents"];
         put?: never;
         /**
          * Submit a Business Intent (Workspace-scoped; API key or JWT + X-Workspace-ID)
@@ -881,6 +908,27 @@ export interface paths {
         };
         /** Get Intent (tenant-scoped) */
         get: operations["getIntent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/executions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Executions (Workspace-scoped via Intent join; API key or JWT + X-Workspace-ID)
+         * @description Returns Executions belonging to Intents in the Workspace, newest first. Slim DTO
+         *     (no steps/timeline). Optional status filter; limit defaults to 50 (max 200).
+         */
+        get: operations["listExecutions"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1119,6 +1167,16 @@ export interface components {
             device_id?: string;
             /** @description Remember device_id for 30 days so future logins skip the challenge */
             trust_device?: boolean;
+        };
+        MFAStatusEnvelope: components["schemas"]["SuccessEnvelope"] & {
+            data?: {
+                enabled: boolean;
+                /** @description Secret provisioned but enable not confirmed yet */
+                pending_enrollment: boolean;
+                remaining_recovery_codes: number;
+                /** @description False for OAuth-only accounts (password required to enroll) */
+                can_enroll: boolean;
+            };
         };
         MFASetupEnvelope: components["schemas"]["SuccessEnvelope"] & {
             data?: {
@@ -1543,6 +1601,27 @@ export interface operations {
             400: components["responses"]["Error"];
             401: components["responses"]["Error"];
             409: components["responses"]["Error"];
+        };
+    };
+    authMFAStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description MFA status */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MFAStatusEnvelope"];
+                };
+            };
+            401: components["responses"]["Error"];
         };
     };
     authMFASetup: {
@@ -2000,6 +2079,28 @@ export interface operations {
                 };
                 content?: never;
             };
+        };
+    };
+    listWorkspaceMembers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspaceId: components["parameters"]["workspaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Members (user_id, email, full_name, role, created_at) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
         };
     };
     addWorkspaceMember: {
@@ -2721,6 +2822,35 @@ export interface operations {
             409: components["responses"]["Error"];
         };
     };
+    listIntents: {
+        parameters: {
+            query?: {
+                status?: "submitted" | "accepted" | "rejected" | "expired";
+                limit?: number;
+            };
+            header?: {
+                /**
+                 * @description Required when authenticating with bearerAuth (user JWT).
+                 *     Ignored when using apiKeyAuth (workspace is implied by the key).
+                 */
+                "X-Workspace-ID"?: components["parameters"]["workspaceIdHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Intents (without payload) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+        };
+    };
     submitIntent: {
         parameters: {
             query?: never;
@@ -2789,6 +2919,35 @@ export interface operations {
             };
             401: components["responses"]["Error"];
             404: components["responses"]["Error"];
+        };
+    };
+    listExecutions: {
+        parameters: {
+            query?: {
+                status?: "created" | "queued" | "running" | "succeeded" | "failed" | "cancelled" | "expired" | "dead_letter";
+                limit?: number;
+            };
+            header?: {
+                /**
+                 * @description Required when authenticating with bearerAuth (user JWT).
+                 *     Ignored when using apiKeyAuth (workspace is implied by the key).
+                 */
+                "X-Workspace-ID"?: components["parameters"]["workspaceIdHeader"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Executions (slim; no steps/timeline) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
         };
     };
     getExecution: {

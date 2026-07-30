@@ -24,8 +24,12 @@ export const queryKeys = {
 
   members: (workspaceId: string) => ["members", workspaceId] as const,
 
+  intents: (workspaceId: string, status?: string, limit?: number) =>
+    ["intents", workspaceId, status ?? "all", limit ?? "default"] as const,
   intent: (workspaceId: string, intentId: string) =>
     ["intents", workspaceId, intentId] as const,
+  executions: (workspaceId: string, status?: string, limit?: number) =>
+    ["executions", workspaceId, status ?? "all", limit ?? "default"] as const,
   execution: (workspaceId: string, executionId: string) =>
     ["executions", workspaceId, executionId] as const,
   executionTimeline: (workspaceId: string, executionId: string) =>

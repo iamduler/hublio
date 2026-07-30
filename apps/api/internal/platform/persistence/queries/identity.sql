@@ -97,6 +97,14 @@ FROM workspace_users
 WHERE workspace_id = $1
 ORDER BY created_at ASC;
 
+-- name: ListWorkspaceMembersByWorkspace :many
+SELECT wu.workspace_id, wu.user_id, wu.role, wu.created_at,
+       u.email, u.full_name
+FROM workspace_users wu
+INNER JOIN users u ON u.id = wu.user_id
+WHERE wu.workspace_id = $1
+ORDER BY wu.created_at ASC;
+
 -- name: ListWorkspaceUsersByUser :many
 SELECT workspace_id, user_id, role, created_at
 FROM workspace_users

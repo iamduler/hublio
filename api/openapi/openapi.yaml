@@ -565,6 +565,21 @@ paths:
           description: Disabled
 
   /api/v1/identity/workspaces/{workspaceId}/members:
+    get:
+      tags: [Identity]
+      summary: List workspace members
+      operationId: listWorkspaceMembers
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/workspaceId"
+      responses:
+        "200":
+          description: Members (user_id, email, full_name, role, created_at)
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
     post:
       tags: [Identity]
       summary: Add user to workspace
@@ -1136,6 +1151,39 @@ paths:
           $ref: "#/components/responses/Error"
 
   /api/v1/intents:
+    get:
+      tags: [Orchestration]
+      summary: List Intents (Workspace-scoped; API key or JWT + X-Workspace-ID)
+      description: |
+        Returns Intents for the Workspace, newest first. Payload is omitted on list
+        responses (use getIntent for full detail). Optional status filter; limit defaults
+        to 50 (max 200).
+      operationId: listIntents
+      security:
+        - apiKeyAuth: []
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/workspaceIdHeader"
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [submitted, accepted, rejected, expired]
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
+            maximum: 200
+      responses:
+        "200":
+          description: Intents (without payload)
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
     post:
       tags: [Orchestration]
       summary: Submit a Business Intent (Workspace-scoped; API key or JWT + X-Workspace-ID)
@@ -1197,6 +1245,50 @@ paths:
         "401":
           $ref: "#/components/responses/Error"
         "404":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/executions:
+    get:
+      tags: [Orchestration]
+      summary: List Executions (Workspace-scoped via Intent join; API key or JWT + X-Workspace-ID)
+      description: |
+        Returns Executions belonging to Intents in the Workspace, newest first. Slim DTO
+        (no steps/timeline). Optional status filter; limit defaults to 50 (max 200).
+      operationId: listExecutions
+      security:
+        - apiKeyAuth: []
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/workspaceIdHeader"
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              [
+                created,
+                queued,
+                running,
+                succeeded,
+                failed,
+                cancelled,
+                expired,
+                dead_letter,
+              ]
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
+            maximum: 200
+      responses:
+        "200":
+          description: Executions (slim; no steps/timeline)
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
           $ref: "#/components/responses/Error"
 
   /api/v1/executions/{executionId}:

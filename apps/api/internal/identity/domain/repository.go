@@ -38,6 +38,7 @@ type MembershipRepository interface {
 	Save(ctx context.Context, membership *Membership) error
 	Find(ctx context.Context, workspaceID, userID uuid.UUID) (*Membership, error)
 	ListByWorkspace(ctx context.Context, workspaceID uuid.UUID) ([]*Membership, error)
+	ListMembersByWorkspace(ctx context.Context, workspaceID uuid.UUID) ([]*WorkspaceMember, error)
 	ListByUser(ctx context.Context, userID uuid.UUID) ([]*Membership, error)
 }
 

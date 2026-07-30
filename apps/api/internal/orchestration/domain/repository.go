@@ -11,6 +11,8 @@ type IntentRepository interface {
 	Save(ctx context.Context, intent *Intent) error
 	Update(ctx context.Context, intent *Intent) error
 	FindByID(ctx context.Context, id uuid.UUID) (*Intent, error)
+	// ListByWorkspace returns Intents for a Workspace, newest first. status nil = all.
+	ListByWorkspace(ctx context.Context, workspaceID uuid.UUID, status *string, limit int32) ([]*Intent, error)
 }
 
 // ExecutionRepository persists the Execution aggregate together with its Steps,
@@ -26,6 +28,9 @@ type ExecutionRepository interface {
 	FindByIntentID(ctx context.Context, intentID uuid.UUID) (*Execution, error)
 	// ListByIntentID returns all Executions for an Intent (fan-out), ordered by created_at.
 	ListByIntentID(ctx context.Context, intentID uuid.UUID) ([]*Execution, error)
+	// ListByWorkspace returns Executions scoped via Intent.workspace_id, newest first.
+	// status nil = all. List rows are slim (no Steps/Snapshots/Timeline hydration).
+	ListByWorkspace(ctx context.Context, workspaceID uuid.UUID, status *string, limit int32) ([]*Execution, error)
 }
 
 // IdempotencyRepository persists Intent idempotency keys (Postgres is the source of truth;

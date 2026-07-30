@@ -7,6 +7,14 @@
   "invalidJson": "Payload must be valid JSON.",
   "noResult": "Submit an intent to see the result here.",
   "loadError": "Could not load intent.",
+  "listLoadError": "Could not load intents.",
+  "empty": "No intents yet",
+  "emptyBody": "Run an intent below to start an orchestration.",
+  "columns": {
+    "capability": "Capability",
+    "status": "Status",
+    "created": "Created"
+  },
   "form": {
     "connection": "Connection",
     "selectConnection": "Select a connection",

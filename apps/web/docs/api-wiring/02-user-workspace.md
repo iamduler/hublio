@@ -3,9 +3,9 @@
 > Tenant user workspace — Integration + Orchestration UI.  
 > Legend: `[x]` wired end-to-end · `[~]` client/hook có nhưng thiếu UI · `[ ]` chưa wire  
 > App: `apps/web` (`@hublio/web`)  
-> **Status (2026-07-29): Core CRUD + 5 UI gaps DONE** — auth/onboarding +
-> connector toggle, sync-route PATCH/poll/watermark, events filters shipped.
-> Remaining: list endpoints (members/intents/executions) blocked on backend.
+> **Status (2026-07-30): Core CRUD + list members/intents/executions DONE** — auth/onboarding +
+> connector toggle, sync-route PATCH/poll/watermark, events filters, Team/Intents/Executions lists.
+> Remaining backend gaps: token refresh, `GET /me`, cursor pagination.
 
 Related: [00-foundation](./00-foundation.md) · [01-admin-workspace](./01-admin-workspace.md)
 
@@ -45,6 +45,7 @@ Related: [00-foundation](./00-foundation.md) · [01-admin-workspace](./01-admin-
 - [x] `POST /identity/workspaces/:id/enable`
 - [x] `POST /identity/workspaces/:id/disable`
 - [x] `POST /identity/workspaces/:id/members` — invite member
+- [x] `GET /identity/workspaces/:id/members` — list members
 - [x] `GET /identity/workspaces/:id/api-keys`
 - [x] `POST /identity/workspaces/:id/api-keys`
 - [x] `POST .../api-keys/:keyId/disable`
@@ -84,8 +85,10 @@ Related: [00-foundation](./00-foundation.md) · [01-admin-workspace](./01-admin-
 
 ### Orchestration (JWT proxy → Go; machines still use X-API-KEY)
 
+- [x] `GET /intents` — list (limit + optional status; no payload)
 - [x] `POST /intents` — `/api/go` (+ `Idempotency-Key`)
 - [x] `GET /intents/:id`
+- [x] `GET /executions` — list (limit + optional status; slim)
 - [x] `GET /executions/:id`
 - [x] `GET /executions/:id/timeline`
 - [x] `POST /executions/:id/cancel`
@@ -124,20 +127,21 @@ Related: [00-foundation](./00-foundation.md) · [01-admin-workspace](./01-admin-
 | Connectors list/detail + enable/disable | [x] |
 | Connections CRUD + verify | [x] |
 | Sync routes CRUD + PATCH/poll/watermark | [x] |
-| Intents run + detail | [x] · list [ ] (no list API) |
-| Executions detail + cancel/retry | [x] · list [ ] (no list API) |
+| Intents run + detail + list | [x] |
+| Executions detail + cancel/retry + list | [x] |
 | Events explorer + filters | [x] |
 | API keys | [x] |
-| Team invite | [x] · member list [ ] (no list API) |
+| Team invite + member list | [x] |
 | Workspace settings | [x] general + security · members tab [ ] |
 
 ---
 
 ## 4. Ngoài phạm vi backend hiện tại
 
-- [ ] Intent list, Execution list → deep-link từ result / events
-- [ ] List workspace members
+- [x] Intent list, Execution list, List workspace members
 - [ ] Replay event, billing → Admin-phase / chưa backend
+- [ ] Cursor/`pagination` envelope on list APIs
+- [ ] Token refresh, `GET /me`
 
 ---
 

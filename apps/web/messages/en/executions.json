@@ -1,6 +1,18 @@
 {
   "title": "Execution",
+  "listTitle": "Executions",
+  "listSubtitle": "Recent executions in this workspace.",
   "loadError": "Could not load execution.",
+  "listLoadError": "Could not load executions.",
+  "empty": "No executions yet",
+  "emptyBody": "Submit an intent to create executions.",
+  "columns": {
+    "id": "Execution",
+    "intent": "Intent",
+    "status": "Status",
+    "step": "Step",
+    "created": "Created"
+  },
   "fromIntent": "From intent",
   "steps": "Steps",
   "noSteps": "No steps recorded.",

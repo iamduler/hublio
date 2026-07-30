@@ -123,13 +123,13 @@ httpOnly JWT proxy — browser never holds tokens or workspace API keys.
 
 - [x] Run intent form (connection + capability + JSON payload)
 - [x] Intent detail
-- [ ] Intent library / list (backend has no list endpoint)
+- [x] Intent library / list (limit; no cursor yet)
 - [ ] Intent configuration / versions screens
 
 ### Executions
 
 - [x] Detail: steps + timeline + cancel + retry
-- [ ] Execution list (backend has no list endpoint; deep-link from intent result / events)
+- [x] Execution list (workspace-scoped; slim rows → detail)
 
 ### Events
 
@@ -145,14 +145,14 @@ httpOnly JWT proxy — browser never holds tokens or workspace API keys.
 ### Team
 
 - [x] Add member (email + role)
-- [ ] Member list / profile / roles matrix (backend has no list-members endpoint)
+- [x] Member list (roles shown; profile / roles matrix later)
 - [ ] Pending invitations / access activity
 
 ### Workspace settings
 
 - [x] General: name / environment / status + enable/disable
 - [x] Security tab (MFA enroll / disable)
-- [ ] Members & roles tab (blocked on list-members)
+- [ ] Members & roles tab (list API exists; settings tab later)
 - [ ] Usage & billing tabs (no backend)
 
 ---
@@ -176,11 +176,11 @@ These are **not frontend-only** — need Go work first:
 
 - [ ] Token **refresh** endpoint (access TTL = 15 min; sessions expire hard)
 - [ ] `GET /me` (or equivalent session bootstrap)
-- [ ] List workspace **members**
-- [ ] List **intents** / **executions** (paginated)
+- [x] List workspace **members**
+- [x] List **intents** / **executions** (limit + optional status; no cursor yet)
 - [ ] Pagination on Identity / Integration list endpoints
 - [ ] Optional: accept JWT on orchestration/events (would shrink BFF surface; hybrid rule still applies)
-- [ ] Password reset / email verify / MFA endpoints
+- [x] Password reset / email verify / MFA endpoints
 
 ---
 

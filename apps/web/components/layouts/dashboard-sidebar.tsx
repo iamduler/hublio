@@ -9,6 +9,7 @@ import {
   GitBranch,
   KeyRound,
   LayoutDashboard,
+  ListOrdered,
   PlayCircle,
   Settings,
   Users,
@@ -55,6 +56,11 @@ const SECTIONS: NavSection[] = [
     labelKey: "sections.orchestration",
     items: [
       { icon: PlayCircle, labelKey: "intents", href: "/dashboard/intents" },
+      {
+        icon: ListOrdered,
+        labelKey: "executions",
+        href: "/dashboard/executions",
+      },
       { icon: Activity, labelKey: "events", href: "/dashboard/events" },
     ],
   },

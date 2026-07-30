@@ -58,6 +58,35 @@ func (r *IntentRepository) FindByID(ctx context.Context, id uuid.UUID) (*domain.
 	return mapIntent(row)
 }
 
+func (r *IntentRepository) ListByWorkspace(ctx context.Context, workspaceID uuid.UUID, status *string, limit int32) ([]*domain.Intent, error) {
+	var rows []sqlc.Intent
+	var err error
+	if status != nil {
+		rows, err = r.q(ctx).ListIntentsByWorkspaceAndStatus(ctx, sqlc.ListIntentsByWorkspaceAndStatusParams{
+			WorkspaceID: workspaceID,
+			Status:      *status,
+			Limit:       limit,
+		})
+	} else {
+		rows, err = r.q(ctx).ListIntentsByWorkspace(ctx, sqlc.ListIntentsByWorkspaceParams{
+			WorkspaceID: workspaceID,
+			Limit:       limit,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	out := make([]*domain.Intent, 0, len(rows))
+	for _, row := range rows {
+		intent, mapErr := mapIntent(row)
+		if mapErr != nil {
+			return nil, mapErr
+		}
+		out = append(out, intent)
+	}
+	return out, nil
+}
+
 func mapIntent(row sqlc.Intent) (*domain.Intent, error) {
 	payload, err := unmarshalJSONMap(row.Payload)
 	if err != nil {

@@ -73,19 +73,20 @@ Theo thứ tự — không bắt đầu từ UI:
 
 ## 5. Verify (Definition of Done)
 
-Last run: 2026-07-26.
+Last run: 2026-07-30 (manual smoke via BFF against `demo@hublio.local`).
 
 - [x] `pnpm --filter @hublio/web build` xanh (42 routes, incl. `/api/go/[...path]`, `/api/auth/*`)
 - [x] lint 0 error (6 warnings pre-existing on provider effects)
 - [x] `pnpm --filter @hublio/web test` xanh (12 tests)
 - [x] Go: `go -C apps/api build ./cmd/api` + middleware/orchestration/events tests xanh
-- [ ] Manual: login → dashboard → run intent (happy + 401/422) — **cần `API_INTERNAL_URL` trong `.env.local`**
+- [x] Manual smoke (BFF): login → session → workspaces/connectors → create+verify connection → run intent (`echo`) → execution **succeeded** (needs `make worker`) · 401 no-cookie + bad password
+- [x] Manual: SyncRoute create (schedule) + enable + **Poll now** — accepted 2 → watermark advanced; 2nd poll accepted 0 / exhausted
 - [x] OpenAPI + `schema.d.ts` regenerated in same change
 
 ---
 
 ## 6. Follow-ups (ngoài scope foundation)
 
-- [ ] Manual e2e smoke (mục trên)
+- [x] Manual e2e smoke — auth/intent + Poll sync-route DONE 2026-07-30
 - [x] Wire gaps user workspace → [02-user-workspace §2](./02-user-workspace.md) — done 2026-07-29
 - [ ] Dọn legacy `lib/api/bff.ts` + `bff-client.ts` sau khi mọi feature dùng `/api/go`

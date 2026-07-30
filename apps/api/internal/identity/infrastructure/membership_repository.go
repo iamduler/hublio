@@ -55,6 +55,25 @@ func (r *MembershipRepository) ListByWorkspace(ctx context.Context, workspaceID 
 	return out, nil
 }
 
+func (r *MembershipRepository) ListMembersByWorkspace(ctx context.Context, workspaceID uuid.UUID) ([]*domain.WorkspaceMember, error) {
+	rows, err := r.q(ctx).ListWorkspaceMembersByWorkspace(ctx, workspaceID)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]*domain.WorkspaceMember, 0, len(rows))
+	for _, row := range rows {
+		out = append(out, domain.ReconstituteWorkspaceMember(
+			row.WorkspaceID,
+			row.UserID,
+			row.Email,
+			row.FullName,
+			domain.WorkspaceRole(row.Role),
+			timeFrom(row.CreatedAt),
+		))
+	}
+	return out, nil
+}
+
 func (r *MembershipRepository) ListByUser(ctx context.Context, userID uuid.UUID) ([]*domain.Membership, error) {
 	rows, err := r.q(ctx).ListWorkspaceUsersByUser(ctx, userID)
 	if err != nil {

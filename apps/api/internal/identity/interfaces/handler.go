@@ -66,6 +66,7 @@ func (h *Handler) RegisterRoutes(api *gin.RouterGroup, jwtAuth gin.HandlerFunc) 
 
 		identity.POST("/workspaces/:workspaceId/enable", h.enableWorkspace)
 		identity.POST("/workspaces/:workspaceId/disable", h.disableWorkspace)
+		identity.GET("/workspaces/:workspaceId/members", h.listMembers)
 		identity.POST("/workspaces/:workspaceId/members", h.addMember)
 
 		identity.GET("/workspaces/:workspaceId/api-keys", h.listAPIKeys)
@@ -727,6 +728,33 @@ func (h *Handler) workspaceStatus(c *gin.Context, enable bool) {
 	}
 	h.svc.PublishAfterCommit(c.Request.Context(), ws.PullEvents()...)
 	httpx.ResponseSuccess(c, http.StatusOK, "workspace updated", workspaceDTO(ws))
+}
+
+func (h *Handler) listMembers(c *gin.Context) {
+	wsID, ok := parseUUIDParam(c, "workspaceId")
+	if !ok {
+		return
+	}
+	actorID, ok := actorUserID(c)
+	if !ok {
+		return
+	}
+	members, err := h.svc.ListWorkspaceMembers(c.Request.Context(), wsID, actorID)
+	if err != nil {
+		httpx.ResponseError(c, err)
+		return
+	}
+	out := make([]gin.H, 0, len(members))
+	for _, m := range members {
+		out = append(out, gin.H{
+			"user_id":    m.UserID().String(),
+			"email":      m.Email(),
+			"full_name":  m.FullName(),
+			"role":       string(m.Role()),
+			"created_at": m.CreatedAt(),
+		})
+	}
+	httpx.ResponseSuccess(c, http.StatusOK, "members", out)
 }
 
 type addMemberRequest struct {

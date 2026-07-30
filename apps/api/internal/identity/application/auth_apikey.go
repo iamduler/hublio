@@ -163,6 +163,17 @@ func (s *Services) ListAPIKeys(ctx context.Context, workspaceID, actorUserID uui
 	return keys, nil
 }
 
+func (s *Services) ListWorkspaceMembers(ctx context.Context, workspaceID, actorUserID uuid.UUID) ([]*domain.WorkspaceMember, error) {
+	if err := s.assertWorkspaceMember(ctx, workspaceID, actorUserID); err != nil {
+		return nil, err
+	}
+	members, err := s.Memberships.ListMembersByWorkspace(ctx, workspaceID)
+	if err != nil {
+		return nil, mapRepoErr(err)
+	}
+	return members, nil
+}
+
 func (s *Services) GetOrganization(ctx context.Context, organizationID uuid.UUID) (*domain.Organization, error) {
 	org, err := s.Orgs.FindByID(ctx, organizationID)
 	if err != nil {

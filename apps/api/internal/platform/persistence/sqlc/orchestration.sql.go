@@ -484,6 +484,194 @@ func (q *Queries) ListExecutionsByIntentID(ctx context.Context, intentID uuid.UU
 	return items, nil
 }
 
+const listExecutionsByWorkspace = `-- name: ListExecutionsByWorkspace :many
+SELECT e.id, e.intent_id, e.status, e.result, e.retry_attempt, e.current_step_no, e.context,
+       e.failure_reason, e.started_at, e.completed_at, e.created_at
+FROM executions e
+INNER JOIN intents i ON i.id = e.intent_id
+WHERE i.workspace_id = $1
+ORDER BY e.created_at DESC
+LIMIT $2
+`
+
+type ListExecutionsByWorkspaceParams struct {
+	WorkspaceID uuid.UUID `json:"workspace_id"`
+	Limit       int32     `json:"limit"`
+}
+
+func (q *Queries) ListExecutionsByWorkspace(ctx context.Context, arg ListExecutionsByWorkspaceParams) ([]Execution, error) {
+	rows, err := q.db.Query(ctx, listExecutionsByWorkspace, arg.WorkspaceID, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Execution{}
+	for rows.Next() {
+		var i Execution
+		if err := rows.Scan(
+			&i.ID,
+			&i.IntentID,
+			&i.Status,
+			&i.Result,
+			&i.RetryAttempt,
+			&i.CurrentStepNo,
+			&i.Context,
+			&i.FailureReason,
+			&i.StartedAt,
+			&i.CompletedAt,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listExecutionsByWorkspaceAndStatus = `-- name: ListExecutionsByWorkspaceAndStatus :many
+SELECT e.id, e.intent_id, e.status, e.result, e.retry_attempt, e.current_step_no, e.context,
+       e.failure_reason, e.started_at, e.completed_at, e.created_at
+FROM executions e
+INNER JOIN intents i ON i.id = e.intent_id
+WHERE i.workspace_id = $1 AND e.status = $2
+ORDER BY e.created_at DESC
+LIMIT $3
+`
+
+type ListExecutionsByWorkspaceAndStatusParams struct {
+	WorkspaceID uuid.UUID `json:"workspace_id"`
+	Status      string    `json:"status"`
+	Limit       int32     `json:"limit"`
+}
+
+func (q *Queries) ListExecutionsByWorkspaceAndStatus(ctx context.Context, arg ListExecutionsByWorkspaceAndStatusParams) ([]Execution, error) {
+	rows, err := q.db.Query(ctx, listExecutionsByWorkspaceAndStatus, arg.WorkspaceID, arg.Status, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Execution{}
+	for rows.Next() {
+		var i Execution
+		if err := rows.Scan(
+			&i.ID,
+			&i.IntentID,
+			&i.Status,
+			&i.Result,
+			&i.RetryAttempt,
+			&i.CurrentStepNo,
+			&i.Context,
+			&i.FailureReason,
+			&i.StartedAt,
+			&i.CompletedAt,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listIntentsByWorkspace = `-- name: ListIntentsByWorkspace :many
+SELECT id, organization_id, workspace_id, connection_id, capability, payload,
+       status, correlation_id, idempotency_key, submitted_at, created_at
+FROM intents
+WHERE workspace_id = $1
+ORDER BY created_at DESC
+LIMIT $2
+`
+
+type ListIntentsByWorkspaceParams struct {
+	WorkspaceID uuid.UUID `json:"workspace_id"`
+	Limit       int32     `json:"limit"`
+}
+
+func (q *Queries) ListIntentsByWorkspace(ctx context.Context, arg ListIntentsByWorkspaceParams) ([]Intent, error) {
+	rows, err := q.db.Query(ctx, listIntentsByWorkspace, arg.WorkspaceID, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Intent{}
+	for rows.Next() {
+		var i Intent
+		if err := rows.Scan(
+			&i.ID,
+			&i.OrganizationID,
+			&i.WorkspaceID,
+			&i.ConnectionID,
+			&i.Capability,
+			&i.Payload,
+			&i.Status,
+			&i.CorrelationID,
+			&i.IdempotencyKey,
+			&i.SubmittedAt,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listIntentsByWorkspaceAndStatus = `-- name: ListIntentsByWorkspaceAndStatus :many
+SELECT id, organization_id, workspace_id, connection_id, capability, payload,
+       status, correlation_id, idempotency_key, submitted_at, created_at
+FROM intents
+WHERE workspace_id = $1 AND status = $2
+ORDER BY created_at DESC
+LIMIT $3
+`
+
+type ListIntentsByWorkspaceAndStatusParams struct {
+	WorkspaceID uuid.UUID `json:"workspace_id"`
+	Status      string    `json:"status"`
+	Limit       int32     `json:"limit"`
+}
+
+func (q *Queries) ListIntentsByWorkspaceAndStatus(ctx context.Context, arg ListIntentsByWorkspaceAndStatusParams) ([]Intent, error) {
+	rows, err := q.db.Query(ctx, listIntentsByWorkspaceAndStatus, arg.WorkspaceID, arg.Status, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Intent{}
+	for rows.Next() {
+		var i Intent
+		if err := rows.Scan(
+			&i.ID,
+			&i.OrganizationID,
+			&i.WorkspaceID,
+			&i.ConnectionID,
+			&i.Capability,
+			&i.Payload,
+			&i.Status,
+			&i.CorrelationID,
+			&i.IdempotencyKey,
+			&i.SubmittedAt,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateExecution = `-- name: UpdateExecution :exec
 UPDATE executions
 SET status = $2,

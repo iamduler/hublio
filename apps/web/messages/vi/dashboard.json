@@ -5,6 +5,7 @@
     "connections": "Connection",
     "syncRoutes": "Sync Route",
     "intents": "Intent",
+    "executions": "Execution",
     "events": "Sự kiện",
     "apiKeys": "API Key",
     "team": "Nhóm",

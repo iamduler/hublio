@@ -66,3 +66,36 @@ func (m *Membership) WorkspaceID() uuid.UUID { return m.workspaceID }
 func (m *Membership) UserID() uuid.UUID      { return m.userID }
 func (m *Membership) Role() WorkspaceRole    { return m.role }
 func (m *Membership) CreatedAt() time.Time   { return m.createdAt }
+
+// WorkspaceMember is a read model for listing members with user profile fields.
+type WorkspaceMember struct {
+	workspaceID uuid.UUID
+	userID      uuid.UUID
+	email       string
+	fullName    string
+	role        WorkspaceRole
+	createdAt   time.Time
+}
+
+func ReconstituteWorkspaceMember(
+	workspaceID, userID uuid.UUID,
+	email, fullName string,
+	role WorkspaceRole,
+	createdAt time.Time,
+) *WorkspaceMember {
+	return &WorkspaceMember{
+		workspaceID: workspaceID,
+		userID:      userID,
+		email:       email,
+		fullName:    fullName,
+		role:        role,
+		createdAt:   createdAt,
+	}
+}
+
+func (m *WorkspaceMember) WorkspaceID() uuid.UUID { return m.workspaceID }
+func (m *WorkspaceMember) UserID() uuid.UUID      { return m.userID }
+func (m *WorkspaceMember) Email() string          { return m.email }
+func (m *WorkspaceMember) FullName() string       { return m.fullName }
+func (m *WorkspaceMember) Role() WorkspaceRole    { return m.role }
+func (m *WorkspaceMember) CreatedAt() time.Time   { return m.createdAt }

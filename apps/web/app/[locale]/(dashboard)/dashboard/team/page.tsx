@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { PageHeader } from "@hublio/ui/common/page-header";
 import { InviteMember } from "@/features/team/components/invite-member";
+import { MembersList } from "@/features/team/components/members-list";
 
 export default async function TeamPage({
   params,
@@ -14,6 +15,7 @@ export default async function TeamPage({
   return (
     <div className="space-y-6">
       <PageHeader title={t("title")} description={t("subtitle")} />
+      <MembersList />
       <InviteMember />
     </div>
   );

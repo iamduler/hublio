@@ -18,6 +18,22 @@ SELECT id, organization_id, workspace_id, connection_id, capability, payload,
 FROM intents
 WHERE id = $1;
 
+-- name: ListIntentsByWorkspace :many
+SELECT id, organization_id, workspace_id, connection_id, capability, payload,
+       status, correlation_id, idempotency_key, submitted_at, created_at
+FROM intents
+WHERE workspace_id = $1
+ORDER BY created_at DESC
+LIMIT $2;
+
+-- name: ListIntentsByWorkspaceAndStatus :many
+SELECT id, organization_id, workspace_id, connection_id, capability, payload,
+       status, correlation_id, idempotency_key, submitted_at, created_at
+FROM intents
+WHERE workspace_id = $1 AND status = $2
+ORDER BY created_at DESC
+LIMIT $3;
+
 -- name: InsertExecution :exec
 INSERT INTO executions (
   id, intent_id, status, result, retry_attempt, current_step_no, context,
@@ -59,6 +75,24 @@ SELECT id, intent_id, status, result, retry_attempt, current_step_no, context,
 FROM executions
 WHERE intent_id = $1
 ORDER BY created_at ASC;
+
+-- name: ListExecutionsByWorkspace :many
+SELECT e.id, e.intent_id, e.status, e.result, e.retry_attempt, e.current_step_no, e.context,
+       e.failure_reason, e.started_at, e.completed_at, e.created_at
+FROM executions e
+INNER JOIN intents i ON i.id = e.intent_id
+WHERE i.workspace_id = $1
+ORDER BY e.created_at DESC
+LIMIT $2;
+
+-- name: ListExecutionsByWorkspaceAndStatus :many
+SELECT e.id, e.intent_id, e.status, e.result, e.retry_attempt, e.current_step_no, e.context,
+       e.failure_reason, e.started_at, e.completed_at, e.created_at
+FROM executions e
+INNER JOIN intents i ON i.id = e.intent_id
+WHERE i.workspace_id = $1 AND e.status = $2
+ORDER BY e.created_at DESC
+LIMIT $3;
 
 -- name: InsertExecutionStep :exec
 INSERT INTO execution_steps (

@@ -3,6 +3,7 @@ package interfaces
 import (
 	"context"
 	"net/http"
+	"strconv"
 
 	"hublio/internal/orchestration/application"
 	"hublio/internal/orchestration/domain"
@@ -31,8 +32,10 @@ func (h *Handler) RegisterRoutes(api *gin.RouterGroup, apiKeyAuth gin.HandlerFun
 	machine := api.Group("")
 	machine.Use(apiKeyAuth)
 	{
+		machine.GET("/intents", h.listIntents)
 		machine.POST("/intents", h.submitIntent)
 		machine.GET("/intents/:intentId", h.getIntent)
+		machine.GET("/executions", h.listExecutions)
 		machine.GET("/executions/:executionId", h.getExecution)
 		machine.GET("/executions/:executionId/timeline", h.getExecutionTimeline)
 		machine.POST("/executions/:executionId/cancel", h.cancelExecution)
@@ -144,6 +147,31 @@ func (h *Handler) submitIntent(c *gin.Context) {
 	httpx.ResponseSuccess(c, status, "intent submitted", resp)
 }
 
+func (h *Handler) listIntents(c *gin.Context) {
+	workspaceID, ok := workspaceIDFromPrincipal(c)
+	if !ok {
+		return
+	}
+	status, ok := optionalStatusQuery(c, validIntentStatuses)
+	if !ok {
+		return
+	}
+	limit, ok := parseLimitQuery(c)
+	if !ok {
+		return
+	}
+	list, err := h.svc.ListIntents(c.Request.Context(), workspaceID, status, limit)
+	if err != nil {
+		httpx.ResponseError(c, err)
+		return
+	}
+	out := make([]gin.H, 0, len(list))
+	for _, intent := range list {
+		out = append(out, intentListDTO(intent))
+	}
+	httpx.ResponseSuccess(c, http.StatusOK, "intents", out)
+}
+
 func (h *Handler) getIntent(c *gin.Context) {
 	workspaceID, ok := workspaceIDFromPrincipal(c)
 	if !ok {
@@ -159,6 +187,31 @@ func (h *Handler) getIntent(c *gin.Context) {
 		return
 	}
 	httpx.ResponseSuccess(c, http.StatusOK, "intent", intentDTO(intent))
+}
+
+func (h *Handler) listExecutions(c *gin.Context) {
+	workspaceID, ok := workspaceIDFromPrincipal(c)
+	if !ok {
+		return
+	}
+	status, ok := optionalStatusQuery(c, validExecutionStatuses)
+	if !ok {
+		return
+	}
+	limit, ok := parseLimitQuery(c)
+	if !ok {
+		return
+	}
+	list, err := h.svc.ListExecutions(c.Request.Context(), workspaceID, status, limit)
+	if err != nil {
+		httpx.ResponseError(c, err)
+		return
+	}
+	out := make([]gin.H, 0, len(list))
+	for _, execution := range list {
+		out = append(out, executionListDTO(execution))
+	}
+	httpx.ResponseSuccess(c, http.StatusOK, "executions", out)
 }
 
 func (h *Handler) getExecution(c *gin.Context) {
@@ -313,6 +366,49 @@ func organizationIDFromPrincipal(c *gin.Context) (uuid.UUID, bool) {
 	return id, true
 }
 
+var validIntentStatuses = map[string]struct{}{
+	string(domain.IntentStatusSubmitted): {},
+	string(domain.IntentStatusAccepted):  {},
+	string(domain.IntentStatusRejected):  {},
+	string(domain.IntentStatusExpired):   {},
+}
+
+var validExecutionStatuses = map[string]struct{}{
+	string(domain.ExecutionStatusCreated):    {},
+	string(domain.ExecutionStatusQueued):     {},
+	string(domain.ExecutionStatusRunning):    {},
+	string(domain.ExecutionStatusSucceeded):  {},
+	string(domain.ExecutionStatusFailed):     {},
+	string(domain.ExecutionStatusCancelled):  {},
+	string(domain.ExecutionStatusExpired):    {},
+	string(domain.ExecutionStatusDeadLetter): {},
+}
+
+func parseLimitQuery(c *gin.Context) (int32, bool) {
+	limit := int32(50)
+	if raw := c.Query("limit"); raw != "" {
+		parsed, err := strconv.Atoi(raw)
+		if err != nil || parsed <= 0 {
+			httpx.ResponseError(c, apperr.New("invalid limit", apperr.ErrCodeBadRequest))
+			return 0, false
+		}
+		limit = int32(parsed)
+	}
+	return limit, true
+}
+
+func optionalStatusQuery(c *gin.Context, allowed map[string]struct{}) (*string, bool) {
+	raw := c.Query("status")
+	if raw == "" {
+		return nil, true
+	}
+	if _, ok := allowed[raw]; !ok {
+		httpx.ResponseError(c, apperr.New("invalid status", apperr.ErrCodeBadRequest))
+		return nil, false
+	}
+	return &raw, true
+}
+
 func intentDTO(intent *domain.Intent) gin.H {
 	return gin.H{
 		"id":              intent.ID().String(),
@@ -329,11 +425,45 @@ func intentDTO(intent *domain.Intent) gin.H {
 	}
 }
 
+func intentListDTO(intent *domain.Intent) gin.H {
+	return gin.H{
+		"id":              intent.ID().String(),
+		"organization_id": intent.OrganizationID().String(),
+		"workspace_id":    intent.WorkspaceID().String(),
+		"connection_id":   intent.ConnectionID().String(),
+		"capability":      intent.Capability(),
+		"status":          string(intent.Status()),
+		"correlation_id":  intent.CorrelationID(),
+		"idempotency_key": intent.IdempotencyKey(),
+		"submitted_at":    intent.SubmittedAt(),
+		"created_at":      intent.CreatedAt(),
+	}
+}
+
 func executionDTOPtr(execution *domain.Execution) any {
 	if execution == nil {
 		return nil
 	}
 	return executionDTO(execution)
+}
+
+func executionListDTO(execution *domain.Execution) gin.H {
+	var result any
+	if execution.Result() != nil {
+		result = string(*execution.Result())
+	}
+	return gin.H{
+		"id":              execution.ID().String(),
+		"intent_id":       execution.IntentID().String(),
+		"status":          string(execution.Status()),
+		"result":          result,
+		"retry_attempt":   execution.RetryAttempt(),
+		"current_step_no": execution.CurrentStepNo(),
+		"failure_reason":  execution.FailureReason(),
+		"started_at":      execution.StartedAt(),
+		"completed_at":    execution.CompletedAt(),
+		"created_at":      execution.CreatedAt(),
+	}
 }
 
 func executionDTO(execution *domain.Execution) gin.H {

@@ -555,6 +555,51 @@ func (q *Queries) ListAPIKeysByWorkspace(ctx context.Context, workspaceID uuid.U
 	return items, nil
 }
 
+const listWorkspaceMembersByWorkspace = `-- name: ListWorkspaceMembersByWorkspace :many
+SELECT wu.workspace_id, wu.user_id, wu.role, wu.created_at,
+       u.email, u.full_name
+FROM workspace_users wu
+INNER JOIN users u ON u.id = wu.user_id
+WHERE wu.workspace_id = $1
+ORDER BY wu.created_at ASC
+`
+
+type ListWorkspaceMembersByWorkspaceRow struct {
+	WorkspaceID uuid.UUID          `json:"workspace_id"`
+	UserID      uuid.UUID          `json:"user_id"`
+	Role        string             `json:"role"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	Email       string             `json:"email"`
+	FullName    string             `json:"full_name"`
+}
+
+func (q *Queries) ListWorkspaceMembersByWorkspace(ctx context.Context, workspaceID uuid.UUID) ([]ListWorkspaceMembersByWorkspaceRow, error) {
+	rows, err := q.db.Query(ctx, listWorkspaceMembersByWorkspace, workspaceID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListWorkspaceMembersByWorkspaceRow{}
+	for rows.Next() {
+		var i ListWorkspaceMembersByWorkspaceRow
+		if err := rows.Scan(
+			&i.WorkspaceID,
+			&i.UserID,
+			&i.Role,
+			&i.CreatedAt,
+			&i.Email,
+			&i.FullName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listWorkspaceUsersByUser = `-- name: ListWorkspaceUsersByUser :many
 SELECT workspace_id, user_id, role, created_at
 FROM workspace_users

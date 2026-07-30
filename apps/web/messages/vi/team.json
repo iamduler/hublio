@@ -6,5 +6,13 @@
   "role": "Vai trò",
   "invite": "Thêm thành viên",
   "invited": "Đã thêm thành viên.",
-  "listUnavailable": "Backend chưa cung cấp endpoint danh sách thành viên. Thành viên đã thêm sẽ hiển thị ở đây khi có sẵn."
+  "loadError": "Không thể tải danh sách thành viên.",
+  "empty": "Chưa có thành viên",
+  "emptyBody": "Thêm đồng nghiệp bằng email để cộng tác trong workspace này.",
+  "columns": {
+    "name": "Tên",
+    "email": "Email",
+    "role": "Vai trò",
+    "joined": "Tham gia"
+  }
 }
