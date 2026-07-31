@@ -35,8 +35,9 @@ Thứ tự làm việc: **00 → 02** (user workspace) → **01** (admin phase).
 - [x] Manual smoke: login → intent + Poll sync-route DONE (2026-07-30)
 - [x] List members / intents / executions (API + FE)
 - [x] Token refresh (`POST /auth/refresh` + BFF + silent proxy rotate)
+- [x] `GET /auth/me` session bootstrap (user + organization)
 - Dọn legacy `lib/api/bff.ts` / `bff-client.ts`
 - Admin phase (`01`) khi product sẵn sàng
-- Backend blockers: `GET /me`
+- Backend blockers: (none for user-workspace core; cursor pagination optional)
 - Optional: thêm `category` query param trên Go `GET /events` (hiện filter client-side)
 - Note: demo MFA đang `pending_enrollment=true` (enrol dở) — disable/re-setup từ Settings → Security nếu cần

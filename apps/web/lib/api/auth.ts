@@ -6,6 +6,17 @@ export type AuthTokenData = {
   user: User;
 };
 
+export type MeData = {
+  user: User;
+  organization: {
+    id: string;
+    name: string;
+    status: string;
+    created_at?: string;
+    updated_at?: string;
+  };
+};
+
 export type MFAChallengeData = {
   mfa_required: true;
   mfa_token: string;
@@ -121,6 +132,12 @@ export const authApi = {
     return authFetch<{ authenticated: boolean; workspace_id: string | null }>(
       "/session",
       { method: "GET" },
+    );
+  },
+
+  me() {
+    return authFetch<SuccessEnvelope<MeData>>("/me", { method: "GET" }).then(
+      (res) => unwrapData<MeData>(res),
     );
   },
 

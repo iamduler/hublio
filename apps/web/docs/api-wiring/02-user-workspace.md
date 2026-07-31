@@ -5,7 +5,7 @@
 > App: `apps/web` (`@hublio/web`)  
 > **Status (2026-07-30): Core CRUD + list members/intents/executions DONE** — auth/onboarding +
 > connector toggle, sync-route PATCH/poll/watermark, events filters, Team/Intents/Executions lists.
-> Remaining backend gaps: `GET /me`, cursor pagination.
+> Remaining backend gaps: cursor pagination.
 
 Related: [00-foundation](./00-foundation.md) · [01-admin-workspace](./01-admin-workspace.md)
 
@@ -32,6 +32,7 @@ Related: [00-foundation](./00-foundation.md) · [01-admin-workspace](./01-admin-
 - [x] `POST /auth/verify-email/request` + `POST /auth/verify-email` + UI `/(auth)/verify-email?email=`
 - [x] Register → redirect verify-email (OTP gửi best-effort sau register)
 - [x] `POST /auth/refresh` — rotate tokens; BFF `/api/auth/refresh` + silent retry in `proxyGoWithJWT`
+- [x] `GET /auth/me` — user + organization bootstrap; BFF `/api/auth/me` + AuthProvider
 
 ### Auth — Onboarding wizard (OAuth hybrid)
 
@@ -143,7 +144,7 @@ Related: [00-foundation](./00-foundation.md) · [01-admin-workspace](./01-admin-
 - [ ] Replay event, billing → Admin-phase / chưa backend
 - [ ] Cursor/`pagination` envelope on list APIs
 - [x] Token refresh (`POST /auth/refresh` + BFF `/api/auth/refresh` + proxy silent rotate)
-- [ ] `GET /me`
+- [x] `GET /auth/me` (user + organization; AuthProvider bootstrap)
 
 ---
 

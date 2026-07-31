@@ -55,6 +55,12 @@ func (h *Handler) RegisterRoutes(api *gin.RouterGroup, jwtAuth gin.HandlerFunc) 
 		mfaGroup.POST("/disable", h.mfaDisable)
 	}
 
+	meGroup := api.Group("/auth")
+	meGroup.Use(jwtAuth)
+	{
+		meGroup.GET("/me", h.me)
+	}
+
 	identity := api.Group("/identity")
 	identity.Use(jwtAuth)
 	{
@@ -245,6 +251,22 @@ func (h *Handler) mfaStatus(c *gin.Context) {
 		"pending_enrollment":        status.PendingEnrollment,
 		"remaining_recovery_codes":  status.RemainingRecoveryCodes,
 		"can_enroll":                status.CanEnroll,
+	})
+}
+
+func (h *Handler) me(c *gin.Context) {
+	actorID, ok := actorUserID(c)
+	if !ok {
+		return
+	}
+	user, org, err := h.svc.GetCurrentUser(c.Request.Context(), actorID)
+	if err != nil {
+		httpx.ResponseError(c, err)
+		return
+	}
+	httpx.ResponseSuccess(c, http.StatusOK, "me", gin.H{
+		"user":         userDTO(user),
+		"organization": organizationDTO(org),
 	})
 }
 

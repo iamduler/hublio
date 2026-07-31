@@ -14,7 +14,6 @@ import { authApi, type AuthTokenData } from "@/lib/api/auth";
 import {
   clearAuthCookies,
   persistUser,
-  readPersistedUser,
   setAuthPresentCookie,
 } from "@/lib/auth";
 
@@ -58,8 +57,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setHasToken(false);
           return;
         }
+
+        const me = await authApi.me();
+        if (cancelled) return;
         setAuthPresentCookie();
-        setUser(readPersistedUser());
+        persistUser(me.user);
+        setUser(me.user);
         setHasToken(true);
       } catch {
         if (cancelled) return;

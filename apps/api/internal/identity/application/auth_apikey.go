@@ -206,6 +206,22 @@ func (s *Services) GetOrganization(ctx context.Context, organizationID uuid.UUID
 	return org, nil
 }
 
+// GetCurrentUser loads the authenticated user and their organization for session bootstrap.
+func (s *Services) GetCurrentUser(ctx context.Context, userID uuid.UUID) (*domain.User, *domain.Organization, error) {
+	user, err := s.Users.FindByID(ctx, userID)
+	if err != nil {
+		return nil, nil, apperr.New("unauthorized", apperr.ErrCodeUnauthorized)
+	}
+	if !user.CanLogin() {
+		return nil, nil, apperr.New("unauthorized", apperr.ErrCodeUnauthorized)
+	}
+	org, err := s.Orgs.FindByID(ctx, user.OrganizationID())
+	if err != nil {
+		return nil, nil, mapRepoErr(err)
+	}
+	return user, org, nil
+}
+
 func (s *Services) ListWorkspaces(ctx context.Context, organizationID, actorUserID uuid.UUID) ([]*domain.Workspace, error) {
 	user, err := s.Users.FindByID(ctx, actorUserID)
 	if err != nil {

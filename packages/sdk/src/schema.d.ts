@@ -208,6 +208,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Current user and organization (session bootstrap)
+         * @description Returns the authenticated user and their organization. Requires Bearer JWT
+         *     (or httpOnly cookie via Next BFF). Used by the web AuthProvider after
+         *     session presence check so bootstrap does not rely on localStorage alone.
+         */
+        get: operations["authMe"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/forgot-password": {
         parameters: {
             query?: never;
@@ -1172,6 +1194,33 @@ export interface components {
                 user: Record<string, never>;
             };
         };
+        MeSuccessEnvelope: components["schemas"]["SuccessEnvelope"] & {
+            data?: {
+                user: components["schemas"]["AuthUser"];
+                organization: components["schemas"]["AuthOrganization"];
+            };
+        };
+        AuthUser: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            organization_id: string;
+            /** Format: email */
+            email: string;
+            full_name: string;
+            status: string;
+            is_platform_admin?: boolean;
+        };
+        AuthOrganization: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            status: string;
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: date-time */
+            updated_at?: string;
+        };
         MFAChallengeEnvelope: components["schemas"]["SuccessEnvelope"] & {
             data?: {
                 /** @constant */
@@ -1773,6 +1822,27 @@ export interface operations {
                 };
             };
             400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+        };
+    };
+    authMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current user + organization */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeSuccessEnvelope"];
+                };
+            };
             401: components["responses"]["Error"];
         };
     };
