@@ -64,7 +64,7 @@ Theo thứ tự — không bắt đầu từ UI:
 - [x] **Query keys**: workspace-scoped (kể cả intents / executions)
 - [x] **Secrets**: JWT httpOnly; workspace API keys không cần cho UI dashboard nữa
 - [x] **Envelope**: parse `SuccessEnvelope` / `ErrorEnvelope`
-- [x] **Auth 401**: clear client presence + local user snapshot (`lib/api/client` + `bff-client`)
+- [x] **Auth 401**: clear client presence + local user snapshot (`lib/api/client`)
 - [x] **Loading / Empty / Error**: primitives sẵn; áp dụng trên mọi view async
 - [x] **i18n**: en + vi cho feature đã ship
 - [x] **OpenAPI sync**: dual auth (bearer \| apiKey) + `X-Workspace-ID` documented
@@ -89,4 +89,4 @@ Last run: 2026-07-30 (manual smoke via BFF against `demo@hublio.local`).
 
 - [x] Manual e2e smoke — auth/intent + Poll sync-route DONE 2026-07-30
 - [x] Wire gaps user workspace → [02-user-workspace §2](./02-user-workspace.md) — done 2026-07-29
-- [ ] Dọn legacy `lib/api/bff.ts` + `bff-client.ts` sau khi mọi feature dùng `/api/go`
+- [x] Dọn legacy `lib/api/bff.ts` + `bff-client.ts` (deleted; all features use `/api/go`)

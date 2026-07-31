@@ -61,7 +61,7 @@ httpOnly JWT proxy — browser never holds tokens or workspace API keys.
 - [x] Catch-all `/api/go/[...path]` JWT proxy
 - [x] Feature clients use `lib/api/client` → `/api/go` (including intents/executions/events)
 - [x] Legacy `/api/intents|executions|events` routes rewired to JWT proxy
-- [~] Legacy `lib/api/bff.ts` minting kept deprecated
+- [x] Removed deprecated `lib/api/bff.ts` + `bff-client.ts` (all traffic via `proxy-go` + `client`)
 ---
 
 ## Phase 2 — Shared feature infrastructure

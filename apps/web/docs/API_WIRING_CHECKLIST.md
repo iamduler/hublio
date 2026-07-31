@@ -36,7 +36,7 @@ Thứ tự làm việc: **00 → 02** (user workspace) → **01** (admin phase).
 - [x] List members / intents / executions (API + FE)
 - [x] Token refresh (`POST /auth/refresh` + BFF + silent proxy rotate)
 - [x] `GET /auth/me` session bootstrap (user + organization)
-- Dọn legacy `lib/api/bff.ts` / `bff-client.ts`
+- [x] Dọn legacy `lib/api/bff.ts` / `bff-client.ts`
 - Admin phase (`01`) khi product sẵn sàng
 - Backend blockers: (none for user-workspace core; cursor pagination optional)
 - Optional: thêm `category` query param trên Go `GET /events` (hiện filter client-side)
