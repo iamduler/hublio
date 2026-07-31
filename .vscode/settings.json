@@ -18,5 +18,13 @@
   "[javascript]": {
     "editor.defaultFormatter": "vscode.typescript-language-features",
     "editor.formatOnSave": true
+  },
+  "go.goroot": "/usr/local/go",
+  "go.alternateTools": {
+    "go": "/usr/local/go/bin/go"
+  },
+  "go.toolsEnvVars": {
+    "GOTOOLCHAIN": "local",
+    "GOROOT": "/usr/local/go"
   }
 }

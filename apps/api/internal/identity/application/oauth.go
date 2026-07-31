@@ -299,7 +299,11 @@ func (s *Services) issueLoginTokens(ctx context.Context, tokens auth.TokenServic
 	if err := s.Users.Update(ctx, user); err != nil {
 		return nil, mapRepoErr(err)
 	}
+	return s.issueTokens(tokens, user)
+}
 
+// issueTokens mints a new access + refresh pair without updating last_login.
+func (s *Services) issueTokens(tokens auth.TokenService, user *domain.User) (*LoginResult, error) {
 	subject := auth.TokenSubject{
 		UserID:          user.ID().String(),
 		Email:           user.Email(),

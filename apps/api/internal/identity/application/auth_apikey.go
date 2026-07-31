@@ -64,6 +64,30 @@ func (s *Services) Logout(ctx context.Context, tokens auth.TokenService, refresh
 	return tokens.RevokeRefreshToken(refreshToken)
 }
 
+// RefreshTokens rotates a valid refresh token into a new access + refresh pair.
+// Does not bump last_login (unlike Login / MFA / OAuth completion).
+func (s *Services) RefreshTokens(ctx context.Context, tokens auth.TokenService, refreshToken string) (*LoginResult, error) {
+	stored, err := tokens.ValidateRefreshToken(refreshToken)
+	if err != nil {
+		return nil, err
+	}
+	userID, err := uuid.Parse(stored.UserID)
+	if err != nil {
+		return nil, apperr.New("Invalid refresh token", apperr.ErrCodeUnauthorized)
+	}
+	user, err := s.Users.FindByID(ctx, userID)
+	if err != nil {
+		return nil, apperr.New("Invalid refresh token", apperr.ErrCodeUnauthorized)
+	}
+	if !user.CanLogin() {
+		return nil, apperr.New("Invalid refresh token", apperr.ErrCodeUnauthorized)
+	}
+	if err := tokens.RevokeRefreshToken(refreshToken); err != nil {
+		return nil, apperr.Wrap(err, "failed to revoke refresh token", apperr.ErrCodeInternal)
+	}
+	return s.issueTokens(tokens, user)
+}
+
 type CreateAPIKeyInput struct {
 	WorkspaceID uuid.UUID
 	ActorUserID uuid.UUID

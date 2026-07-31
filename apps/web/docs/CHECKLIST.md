@@ -174,7 +174,7 @@ httpOnly JWT proxy — browser never holds tokens or workspace API keys.
 
 These are **not frontend-only** — need Go work first:
 
-- [ ] Token **refresh** endpoint (access TTL = 15 min; sessions expire hard)
+- [x] Token **refresh** endpoint (access TTL = 15 min; rotate via refresh cookie)
 - [ ] `GET /me` (or equivalent session bootstrap)
 - [x] List workspace **members**
 - [x] List **intents** / **executions** (limit + optional status; no cursor yet)

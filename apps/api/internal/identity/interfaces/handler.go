@@ -33,6 +33,7 @@ func (h *Handler) RegisterRoutes(api *gin.RouterGroup, jwtAuth gin.HandlerFunc) 
 	{
 		authGroup.POST("/register", h.register)
 		authGroup.POST("/login", h.login)
+		authGroup.POST("/refresh", h.refresh)
 		authGroup.POST("/logout", h.logout)
 		authGroup.POST("/forgot-password", h.forgotPassword)
 		authGroup.POST("/reset-password", h.resetPassword)
@@ -341,6 +342,24 @@ func (h *Handler) mfaDisable(c *gin.Context) {
 
 type logoutRequest struct {
 	RefreshToken string `json:"refresh_token" binding:"required"`
+}
+
+type refreshRequest struct {
+	RefreshToken string `json:"refresh_token" binding:"required"`
+}
+
+func (h *Handler) refresh(c *gin.Context) {
+	var req refreshRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		httpx.ResponseError(c, apperr.New(err.Error(), apperr.ErrCodeBadRequest))
+		return
+	}
+	result, err := h.svc.RefreshTokens(c.Request.Context(), h.tokens, req.RefreshToken)
+	if err != nil {
+		httpx.ResponseError(c, err)
+		return
+	}
+	httpx.ResponseSuccess(c, http.StatusOK, "token refreshed", loginDTO(result))
 }
 
 func (h *Handler) logout(c *gin.Context) {

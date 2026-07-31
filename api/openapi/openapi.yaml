@@ -258,6 +258,38 @@ paths:
         "400":
           $ref: "#/components/responses/Error"
 
+  /api/v1/auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Rotate refresh token and issue a new access + refresh pair
+      description: |
+        Validates the refresh token in Redis, revokes it, and returns a new
+        `access_token` + `refresh_token` (same shape as login success). Does not
+        bump `last_login`. Access TTL remains 15 minutes; refresh TTL 7 days.
+      operationId: authRefresh
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        "200":
+          description: Tokens rotated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginSuccessEnvelope"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+
   /api/v1/auth/forgot-password:
     post:
       tags: [Auth]
