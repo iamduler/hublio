@@ -3,6 +3,8 @@
   "subtitle": "Sự kiện runtime, nghiệp vụ và hệ thống của workspace này.",
   "empty": "Chưa có sự kiện nào.",
   "loadError": "Không thể tải sự kiện.",
+  "loadMore": "Tải thêm",
+  "loadingMore": "Đang tải…",
   "columns": {
     "event": "Sự kiện",
     "category": "Loại",

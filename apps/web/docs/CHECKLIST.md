@@ -134,7 +134,7 @@ httpOnly JWT proxy — browser never holds tokens or workspace API keys.
 ### Events
 
 - [x] Explorer table + payload inspector dialog
-- [x] Filter by execution ID (API) + category (client-side)
+- [x] Filter by execution ID + category (API) + Load more (cursor)
 - [ ] Replay event screen (no backend)
 
 ### API Keys / credentials

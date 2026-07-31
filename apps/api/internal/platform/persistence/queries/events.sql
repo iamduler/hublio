@@ -7,21 +7,19 @@ INSERT INTO events (
   $7, $8, $9, $10, $11, $12, $13
 );
 
--- name: ListEventsByWorkspace :many
+-- name: ListEventsFiltered :many
 SELECT id, organization_id, workspace_id, aggregate_type, aggregate_id, execution_id,
        category, event_name, correlation_id, payload, metadata, published_by, created_at
 FROM events
-WHERE workspace_id = $1
-ORDER BY created_at DESC
-LIMIT $2;
-
--- name: ListEventsByWorkspaceAndExecution :many
-SELECT id, organization_id, workspace_id, aggregate_type, aggregate_id, execution_id,
-       category, event_name, correlation_id, payload, metadata, published_by, created_at
-FROM events
-WHERE workspace_id = $1 AND execution_id = $2
-ORDER BY created_at DESC
-LIMIT $3;
+WHERE workspace_id = sqlc.arg(workspace_id)
+  AND (sqlc.narg(execution_id)::uuid IS NULL OR execution_id = sqlc.narg(execution_id))
+  AND (sqlc.narg(category)::text IS NULL OR category = sqlc.narg(category)::event_category)
+  AND (
+    sqlc.narg(cursor_created_at)::timestamptz IS NULL
+    OR (created_at, id) < (sqlc.narg(cursor_created_at)::timestamptz, sqlc.narg(cursor_id)::uuid)
+  )
+ORDER BY created_at DESC, id DESC
+LIMIT sqlc.arg(fetch_limit);
 
 -- name: InsertAuditLog :exec
 INSERT INTO audit_logs (

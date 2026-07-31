@@ -3,6 +3,15 @@ export interface SuccessEnvelope<T> {
   status: string;
   message?: string;
   data: T;
+  pagination?: {
+    next_cursor?: string;
+    has_next?: boolean;
+    limit?: number;
+    page?: number;
+    total?: number;
+    total_pages?: number;
+    has_previous?: boolean;
+  };
 }
 
 /** Error envelope from Hublio Go API. */

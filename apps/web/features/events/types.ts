@@ -16,9 +16,20 @@ export interface DomainEvent {
   created_at?: string;
 }
 
+export interface CursorPagination {
+  next_cursor: string;
+  has_next: boolean;
+  limit: number;
+}
+
+export interface EventsPage {
+  items: DomainEvent[];
+  pagination: CursorPagination;
+}
+
 export interface EventsQuery {
   execution_id?: string;
-  /** Client-side filter — backend list API does not yet accept category. */
   category?: EventCategory | "all";
+  cursor?: string;
   limit?: number;
 }

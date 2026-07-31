@@ -45,6 +45,31 @@ func TestNewPlatformEvent(t *testing.T) {
 	}
 }
 
+func TestParseCategory(t *testing.T) {
+	tests := []struct {
+		raw     string
+		want    Category
+		wantErr error
+	}{
+		{"runtime", CategoryRuntime, nil},
+		{"business", CategoryBusiness, nil},
+		{"system", CategorySystem, nil},
+		{"bogus", "", ErrInvalidCategory},
+		{"", "", ErrInvalidCategory},
+	}
+	for _, tt := range tests {
+		t.Run(tt.raw, func(t *testing.T) {
+			got, err := ParseCategory(tt.raw)
+			if err != tt.wantErr {
+				t.Fatalf("err = %v, want %v", err, tt.wantErr)
+			}
+			if got != tt.want {
+				t.Fatalf("got %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestNewPlatformEvent_EventNameTooLong(t *testing.T) {
 	longName := make([]byte, 151)
 	for i := range longName {

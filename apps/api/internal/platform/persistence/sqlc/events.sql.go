@@ -105,71 +105,39 @@ func (q *Queries) InsertEvent(ctx context.Context, arg InsertEventParams) error 
 	return err
 }
 
-const listEventsByWorkspace = `-- name: ListEventsByWorkspace :many
+const listEventsFiltered = `-- name: ListEventsFiltered :many
 SELECT id, organization_id, workspace_id, aggregate_type, aggregate_id, execution_id,
        category, event_name, correlation_id, payload, metadata, published_by, created_at
 FROM events
 WHERE workspace_id = $1
-ORDER BY created_at DESC
-LIMIT $2
+  AND ($2::uuid IS NULL OR execution_id = $2)
+  AND ($3::text IS NULL OR category = $3::event_category)
+  AND (
+    $4::timestamptz IS NULL
+    OR (created_at, id) < ($4::timestamptz, $5::uuid)
+  )
+ORDER BY created_at DESC, id DESC
+LIMIT $6
 `
 
-type ListEventsByWorkspaceParams struct {
-	WorkspaceID pgtype.UUID `json:"workspace_id"`
-	Limit       int32       `json:"limit"`
+type ListEventsFilteredParams struct {
+	WorkspaceID     pgtype.UUID        `json:"workspace_id"`
+	ExecutionID     pgtype.UUID        `json:"execution_id"`
+	Category        *string            `json:"category"`
+	CursorCreatedAt pgtype.Timestamptz `json:"cursor_created_at"`
+	CursorID        pgtype.UUID        `json:"cursor_id"`
+	FetchLimit      int32              `json:"fetch_limit"`
 }
 
-func (q *Queries) ListEventsByWorkspace(ctx context.Context, arg ListEventsByWorkspaceParams) ([]Event, error) {
-	rows, err := q.db.Query(ctx, listEventsByWorkspace, arg.WorkspaceID, arg.Limit)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []Event{}
-	for rows.Next() {
-		var i Event
-		if err := rows.Scan(
-			&i.ID,
-			&i.OrganizationID,
-			&i.WorkspaceID,
-			&i.AggregateType,
-			&i.AggregateID,
-			&i.ExecutionID,
-			&i.Category,
-			&i.EventName,
-			&i.CorrelationID,
-			&i.Payload,
-			&i.Metadata,
-			&i.PublishedBy,
-			&i.CreatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listEventsByWorkspaceAndExecution = `-- name: ListEventsByWorkspaceAndExecution :many
-SELECT id, organization_id, workspace_id, aggregate_type, aggregate_id, execution_id,
-       category, event_name, correlation_id, payload, metadata, published_by, created_at
-FROM events
-WHERE workspace_id = $1 AND execution_id = $2
-ORDER BY created_at DESC
-LIMIT $3
-`
-
-type ListEventsByWorkspaceAndExecutionParams struct {
-	WorkspaceID pgtype.UUID `json:"workspace_id"`
-	ExecutionID pgtype.UUID `json:"execution_id"`
-	Limit       int32       `json:"limit"`
-}
-
-func (q *Queries) ListEventsByWorkspaceAndExecution(ctx context.Context, arg ListEventsByWorkspaceAndExecutionParams) ([]Event, error) {
-	rows, err := q.db.Query(ctx, listEventsByWorkspaceAndExecution, arg.WorkspaceID, arg.ExecutionID, arg.Limit)
+func (q *Queries) ListEventsFiltered(ctx context.Context, arg ListEventsFilteredParams) ([]Event, error) {
+	rows, err := q.db.Query(ctx, listEventsFiltered,
+		arg.WorkspaceID,
+		arg.ExecutionID,
+		arg.Category,
+		arg.CursorCreatedAt,
+		arg.CursorID,
+		arg.FetchLimit,
+	)
 	if err != nil {
 		return nil, err
 	}

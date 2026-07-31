@@ -3,9 +3,9 @@
 > Tenant user workspace — Integration + Orchestration UI.  
 > Legend: `[x]` wired end-to-end · `[~]` client/hook có nhưng thiếu UI · `[ ]` chưa wire  
 > App: `apps/web` (`@hublio/web`)  
-> **Status (2026-07-30): Core CRUD + list members/intents/executions DONE** — auth/onboarding +
-> connector toggle, sync-route PATCH/poll/watermark, events filters, Team/Intents/Executions lists.
-> Remaining backend gaps: cursor pagination.
+> **Status (2026-07-31): Core CRUD + list members/intents/executions DONE** — auth/onboarding +
+> connector toggle, sync-route PATCH/poll/watermark, events filters + cursor Load more,
+> Team/Intents/Executions lists.
 
 Related: [00-foundation](./00-foundation.md) · [01-admin-workspace](./01-admin-workspace.md)
 
@@ -100,8 +100,8 @@ Related: [00-foundation](./00-foundation.md) · [01-admin-workspace](./01-admin-
 
 ### Events (JWT proxy → Go)
 
-- [x] `GET /events`
-- [x] Filter UI: `execution_id` (API query) + `category` (client-side trên page)
+- [x] `GET /events` — `execution_id`, `category`, `cursor` / `limit`; response `pagination.next_cursor`
+- [x] Filter UI: `execution_id` + `category` (API) + Load more (cursor)
 
 ---
 
@@ -111,7 +111,7 @@ Related: [00-foundation](./00-foundation.md) · [01-admin-workspace](./01-admin-
 - [x] Sync Route `PATCH` edit form
 - [x] Sync Route poll: nút “Poll now” → `POST /sync-routes/:id/poll` qua `/api/go`
 - [x] Watermark editor: UI cho `PUT watermarks/:resourceType`
-- [x] Events filters: bind `execution_id`, `category`
+- [x] Events filters: bind `execution_id`, `category` (server) + cursor Load more
 
 ---
 

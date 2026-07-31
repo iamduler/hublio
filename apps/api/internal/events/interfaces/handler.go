@@ -47,6 +47,16 @@ func (h *Handler) listEvents(c *gin.Context) {
 		executionID = &id
 	}
 
+	var category *domain.Category
+	if raw := c.Query("category"); raw != "" {
+		parsed, err := domain.ParseCategory(raw)
+		if err != nil {
+			httpx.ResponseError(c, apperr.New("invalid category", apperr.ErrCodeBadRequest))
+			return
+		}
+		category = &parsed
+	}
+
 	limit := int32(50)
 	if raw := c.Query("limit"); raw != "" {
 		parsed, err := strconv.Atoi(raw)
@@ -57,17 +67,30 @@ func (h *Handler) listEvents(c *gin.Context) {
 		limit = int32(parsed)
 	}
 
-	events, err := h.svc.ListEvents(c.Request.Context(), workspaceID, executionID, limit)
+	result, err := h.svc.ListEvents(c.Request.Context(), application.ListEventsInput{
+		WorkspaceID: workspaceID,
+		ExecutionID: executionID,
+		Category:    category,
+		Cursor:      c.Query("cursor"),
+		Limit:       limit,
+	})
 	if err != nil {
 		httpx.ResponseError(c, err)
 		return
 	}
 
-	out := make([]gin.H, 0, len(events))
-	for _, e := range events {
+	out := make([]gin.H, 0, len(result.Events))
+	for _, e := range result.Events {
 		out = append(out, eventDTO(e))
 	}
-	httpx.ResponseSuccess(c, http.StatusOK, "events", out)
+	httpx.ResponseSuccess(c, http.StatusOK, "events", map[string]any{
+		"data": out,
+		"pagination": map[string]any{
+			"next_cursor": result.NextCursor,
+			"has_next":    result.HasNext,
+			"limit":       result.Limit,
+		},
+	})
 }
 
 func eventDTO(e *domain.PlatformEvent) gin.H {

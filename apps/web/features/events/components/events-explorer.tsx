@@ -36,7 +36,7 @@ import { EmptyState } from "@hublio/ui/ui/empty-state";
 import { ErrorState } from "@hublio/ui/ui/error-state";
 import { LoadingState } from "@hublio/ui/ui/loading-state";
 import { useApiErrorMessage } from "@/hooks/use-api-error";
-import { useEvents } from "../hooks";
+import { useInfiniteEvents } from "../hooks";
 import type { DomainEvent, EventCategory } from "../types";
 
 const CATEGORY_VARIANT: Record<EventCategory, "sky" | "violet" | "gray"> = {
@@ -52,6 +52,8 @@ const CATEGORIES: Array<EventCategory | "all"> = [
   "system",
 ];
 
+const PAGE_LIMIT = 50;
+
 export function EventsExplorer() {
   const t = useTranslations("events");
   const getError = useApiErrorMessage();
@@ -64,27 +66,39 @@ export function EventsExplorer() {
     execution_id?: string;
     category?: EventCategory | "all";
     limit: number;
-  }>({ limit: 100 });
+  }>({ limit: PAGE_LIMIT });
 
-  const { data, isLoading, isError, error, refetch } = useEvents({
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteEvents({
     execution_id: applied.execution_id,
     category: applied.category,
     limit: applied.limit,
   });
   const [selected, setSelected] = useState<DomainEvent | null>(null);
 
+  const events = data?.pages.flatMap((page) => page.items) ?? [];
+
+
   function applyFilters() {
     setApplied({
       execution_id: executionIdInput.trim() || undefined,
       category: categoryInput,
-      limit: 100,
+      limit: PAGE_LIMIT,
     });
   }
 
   function clearFilters() {
     setExecutionIdInput("");
     setCategoryInput("all");
-    setApplied({ limit: 100 });
+    setApplied({ limit: PAGE_LIMIT });
   }
 
   return (
@@ -140,7 +154,7 @@ export function EventsExplorer() {
           description={getError(error)}
           onRetry={() => void refetch()}
         />
-      ) : !data || data.length === 0 ? (
+      ) : events.length === 0 ? (
         <EmptyState icon={Activity} title={t("empty")} />
       ) : (
         <>
@@ -156,7 +170,7 @@ export function EventsExplorer() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data.map((event) => (
+                {events.map((event) => (
                   <TableRow
                     key={event.id}
                     className="cursor-pointer"
@@ -198,6 +212,19 @@ export function EventsExplorer() {
               </TableBody>
             </Table>
           </Card>
+
+          {hasNextPage ? (
+            <div className="flex justify-center">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isFetchingNextPage}
+                onClick={() => void fetchNextPage()}
+              >
+                {isFetchingNextPage ? t("loadingMore") : t("loadMore")}
+              </Button>
+            </div>
+          ) : null}
 
           <Dialog
             open={Boolean(selected)}

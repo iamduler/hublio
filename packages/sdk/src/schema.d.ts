@@ -1162,6 +1162,40 @@ export interface components {
             message?: string;
             /** @description Payload varies by endpoint */
             data?: unknown;
+            /** @description Present on keyset-paginated list endpoints */
+            pagination?: components["schemas"]["CursorPagination"];
+        };
+        CursorPagination: {
+            /** @description Opaque cursor for the next page; empty when has_next is false */
+            next_cursor?: string;
+            has_next?: boolean;
+            limit?: number;
+        };
+        PlatformEvent: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            organization_id?: string | null;
+            /** Format: uuid */
+            workspace_id?: string | null;
+            aggregate_type: string;
+            /** Format: uuid */
+            aggregate_id: string;
+            /** Format: uuid */
+            execution_id?: string | null;
+            /** @enum {string} */
+            category: "runtime" | "business" | "system";
+            event_name: string;
+            correlation_id?: string;
+            payload?: {
+                [key: string]: unknown;
+            };
+            metadata?: {
+                [key: string]: unknown;
+            };
+            published_by?: string;
+            /** Format: date-time */
+            created_at?: string;
         };
         ErrorEnvelope: {
             error?: string;
@@ -3188,6 +3222,13 @@ export interface operations {
         parameters: {
             query?: {
                 execution_id?: string;
+                /** @description Filter by PlatformEvent category */
+                category?: "runtime" | "business" | "system";
+                /**
+                 * @description Opaque keyset cursor from a previous page (`pagination.next_cursor`).
+                 *     Encodes created_at + id for (created_at DESC, id DESC) order.
+                 */
+                cursor?: string;
                 limit?: number;
             };
             header?: {
@@ -3202,12 +3243,17 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Events */
+            /** @description Events page with optional cursor pagination */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: components["schemas"]["PlatformEvent"][];
+                        pagination?: components["schemas"]["CursorPagination"];
+                    };
+                };
             };
             400: components["responses"]["Error"];
             401: components["responses"]["Error"];

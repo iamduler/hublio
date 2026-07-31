@@ -26,6 +26,15 @@ func (c Category) valid() bool {
 	}
 }
 
+// ParseCategory validates a category query string.
+func ParseCategory(raw string) (Category, error) {
+	c := Category(raw)
+	if !c.valid() {
+		return "", ErrInvalidCategory
+	}
+	return c, nil
+}
+
 // AggregateType matches the frozen `aggregate_type` enum (docs/20-database-schema.dbml).
 // It intentionally has no "user" / "api_key" / "credential" member: events for those
 // entities are attributed to the closest owning Aggregate (see the events BC bridges).
@@ -169,9 +178,30 @@ type EventRepository interface {
 // (GET /api/v1/events). Kept separate from EventRepository so the write path stays
 // literally Save-only.
 type EventReader interface {
-	// ListByWorkspace returns the most recent events for workspaceID, newest first,
-	// optionally filtered to one executionID, bounded by limit.
-	ListByWorkspace(ctx context.Context, workspaceID uuid.UUID, executionID *uuid.UUID, limit int32) ([]*PlatformEvent, error)
+	// ListByWorkspace returns a page of events for workspaceID, newest first
+	// (created_at DESC, id DESC), optionally filtered and keyset-paginated.
+	ListByWorkspace(ctx context.Context, workspaceID uuid.UUID, filter EventListFilter) (*EventListPage, error)
+}
+
+// EventListCursor is a keyset position for GET /events (opaque encoding is application-layer).
+type EventListCursor struct {
+	CreatedAt time.Time
+	ID        uuid.UUID
+}
+
+// EventListFilter carries optional filters for EventReader.ListByWorkspace.
+type EventListFilter struct {
+	ExecutionID *uuid.UUID
+	Category    *Category
+	Cursor      *EventListCursor
+	Limit       int32
+}
+
+// EventListPage is one page of events plus whether another page exists.
+type EventListPage struct {
+	Events   []*PlatformEvent
+	Next     *EventListCursor
+	HasNext  bool
 }
 
 // EventHandler is an in-process subscriber invoked after a PlatformEvent has been durably

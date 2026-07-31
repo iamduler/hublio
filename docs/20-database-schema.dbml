@@ -703,6 +703,8 @@ Table events {
     created_at    
     (aggregate_type, aggregate_id)    
     (category, created_at)
+    (workspace_id, created_at, id) [name: 'idx_events_workspace_created_id', note: 'Keyset list GET /events']
+    (workspace_id, category, created_at, id) [name: 'idx_events_workspace_category_created_id']
   }
 
   Note: '''

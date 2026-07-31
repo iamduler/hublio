@@ -9,6 +9,7 @@ import (
 	"hublio/internal/platform/persistence/sqlc"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -56,34 +57,57 @@ func (r *EventRepository) Save(ctx context.Context, event *domain.PlatformEvent)
 	return nil
 }
 
-// ListByWorkspace returns the most recent PlatformEvents for a Workspace (optionally
-// filtered by executionID), newest first, bounded by limit. Used by the Platform Events API
-// (GET /api/v1/events).
-func (r *EventRepository) ListByWorkspace(ctx context.Context, workspaceID uuid.UUID, executionID *uuid.UUID, limit int32) ([]*domain.PlatformEvent, error) {
+// ListByWorkspace returns a keyset page of PlatformEvents for a Workspace.
+func (r *EventRepository) ListByWorkspace(
+	ctx context.Context,
+	workspaceID uuid.UUID,
+	filter domain.EventListFilter,
+) (*domain.EventListPage, error) {
+	limit := filter.Limit
 	if limit <= 0 || limit > 200 {
 		limit = 50
 	}
 
-	if executionID != nil {
-		rows, err := r.q(ctx).ListEventsByWorkspaceAndExecution(ctx, sqlc.ListEventsByWorkspaceAndExecutionParams{
-			WorkspaceID: uuidPtrToPgtype(&workspaceID),
-			ExecutionID: uuidPtrToPgtype(executionID),
-			Limit:       limit,
-		})
-		if err != nil {
-			return nil, fmt.Errorf("events repo: list by workspace+execution: %w", err)
-		}
-		return hydrateEvents(rows)
+	params := sqlc.ListEventsFilteredParams{
+		WorkspaceID: uuidPtrToPgtype(&workspaceID),
+		ExecutionID: uuidPtrToPgtype(filter.ExecutionID),
+		FetchLimit:  limit + 1,
+	}
+	if filter.Category != nil {
+		cat := string(*filter.Category)
+		params.Category = &cat
+	}
+	if filter.Cursor != nil {
+		params.CursorCreatedAt = timestamptz(filter.Cursor.CreatedAt)
+		params.CursorID = uuidPtrToPgtype(&filter.Cursor.ID)
+	} else {
+		params.CursorCreatedAt = pgtype.Timestamptz{Valid: false}
+		params.CursorID = pgtype.UUID{Valid: false}
 	}
 
-	rows, err := r.q(ctx).ListEventsByWorkspace(ctx, sqlc.ListEventsByWorkspaceParams{
-		WorkspaceID: uuidPtrToPgtype(&workspaceID),
-		Limit:       limit,
-	})
+	rows, err := r.q(ctx).ListEventsFiltered(ctx, params)
 	if err != nil {
-		return nil, fmt.Errorf("events repo: list by workspace: %w", err)
+		return nil, fmt.Errorf("events repo: list filtered: %w", err)
 	}
-	return hydrateEvents(rows)
+
+	events, err := hydrateEvents(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	page := &domain.EventListPage{Events: events, HasNext: false}
+	if int32(len(events)) > limit {
+		page.HasNext = true
+		page.Events = events[:limit]
+	}
+	if page.HasNext && len(page.Events) > 0 {
+		last := page.Events[len(page.Events)-1]
+		page.Next = &domain.EventListCursor{
+			CreatedAt: last.CreatedAt(),
+			ID:        last.ID(),
+		}
+	}
+	return page, nil
 }
 
 func hydrateEvents(rows []sqlc.Event) ([]*domain.PlatformEvent, error) {

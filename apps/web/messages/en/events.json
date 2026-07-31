@@ -3,6 +3,8 @@
   "subtitle": "Runtime, business and system events for this workspace.",
   "empty": "No events yet.",
   "loadError": "Could not load events.",
+  "loadMore": "Load more",
+  "loadingMore": "Loading…",
   "columns": {
     "event": "Event",
     "category": "Category",

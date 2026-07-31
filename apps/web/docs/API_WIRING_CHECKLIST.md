@@ -28,7 +28,8 @@ Thứ tự làm việc: **00 → 02** (user workspace) → **01** (admin phase).
 2. [x] Sync Route `PATCH` edit
 3. [x] Sync Route “Poll now”
 4. [x] Watermark editor
-5. [x] Events filters (`execution_id` API + `category` client-side)
+5. [x] Events filters (`execution_id` + `category` API) + cursor Load more
+
 
 ### Tiếp theo
 
@@ -38,6 +39,5 @@ Thứ tự làm việc: **00 → 02** (user workspace) → **01** (admin phase).
 - [x] `GET /auth/me` session bootstrap (user + organization)
 - [x] Dọn legacy `lib/api/bff.ts` / `bff-client.ts`
 - Admin phase (`01`) khi product sẵn sàng
-- Backend blockers: (none for user-workspace core; cursor pagination optional)
-- Optional: thêm `category` query param trên Go `GET /events` (hiện filter client-side)
+- Backend blockers: (none for user-workspace core)
 - Note: demo MFA đang `pending_enrollment=true` (enrol dở) — disable/re-setup từ Settings → Security nếu cần
