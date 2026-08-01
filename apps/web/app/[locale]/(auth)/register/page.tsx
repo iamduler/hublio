@@ -85,37 +85,14 @@ export default function RegisterPage() {
   return (
     <AuthCard>
       <div className="mb-6 flex flex-col items-center">
-        <Logo size="lg" />
+        <Logo size="lg" priority />
         <div className="mt-5 text-center">
-          <h1 className="text-[17px] font-semibold tracking-tight text-[var(--ink)]">
+          <h1 className="text-[17px] font-semibold tracking-tight text-(--ink)">
             {t("title")}
           </h1>
-          <p className="mt-1.5 text-[13px] text-[var(--muted-clr)]">{t("subtitle")}</p>
+          <p className="mt-1.5 text-[13px] text-(--muted-clr)">{t("subtitle")}</p>
         </div>
       </div>
-
-      <div className="mb-4 space-y-2.5">
-        {(["google", "microsoft", "github"] as const).map((provider) => {
-          const enabled = providers.includes(provider);
-          return (
-            <SSOButton
-              key={provider}
-              provider={provider}
-              label={t(`oauth.${provider}`)}
-              disabled={!enabled}
-              onClick={() => {
-                if (!enabled) {
-                  toast.error(t("oauthUnavailable"));
-                  return;
-                }
-                window.location.href = `/api/auth/oauth/start?provider=${provider}`;
-              }}
-            />
-          );
-        })}
-      </div>
-
-      <AuthDivider label={t("or")} />
 
       <form
         className="mt-1 space-y-3.5"
@@ -136,7 +113,7 @@ export default function RegisterPage() {
               inputBase,
               form.formState.errors.full_name
                 ? "border-red-300 bg-red-50/40"
-                : "border-[var(--line)] hover:border-[var(--line-3)]",
+                : "border-(--line) hover:border-(--line-3)",
             )}
             {...form.register("full_name")}
           />
@@ -160,7 +137,7 @@ export default function RegisterPage() {
               inputBase,
               form.formState.errors.organization_name
                 ? "border-red-300 bg-red-50/40"
-                : "border-[var(--line)] hover:border-[var(--line-3)]",
+                : "border-(--line) hover:border-(--line-3)",
             )}
             {...form.register("organization_name")}
           />
@@ -184,7 +161,7 @@ export default function RegisterPage() {
               inputBase,
               form.formState.errors.email
                 ? "border-red-300 bg-red-50/40"
-                : "border-[var(--line)] hover:border-[var(--line-3)]",
+                : "border-(--line) hover:border-(--line-3)",
             )}
             {...form.register("email")}
           />
@@ -250,7 +227,7 @@ export default function RegisterPage() {
         </div>
       </form>
 
-      <p className="mt-5 text-center text-[13px] text-[var(--muted-clr)]">
+      <p className="mt-5 text-center text-[13px] text-(--muted-clr)">
         {t("hasAccount")}{" "}
         <Link
           href="/login"

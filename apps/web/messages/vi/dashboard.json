@@ -10,6 +10,9 @@
     "apiKeys": "API Key",
     "team": "Nhóm",
     "settings": "Cài đặt",
+    "collapse": "Thu gọn thanh bên",
+    "expand": "Mở rộng thanh bên",
+    "menu": "Mở điều hướng",
     "sections": {
       "integration": "Tích hợp",
       "orchestration": "Điều phối",

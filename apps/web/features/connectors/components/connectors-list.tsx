@@ -58,24 +58,24 @@ export function ConnectorsList() {
               <TableCell>
                 <Link
                   href={`/dashboard/connectors/${connector.id}`}
-                  className="font-medium text-[var(--ink)] no-underline hover:text-primary"
+                  className="font-medium text-(--ink) no-underline hover:text-primary"
                 >
                   {connector.name}
                 </Link>
-                <div className="font-mono text-xs text-[var(--muted-clr)]">
+                <div className="font-mono text-xs text-(--muted-clr)">
                   {connector.code}
                 </div>
               </TableCell>
-              <TableCell className="text-[var(--ink-2)]">
+              <TableCell className="text-(--ink-2)">
                 {connector.vendor}
               </TableCell>
               <TableCell>
                 <Badge variant="gray">{connector.category}</Badge>
               </TableCell>
-              <TableCell className="font-mono text-xs text-[var(--ink-2)]">
+              <TableCell className="font-mono text-xs text-(--ink-2)">
                 {connector.version}
               </TableCell>
-              <TableCell className="text-[var(--ink-2)]">
+              <TableCell className="text-(--ink-2)">
                 {connector.capabilities?.length ?? 0}
               </TableCell>
               <TableCell>

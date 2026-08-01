@@ -1,10 +1,112 @@
 {
+  "common": {
+    "meta": {
+      "brand": "Hublio Admin",
+      "title": "Hublio Admin",
+      "description": "Platform administration console for Hublio"
+    },
+    "settings": {
+      "appearance": {
+        "themes": {
+          "system": "System",
+          "light": "Light",
+          "dark": "Dark"
+        }
+      }
+    }
+  },
   "admin": {
     "eyebrow": "Hublio Admin",
     "title": "Admin Console",
     "subtitle": "Operate organizations, workspaces, and platform settings.",
-    "placeholder": "This is a scaffold. Admin features will be added incrementally on top of the shared design system and Go API.",
-    "cta": "View documentation",
-    "status": "Scaffold"
+    "placeholder": "Org suspend/activate and connector registry screens land in the next wiring phase.",
+    "status": "Scaffold",
+    "overview": {
+      "session": "Session",
+      "signedInAs": "Signed in as",
+      "orgContext": "Organization context:"
+    }
+  },
+  "validation": {
+    "required": "This field is required",
+    "email": "Enter a valid email address",
+    "passwordMin": "Password must be at least 8 characters",
+    "passwordsMatch": "Passwords do not match"
+  },
+  "auth": {
+    "login": {
+      "title": "Platform admin sign in",
+      "subtitle": "Access is limited to users with the platform admin claim.",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign in",
+      "submitting": "Signing in…",
+      "fillDemo": "Fill seed admin",
+      "forgotPassword": "Forgot password?",
+      "failed": "Sign in failed.",
+      "notPlatformAdmin": "This account is not a platform admin.",
+      "mfaUnsupported": "MFA is not supported in the admin console. Use a password-only platform admin account."
+    },
+    "forgot": {
+      "title": "Reset your password",
+      "subtitle": "Enter your email and we'll send a secure reset link. It expires in 1 hour.",
+      "email": "Email",
+      "submit": "Send reset link",
+      "submitting": "Sending link…",
+      "sentTitle": "Check your inbox",
+      "sentBody": "We sent a reset link to {email}. The link expires in 60 minutes.",
+      "resend": "Resend email",
+      "backToLogin": "Back to sign in",
+      "successGeneric": "If an account exists for that email, a reset link has been sent.",
+      "failed": "Could not send reset link."
+    },
+    "reset": {
+      "title": "Set new password",
+      "subtitle": "Choose a strong password for your platform admin account.",
+      "password": "New password",
+      "confirmPassword": "Confirm new password",
+      "submit": "Set new password",
+      "submitting": "Saving password…",
+      "doneTitle": "Password updated",
+      "doneBody": "Your password has been changed. You can now sign in with your new password.",
+      "continueLogin": "Continue to sign in",
+      "backToLogin": "Back to sign in",
+      "invalidToken": "This reset link is invalid or has expired.",
+      "failed": "Could not reset password."
+    },
+    "forbidden": {
+      "title": "Access denied",
+      "subtitle": "You need a platform admin account to use this console.",
+      "signOut": "Sign out",
+      "goLogin": "Back to sign in"
+    },
+    "passwordField": {
+      "show": "Show password",
+      "hide": "Hide password"
+    }
+  },
+  "shell": {
+    "nav": {
+      "brand": "Hublio Admin",
+      "overview": "Overview",
+      "organizations": "Organizations",
+      "connectors": "Connectors",
+      "collapse": "Collapse sidebar",
+      "expand": "Expand sidebar",
+      "menu": "Open navigation"
+    },
+    "header": {
+      "signOut": "Sign out",
+      "noOrg": "No organization loaded",
+      "menu": "Open navigation"
+    }
+  },
+  "organizations": {
+    "stubTitle": "Organizations",
+    "stubDescription": "List, suspend, and activate organizations will be wired next."
+  },
+  "connectors": {
+    "stubTitle": "Connector registry",
+    "stubDescription": "Register, enable, disable, and remove connectors will be wired next."
   }
 }

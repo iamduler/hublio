@@ -126,7 +126,7 @@ export function ConnectorDetail({ connectorId }: { connectorId: string }) {
               </Badge>
             ))
           ) : (
-            <p className="text-sm text-[var(--muted-clr)]">
+            <p className="text-sm text-(--muted-clr)">
               {t("noCapabilities")}
             </p>
           )}
@@ -148,14 +148,14 @@ function Detail({
   return (
     <Card>
       <CardContent className="p-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted-clr)]">
+        <p className="text-xs font-medium uppercase tracking-wide text-(--muted-clr)">
           {label}
         </p>
         <p
           className={
             mono
-              ? "font-mono text-sm text-[var(--ink)]"
-              : "text-sm text-[var(--ink)]"
+              ? "font-mono text-sm text-(--ink)"
+              : "text-sm text-(--ink)"
           }
         >
           {value}

@@ -176,7 +176,7 @@ export function EventsExplorer() {
                     className="cursor-pointer"
                     onClick={() => setSelected(event)}
                   >
-                    <TableCell className="font-medium text-[var(--ink)]">
+                    <TableCell className="font-medium text-(--ink)">
                       {event.event_name}
                     </TableCell>
                     <TableCell>
@@ -186,7 +186,7 @@ export function EventsExplorer() {
                         {event.category}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-[var(--ink-2)]">
+                    <TableCell className="text-(--ink-2)">
                       {event.aggregate_type}
                     </TableCell>
                     <TableCell
@@ -204,7 +204,7 @@ export function EventsExplorer() {
                         "—"
                       )}
                     </TableCell>
-                    <TableCell className="text-[var(--muted-clr)]">
+                    <TableCell className="text-(--muted-clr)">
                       <FormattedDate value={event.created_at} relative />
                     </TableCell>
                   </TableRow>
@@ -254,10 +254,10 @@ export function EventsExplorer() {
                   />
                 </div>
                 <div>
-                  <p className="mb-1 text-xs font-medium uppercase tracking-wide text-[var(--muted-clr)]">
+                  <p className="mb-1 text-xs font-medium uppercase tracking-wide text-(--muted-clr)">
                     {t("detail.payload")}
                   </p>
-                  <pre className="max-h-80 overflow-auto rounded-md bg-[var(--line-2)] p-4 font-mono text-xs text-[var(--ink-2)]">
+                  <pre className="max-h-80 overflow-auto rounded-md bg-(--line-2) p-4 font-mono text-xs text-(--ink-2)">
                     {JSON.stringify(selected?.payload ?? {}, null, 2)}
                   </pre>
                 </div>
@@ -273,10 +273,10 @@ export function EventsExplorer() {
 function Meta({ label, value }: { label: string; value?: string }) {
   return (
     <div>
-      <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted-clr)]">
+      <p className="text-xs font-medium uppercase tracking-wide text-(--muted-clr)">
         {label}
       </p>
-      <p className="truncate font-mono text-xs text-[var(--ink)]">
+      <p className="truncate font-mono text-xs text-(--ink)">
         {value ?? "—"}
       </p>
     </div>

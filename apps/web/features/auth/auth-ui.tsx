@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 import { Check, Eye, EyeOff } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 
@@ -9,43 +10,53 @@ export function cx(...classes: Array<string | undefined | false | null>) {
 }
 
 export const inputBase =
-  "w-full h-9 px-3 rounded-lg text-sm text-[var(--ink)] placeholder:text-[var(--faint)] border bg-[var(--white)] transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed";
+  "w-full h-9 px-3 rounded-lg text-sm text-(--ink) placeholder:text-(--faint) border bg-(--white) transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed";
 
-export function HublioMark({ size = 26 }: { size?: number }) {
+const LOGO_HEIGHT: Record<"sm" | "md" | "lg" | "xl" | "xxl", number> = {
+  sm: 28,
+  md: 36,
+  lg: 52,
+  xl: 64,
+  xxl: 105,
+};
+
+/** Full wordmark + tagline. Transparent PNG — always on a white plate. */
+export function Logo({
+  size = "md",
+  className,
+  priority = false,
+}: {
+  size?: "sm" | "md" | "lg" | "xl" | "xxl";
+  className?: string;
+  priority?: boolean;
+}) {
+  const height = LOGO_HEIGHT[size];
+  const width = Math.round(height * (564 / 182));
+  const paddingClass = {
+    sm: "px-2 py-1.5",
+    md: "px-4 py-3",
+    lg: "px-6 py-4",
+    xl: "px-8 py-6",
+    xxl: "px-10 py-8",
+  }
+
   return (
     <div
-      className="flex flex-shrink-0 items-center justify-center rounded-[7px] bg-blue-600"
-      style={{ width: size, height: size }}
+      className={cx(
+        "inline-flex items-center justify-center rounded-sm bg-white",
+        paddingClass[size],
+        className,
+      )}
     >
-      <svg
-        width={size * 0.54}
-        height={size * 0.54}
-        viewBox="0 0 14 14"
-        fill="none"
-        aria-hidden
-      >
-        <rect x="1" y="1" width="5.2" height="5.2" rx="1.2" fill="white" fillOpacity="0.95" />
-        <rect x="7.8" y="1" width="5.2" height="5.2" rx="1.2" fill="white" fillOpacity="0.95" />
-        <rect x="1" y="7.8" width="5.2" height="5.2" rx="1.2" fill="white" fillOpacity="0.95" />
-        <rect x="7.8" y="7.8" width="5.2" height="5.2" rx="1.2" fill="white" fillOpacity="0.55" />
-      </svg>
-    </div>
-  );
-}
-
-export function Logo({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
-  const cfg = {
-    sm: { mark: 20, cls: "text-[13px]" },
-    md: { mark: 26, cls: "text-[15px]" },
-    lg: { mark: 32, cls: "text-[19px]" },
-  };
-  const c = cfg[size];
-  return (
-    <div className="flex items-center gap-2.5">
-      <HublioMark size={c.mark} />
-      <span className={cx("font-semibold tracking-tight text-[var(--ink)]", c.cls)}>
-        Hublio
-      </span>
+      <Image
+        src="/logo/logo.png"
+        alt="Hublio"
+        width={width}
+        height={height}
+        className="h-auto w-auto max-w-full"
+        style={{ height, width: "auto" }}
+        priority={priority}
+      />
     </div>
   );
 }
@@ -53,9 +64,9 @@ export function Logo({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
 /** Inner auth card only — page background comes from auth layout (theme-aware). */
 export function AuthCard({ children }: { children: React.ReactNode }) {
   return (
-    <div className="w-full max-w-[420px]">
+    <div className="w-full max-w-105">
       <div
-        className="w-full rounded-xl border border-[var(--line)] bg-[var(--white)] p-8"
+        className="w-full rounded-xl border border-(--line) bg-(--white) p-8"
         style={{
           boxShadow:
             "0 1px 3px rgba(0,0,0,0.07), 0 4px 20px rgba(0,0,0,0.05)",
@@ -63,7 +74,7 @@ export function AuthCard({ children }: { children: React.ReactNode }) {
       >
         {children}
       </div>
-      <p className="mt-5 text-center text-[11px] text-[var(--faint)]">
+      <p className="mt-5 text-center text-[11px] text-(--faint)">
         © {new Date().getFullYear()} Hublio
       </p>
     </div>
@@ -82,9 +93,9 @@ export function OnboardingShell({
     <div className="flex w-full flex-col items-center justify-center px-4 py-8">
       <div className="w-full max-w-lg">
         <div className="mb-8 flex justify-center">
-          <Logo size="lg" />
+          <Logo size="lg" priority />
         </div>
-        <div className="rounded-2xl border border-[var(--line)] bg-[var(--white)] px-8 py-8 shadow-sm">
+        <div className="rounded-2xl border border-(--line) bg-(--white) px-8 py-8 shadow-sm">
           <div className="mb-8 flex items-center gap-0">
             {steps.map((label, i) => {
               const done = i < step;
@@ -99,8 +110,8 @@ export function OnboardingShell({
                         done
                           ? "border-blue-600 bg-blue-600 text-white"
                           : active
-                            ? "border-blue-600 bg-[var(--white)] text-blue-600"
-                            : "border-[var(--line)] bg-[var(--white)] text-[var(--faint)]",
+                            ? "border-blue-600 bg-(--white) text-blue-600"
+                            : "border-(--line) bg-(--white) text-(--faint)",
                       )}
                     >
                       {done ? "✓" : i + 1}
@@ -111,8 +122,8 @@ export function OnboardingShell({
                         active
                           ? "text-blue-600"
                           : done
-                            ? "text-[var(--ink-2)]"
-                            : "text-[var(--faint)]",
+                            ? "text-(--ink-2)"
+                            : "text-(--faint)",
                       )}
                     >
                       {label}
@@ -122,7 +133,7 @@ export function OnboardingShell({
                     <div
                       className={cx(
                         "mx-2 mt-[-14px] h-px flex-1",
-                        done ? "bg-blue-600" : "bg-[var(--line)]",
+                        done ? "bg-blue-600" : "bg-(--line)",
                       )}
                     />
                   )}
@@ -203,7 +214,7 @@ export function SSOButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="flex h-9 w-full items-center justify-center gap-2.5 rounded-lg border border-[var(--line)] bg-[var(--white)] text-[13px] font-medium text-[var(--ink-2)] transition-colors duration-150 hover:border-[var(--line-3)] hover:bg-[var(--line-2)] focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-50"
+      className="flex h-9 w-full items-center justify-center gap-2.5 rounded-lg border border-(--line) bg-(--white) text-[13px] font-medium text-(--ink-2) transition-colors duration-150 hover:border-(--line-3) hover:bg-(--line-2) focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-50"
     >
       {icon}
       {label}
@@ -214,9 +225,9 @@ export function SSOButton({
 export function AuthDivider({ label }: { label: string }) {
   return (
     <div className="my-1 flex items-center gap-3">
-      <div className="h-px flex-1 bg-[var(--line)]" />
-      <span className="text-[11px] font-medium text-[var(--faint)]">{label}</span>
-      <div className="h-px flex-1 bg-[var(--line)]" />
+      <div className="h-px flex-1 bg-(--line)" />
+      <span className="text-[11px] font-medium text-(--faint)">{label}</span>
+      <div className="h-px flex-1 bg-(--line)" />
     </div>
   );
 }
@@ -233,7 +244,7 @@ export function AuthFieldLabel({
   return (
     <label
       htmlFor={htmlFor}
-      className="mb-1.5 block text-[13px] font-medium text-[var(--ink-2)]"
+      className="mb-1.5 block text-[13px] font-medium text-(--ink-2)"
     >
       {children}
       {required ? <span className="ml-0.5 text-red-500">*</span> : null}
@@ -270,7 +281,7 @@ export function PasswordField({
             "pr-10",
             error
               ? "border-red-300 bg-red-50/40"
-              : "border-[var(--line)] hover:border-[var(--line-3)]",
+              : "border-(--line) hover:border-(--line-3)",
           )}
           {...props}
         />
@@ -278,7 +289,7 @@ export function PasswordField({
           type="button"
           tabIndex={-1}
           onClick={() => setShow((v) => !v)}
-          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--faint)] hover:text-[var(--ink-2)]"
+          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--faint) hover:text-(--ink-2)"
         >
           {show ? <EyeOff size={14} /> : <Eye size={14} />}
         </button>
@@ -315,12 +326,12 @@ export function PasswordStrengthMeter({ password }: { password: string }) {
             key={n}
             className={cx(
               "h-1 flex-1 rounded-full transition-all duration-300",
-              n <= s.score ? s.color : "bg-[var(--line)]",
+              n <= s.score ? s.color : "bg-(--line)",
             )}
           />
         ))}
       </div>
-      <p className="text-[11px] text-[var(--muted-clr)]">{s.label}</p>
+      <p className="text-[11px] text-(--muted-clr)">{s.label}</p>
     </div>
   );
 }
@@ -352,19 +363,19 @@ export function PasswordRequirements({
           <div
             className={cx(
               "flex h-3.5 w-3.5 flex-shrink-0 items-center justify-center rounded-full transition-colors",
-              r.met ? "bg-green-100" : "bg-[var(--line-2)]",
+              r.met ? "bg-green-100" : "bg-(--line-2)",
             )}
           >
             <Check
               size={8}
               strokeWidth={3}
-              className={r.met ? "text-green-600" : "text-[var(--faint)]"}
+              className={r.met ? "text-green-600" : "text-(--faint)"}
             />
           </div>
           <span
             className={cx(
               "text-[12px]",
-              r.met ? "text-[var(--ink-2)]" : "text-[var(--faint)]",
+              r.met ? "text-(--ink-2)" : "text-(--faint)",
             )}
           >
             {r.label}
@@ -425,10 +436,10 @@ export function OTPInput({
           onKeyDown={(e) => handleKeyDown(i, e)}
           onPaste={handlePaste}
           className={cx(
-            "w-12 rounded-xl border bg-[var(--white)] text-center font-mono text-[18px] font-semibold text-[var(--ink)] transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-600/20",
+            "w-12 rounded-xl border bg-(--white) text-center font-mono text-[18px] font-semibold text-(--ink) transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-600/20",
             value[i]
               ? "border-blue-300 bg-blue-50/60"
-              : "border-[var(--line)] hover:border-[var(--line-3)]",
+              : "border-(--line) hover:border-(--line-3)",
           )}
           style={{ height: 52 }}
         />
@@ -466,13 +477,13 @@ export function CheckboxField({
               "flex h-4 w-4 items-center justify-center rounded-[4px] border-[1.5px] transition-all",
               checked
                 ? "border-blue-600 bg-blue-600"
-                : "border-[var(--line-3)] bg-[var(--white)] group-hover:border-[var(--faint)]",
+                : "border-(--line-3) bg-(--white) group-hover:border-(--faint)",
             )}
           >
             {checked ? <Check size={9} strokeWidth={3} className="text-white" /> : null}
           </div>
         </div>
-        <span className="text-[13px] leading-snug text-[var(--ink-2)] select-none">
+        <span className="text-[13px] leading-snug text-(--ink-2) select-none">
           {label}
         </span>
       </label>

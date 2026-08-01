@@ -72,12 +72,12 @@ export function ConnectionsList() {
               <TableCell>
                 <Link
                   href={`/dashboard/connections/${connection.id}`}
-                  className="font-medium text-[var(--ink)] no-underline hover:text-primary"
+                  className="font-medium text-(--ink) no-underline hover:text-primary"
                 >
                   {connection.name}
                 </Link>
                 {connection.description ? (
-                  <div className="text-xs text-[var(--muted-clr)]">
+                  <div className="text-xs text-(--muted-clr)">
                     {connection.description}
                   </div>
                 ) : null}
@@ -88,7 +88,7 @@ export function ConnectionsList() {
               <TableCell>
                 <StatusBadge status={connection.status} />
               </TableCell>
-              <TableCell className="text-[var(--ink-2)]">
+              <TableCell className="text-(--ink-2)">
                 {connection.is_default ? "★" : "—"}
               </TableCell>
             </TableRow>

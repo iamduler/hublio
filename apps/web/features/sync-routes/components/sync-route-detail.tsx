@@ -259,7 +259,7 @@ export function SyncRouteDetail({ syncRouteId }: { syncRouteId: string }) {
             <CardTitle>{t("webhookSecret")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <p className="text-sm text-[var(--ink-2)]">{t("secretOnce")}</p>
+            <p className="text-sm text-(--ink-2)">{t("secretOnce")}</p>
             <CopyValue value={secret} />
           </CardContent>
         </Card>
@@ -276,7 +276,7 @@ export function SyncRouteDetail({ syncRouteId }: { syncRouteId: string }) {
           {watermarks.isLoading ? (
             <LoadingState rows={2} />
           ) : !watermarks.data || watermarks.data.length === 0 ? (
-            <p className="text-sm text-[var(--muted-clr)]">
+            <p className="text-sm text-(--muted-clr)">
               {t("noWatermarks")}
             </p>
           ) : (
@@ -284,13 +284,13 @@ export function SyncRouteDetail({ syncRouteId }: { syncRouteId: string }) {
               {watermarks.data.map((wm) => (
                 <li
                   key={wm.resource_type}
-                  className="flex items-center justify-between gap-3 rounded-md border border-[var(--line)] px-3 py-2 text-sm"
+                  className="flex items-center justify-between gap-3 rounded-md border border-(--line) px-3 py-2 text-sm"
                 >
                   <div className="min-w-0 flex-1">
-                    <span className="font-medium text-[var(--ink)]">
+                    <span className="font-medium text-(--ink)">
                       {wm.resource_type}
                     </span>
-                    <code className="mt-1 block truncate font-mono text-xs text-[var(--muted-clr)]">
+                    <code className="mt-1 block truncate font-mono text-xs text-(--muted-clr)">
                       {JSON.stringify(wm.cursor ?? {})}
                     </code>
                   </div>

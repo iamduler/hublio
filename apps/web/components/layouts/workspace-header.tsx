@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { LogOut } from "lucide-react";
+import { AppSidebarTrigger } from "@hublio/ui/common/app-sidebar";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { WorkspaceSwitcher } from "@/components/layouts/workspace-switcher";
@@ -20,16 +21,19 @@ export function WorkspaceHeader({ title }: { title?: string }) {
   }
 
   return (
-    <header className="flex h-[var(--nav-h)] items-center justify-between gap-4 border-b border-[var(--line)] bg-[var(--white)] px-5">
-      <div className="flex items-center gap-4">
+    <header className="flex h-(--nav-h) items-center justify-between gap-3 border-b border-(--line) bg-(--white) px-3 md:gap-4 md:px-5">
+      <div className="flex min-w-0 items-center gap-2 md:gap-4">
+        <AppSidebarTrigger menuLabel={t("nav.menu")} />
         <WorkspaceSwitcher />
         {title ? (
-          <h1 className="text-base font-semibold text-[var(--ink)]">{title}</h1>
+          <h1 className="truncate text-base font-semibold text-(--ink)">
+            {title}
+          </h1>
         ) : null}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2">
         {user ? (
-          <span className="hidden text-xs text-[var(--muted-clr)] sm:inline">
+          <span className="hidden text-xs text-(--muted-clr) sm:inline">
             {user.email}
           </span>
         ) : null}
@@ -42,7 +46,7 @@ export function WorkspaceHeader({ title }: { title?: string }) {
           onClick={() => void onLogout()}
         >
           <LogOut size={14} />
-          {t("nav.signOut")}
+          <span className="hidden sm:inline">{t("nav.signOut")}</span>
         </Button>
       </div>
     </header>

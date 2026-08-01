@@ -22,13 +22,13 @@ export const buttonVariants = cva(
         default:
           "bg-primary text-primary-foreground shadow-sm hover:opacity-90 active:scale-[.98]",
         outline:
-          "border border-[var(--line)] bg-[var(--white)] text-[var(--ink-2)] hover:bg-[var(--line-2)]",
+          "border border-(--line) bg-(--white) text-(--ink-2) hover:bg-(--line-2)",
         navy: "bg-[var(--navy-900)] text-white hover:bg-[#11111f]",
         ghost:
-          "border border-border bg-[var(--white)] text-foreground hover:bg-secondary",
+          "border border-border bg-(--white) text-foreground hover:bg-secondary",
         soft: "text-primary hover:opacity-90",
         "danger-soft":
-          "bg-[var(--danger-soft)] text-[var(--danger)] hover:opacity-90",
+          "bg-border-(--danger-soft) text-border-(--danger) hover:opacity-90",
         link: "rounded-none underline-offset-4 hover:underline text-primary gap-0",
       },
       size: {
@@ -43,7 +43,7 @@ export const buttonVariants = cva(
       {
         size: "icon-sm",
         className:
-          "border-0 bg-transparent text-[var(--faint)] shadow-none hover:bg-[var(--line-2)] hover:text-[var(--ink-2)]",
+          "border-0 bg-transparent text-(--faint) shadow-none hover:bg-(--line-2) hover:text-(--ink-2)",
       },
     ],
     defaultVariants: { variant: "default", size: "default" },

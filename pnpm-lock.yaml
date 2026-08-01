@@ -14,9 +14,15 @@ importers:
 
   apps/admin:
     dependencies:
+      '@hookform/resolvers':
+        specifier: ^5.4.3
+        version: 5.4.3(@standard-schema/spec@1.1.0)(react-hook-form@7.83.0(react@19.2.4))(zod@4.4.3)
       '@hublio/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@tanstack/react-query':
+        specifier: ^5.101.0
+        version: 5.101.4(react@19.2.4)
       lucide-react:
         specifier: ^1.21.0
         version: 1.26.0(react@19.2.4)
@@ -32,10 +38,19 @@ importers:
       react-dom:
         specifier: 19.2.4
         version: 19.2.4(react@19.2.4)
+      react-hook-form:
+        specifier: ^7.83.0
+        version: 7.83.0(react@19.2.4)
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
     devDependencies:
       '@hublio/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@hublio/sdk':
+        specifier: workspace:*
+        version: link:../../packages/sdk
       '@tailwindcss/postcss':
         specifier: ^4
         version: 4.3.3

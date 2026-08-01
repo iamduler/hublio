@@ -11,11 +11,11 @@ Related: [00-foundation](./00-foundation.md) · [02-user-workspace](./02-user-wo
 ## 1. App scaffold
 
 - [x] Next.js 16 + Tailwind + next-intl + `@hublio/ui`
-- [x] Placeholder home page
-- [~] Auth gate for platform admins (JWT + role check) — backend now issues `is_platform_admin` claim + seed `admin@hublio.local`; admin app gate still pending
-- [ ] Admin shell: top bar, nav, org context
-- [ ] Feature-first layout `features/<name>/` (mirror web)
-- [ ] `lib/api/client` (JWT → Go) — reuse pattern từ web; **không** cần BFF orchestration trừ khi admin chạy intents
+- [x] Placeholder home page (console overview)
+- [x] Auth gate for platform admins (JWT + `is_platform_admin`; seed `admin@hublio.local`)
+- [x] Admin shell: top bar, nav, org context (from `/auth/me`)
+- [x] Feature-first layout `features/<name>/` (mirror web)
+- [x] `lib/api/client` (JWT → Go) — reuse pattern từ web; **không** cần BFF orchestration trừ khi admin chạy intents
 
 ---
 
@@ -57,10 +57,10 @@ Related: [00-foundation](./00-foundation.md) · [02-user-workspace](./02-user-wo
 
 ## 4. Gaps ưu tiên (khi bắt đầu Admin phase)
 
-1. Auth + admin shell + org context
+1. [x] Auth + admin shell + org context
 2. Org suspend / activate wired end-to-end
 3. Connector register + enable/disable/remove UI
-4. i18n namespaces `admin/*` (en + vi)
+4. [x] i18n namespaces (`en` + `vi`) + auth locale/theme switchers (shared `@hublio/ui`)
 5. Verify theo [00-foundation §5](./00-foundation.md)
 
 ---

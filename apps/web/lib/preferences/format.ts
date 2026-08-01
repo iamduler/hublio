@@ -1,4 +1,9 @@
 import type { UserDateFormat, UserPreferences, UserTimeFormat } from "./types";
+import {
+  applyThemeToDocument as applyThemeToDocumentShared,
+  resolveEffectiveTheme as resolveEffectiveThemeShared,
+  type UserTheme,
+} from "@hublio/ui/lib/theme";
 
 function dateParts(
   date: Date,
@@ -66,20 +71,13 @@ export function formatDateTimeWithPrefs(
 }
 
 export function resolveEffectiveTheme(
-  theme: UserPreferences["theme"],
+  theme: UserPreferences["theme"] | UserTheme,
 ): "light" | "dark" {
-  if (theme === "light" || theme === "dark") return theme;
-  if (typeof window === "undefined") return "light";
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
+  return resolveEffectiveThemeShared(theme);
 }
 
-export function applyThemeToDocument(theme: UserPreferences["theme"]): void {
-  if (typeof document === "undefined") return;
-  const effective = resolveEffectiveTheme(theme);
-  const root = document.documentElement;
-  root.dataset.theme = theme;
-  root.classList.toggle("dark", effective === "dark");
-  root.style.colorScheme = effective;
+export function applyThemeToDocument(
+  theme: UserPreferences["theme"] | UserTheme,
+): void {
+  applyThemeToDocumentShared(theme);
 }

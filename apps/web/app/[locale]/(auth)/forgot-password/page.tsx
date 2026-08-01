@@ -49,7 +49,7 @@ export default function ForgotPasswordPage() {
     <AuthCard>
       <Link
         href="/login"
-        className="mb-7 -ml-0.5 flex items-center gap-1.5 text-[13px] text-[var(--muted-clr)] transition-colors hover:text-[var(--ink-2)]"
+        className="mb-7 -ml-0.5 flex items-center gap-1.5 text-[13px] text-(--muted-clr) transition-colors hover:text-(--ink-2)"
       >
         <ChevronLeft size={14} />
         {t("backToLogin")}
@@ -58,13 +58,13 @@ export default function ForgotPasswordPage() {
       {!sent ? (
         <>
           <div className="mb-6">
-            <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--line-2)]">
-              <KeyRound size={16} className="text-[var(--ink-2)]" />
+            <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-xl border border-(--line) bg-(--line-2)">
+              <KeyRound size={16} className="text-(--ink-2)" />
             </div>
-            <h1 className="text-[17px] font-semibold tracking-tight text-[var(--ink)]">
+            <h1 className="text-[17px] font-semibold tracking-tight text-(--ink)">
               {t("title")}
             </h1>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-[var(--muted-clr)]">
+            <p className="mt-1.5 text-[13px] leading-relaxed text-(--muted-clr)">
               {t("subtitle")}
             </p>
           </div>
@@ -87,7 +87,7 @@ export default function ForgotPasswordPage() {
                   inputBase,
                   error
                     ? "border-red-300 bg-red-50/40"
-                    : "border-[var(--line)] hover:border-[var(--line-3)]",
+                    : "border-(--line) hover:border-(--line-3)",
                 )}
               />
               {error ? <p className="mt-1 text-[12px] text-red-600">{error}</p> : null}
@@ -106,22 +106,22 @@ export default function ForgotPasswordPage() {
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-green-100 bg-green-50">
             <CheckCircle2 size={22} className="text-green-600" />
           </div>
-          <h2 className="text-[16px] font-semibold text-[var(--ink)]">{t("sentTitle")}</h2>
-          <p className="mt-2 text-[13px] leading-relaxed text-[var(--muted-clr)]">
+          <h2 className="text-[16px] font-semibold text-(--ink)">{t("sentTitle")}</h2>
+          <p className="mt-2 text-[13px] leading-relaxed text-(--muted-clr)">
             {t("sentBody", { email })}
           </p>
           <div className="mt-5 space-y-2.5">
             <button
               type="button"
               onClick={() => setSent(false)}
-              className="flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-[var(--line)] bg-[var(--white)] text-[13px] font-medium text-[var(--ink-2)] transition-colors hover:bg-[var(--line-2)]"
+              className="flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-(--line) bg-(--white) text-[13px] font-medium text-(--ink-2) transition-colors hover:bg-(--line-2)"
             >
               <RefreshCw size={12} />
               {t("resend")}
             </button>
             <Link
               href="/login"
-              className="block w-full text-center text-[13px] text-[var(--muted-clr)] transition-colors hover:text-[var(--ink-2)]"
+              className="block w-full text-center text-[13px] text-(--muted-clr) transition-colors hover:text-(--ink-2)"
             >
               {t("backToLogin")}
             </Link>

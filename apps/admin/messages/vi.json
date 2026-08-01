@@ -1,0 +1,112 @@
+{
+  "common": {
+    "meta": {
+      "brand": "Hublio Admin",
+      "title": "Hublio Admin",
+      "description": "Bảng điều khiển quản trị nền tảng Hublio"
+    },
+    "settings": {
+      "appearance": {
+        "themes": {
+          "system": "Hệ thống",
+          "light": "Sáng",
+          "dark": "Tối"
+        }
+      }
+    }
+  },
+  "admin": {
+    "eyebrow": "Hublio Admin",
+    "title": "Bảng quản trị",
+    "subtitle": "Quản lý tổ chức, workspace và cấu hình nền tảng.",
+    "placeholder": "Màn hình tạm dừng/kích hoạt tổ chức và registry connector sẽ được nối ở giai đoạn tiếp theo.",
+    "status": "Scaffold",
+    "overview": {
+      "session": "Phiên đăng nhập",
+      "signedInAs": "Đăng nhập với",
+      "orgContext": "Ngữ cảnh tổ chức:"
+    }
+  },
+  "validation": {
+    "required": "Trường này là bắt buộc",
+    "email": "Nhập địa chỉ email hợp lệ",
+    "passwordMin": "Mật khẩu phải có ít nhất 8 ký tự",
+    "passwordsMatch": "Mật khẩu không khớp"
+  },
+  "auth": {
+    "login": {
+      "title": "Đăng nhập quản trị viên nền tảng",
+      "subtitle": "Chỉ tài khoản có quyền quản trị viên nền tảng mới được truy cập.",
+      "email": "Email",
+      "password": "Mật khẩu",
+      "submit": "Đăng nhập",
+      "submitting": "Đang đăng nhập…",
+      "fillDemo": "Điền tài khoản seed",
+      "forgotPassword": "Quên mật khẩu?",
+      "failed": "Đăng nhập thất bại.",
+      "notPlatformAdmin": "Tài khoản này không phải quản trị viên nền tảng.",
+      "mfaUnsupported": "Admin console chưa hỗ trợ MFA. Dùng tài khoản quản trị chỉ mật khẩu."
+    },
+    "forgot": {
+      "title": "Đặt lại mật khẩu",
+      "subtitle": "Nhập email để nhận liên kết đặt lại bảo mật. Liên kết hết hạn sau 1 giờ.",
+      "email": "Email",
+      "submit": "Gửi liên kết",
+      "submitting": "Đang gửi…",
+      "sentTitle": "Kiểm tra hộp thư",
+      "sentBody": "Chúng tôi đã gửi liên kết đặt lại tới {email}. Liên kết hết hạn sau 60 phút.",
+      "resend": "Gửi lại email",
+      "backToLogin": "Quay lại đăng nhập",
+      "successGeneric": "Nếu email tồn tại, liên kết đặt lại đã được gửi.",
+      "failed": "Không gửi được liên kết đặt lại."
+    },
+    "reset": {
+      "title": "Đặt mật khẩu mới",
+      "subtitle": "Chọn mật khẩu mạnh cho tài khoản quản trị viên nền tảng.",
+      "password": "Mật khẩu mới",
+      "confirmPassword": "Xác nhận mật khẩu mới",
+      "submit": "Đặt mật khẩu mới",
+      "submitting": "Đang lưu mật khẩu…",
+      "doneTitle": "Đã cập nhật mật khẩu",
+      "doneBody": "Mật khẩu đã được đổi. Bạn có thể đăng nhập bằng mật khẩu mới.",
+      "continueLogin": "Tiếp tục đăng nhập",
+      "backToLogin": "Quay lại đăng nhập",
+      "invalidToken": "Liên kết đặt lại không hợp lệ hoặc đã hết hạn.",
+      "failed": "Không thể đặt lại mật khẩu."
+    },
+    "forbidden": {
+      "title": "Không có quyền truy cập",
+      "subtitle": "Bạn cần tài khoản quản trị viên nền tảng để dùng console này.",
+      "signOut": "Đăng xuất",
+      "goLogin": "Quay lại đăng nhập"
+    },
+    "passwordField": {
+      "show": "Hiện mật khẩu",
+      "hide": "Ẩn mật khẩu"
+    }
+  },
+  "shell": {
+    "nav": {
+      "brand": "Hublio Admin",
+      "overview": "Tổng quan",
+      "organizations": "Tổ chức",
+      "connectors": "Connector",
+      "collapse": "Thu gọn thanh bên",
+      "expand": "Mở rộng thanh bên",
+      "menu": "Mở điều hướng"
+    },
+    "header": {
+      "signOut": "Đăng xuất",
+      "noOrg": "Chưa tải tổ chức",
+      "menu": "Mở điều hướng"
+    }
+  },
+  "organizations": {
+    "stubTitle": "Tổ chức",
+    "stubDescription": "Danh sách, tạm dừng và kích hoạt tổ chức sẽ được nối tiếp theo."
+  },
+  "connectors": {
+    "stubTitle": "Registry connector",
+    "stubDescription": "Đăng ký, bật/tắt và gỡ connector sẽ được nối tiếp theo."
+  }
+}

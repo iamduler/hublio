@@ -37,7 +37,7 @@ const SearchField = React.forwardRef<HTMLInputElement, SearchFieldProps>(
         <Search
           size={s.icon}
           className={cn(
-            "pointer-events-none absolute top-1/2 -translate-y-1/2 text-[var(--faint)]",
+            "pointer-events-none absolute top-1/2 -translate-y-1/2 text-(--faint)",
             s.iconClass,
           )}
           aria-hidden

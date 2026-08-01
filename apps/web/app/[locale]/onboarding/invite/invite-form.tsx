@@ -100,10 +100,10 @@ export function InviteOnboardingForm() {
   return (
     <OnboardingShell step={2}>
       <div className="mb-6">
-        <h2 className="text-[18px] font-semibold tracking-tight text-[var(--ink)]">
+        <h2 className="text-[18px] font-semibold tracking-tight text-(--ink)">
           {t("inviteTitle")}
         </h2>
-        <p className="mt-1.5 text-[13px] text-[var(--muted-clr)]">
+        <p className="mt-1.5 text-[13px] text-(--muted-clr)">
           {t("inviteSubtitle")}
         </p>
       </div>
@@ -116,12 +116,12 @@ export function InviteOnboardingForm() {
               value={row.email}
               onChange={(e) => updateRow(row.id, "email", e.target.value)}
               placeholder={t("inviteEmailPlaceholder")}
-              className={cx(inputBase, "flex-1 border-[var(--line)] hover:border-[var(--line-3)]")}
+              className={cx(inputBase, "flex-1 border-(--line) hover:border-(--line-3)")}
             />
             <select
               value={row.role}
               onChange={(e) => updateRow(row.id, "role", e.target.value)}
-              className="h-9 w-28 flex-shrink-0 rounded-lg border border-[var(--line)] bg-[var(--white)] px-2.5 text-[13px] text-[var(--ink-2)] transition-colors hover:border-[var(--line-3)] focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+              className="h-9 w-28 flex-shrink-0 rounded-lg border border-(--line) bg-(--white) px-2.5 text-[13px] text-(--ink-2) transition-colors hover:border-(--line-3) focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
             >
               {ROLES.map((role) => (
                 <option key={role} value={role}>
@@ -133,7 +133,7 @@ export function InviteOnboardingForm() {
               type="button"
               onClick={() => removeRow(row.id)}
               disabled={rows.length <= 1}
-              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-[var(--faint)] transition-colors hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-30"
+              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-(--faint) transition-colors hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-30"
             >
               <Trash2 size={13} />
             </button>
@@ -149,30 +149,30 @@ export function InviteOnboardingForm() {
         </button>
       </div>
 
-      <div className="mt-3 rounded-xl border border-[var(--line)] bg-[var(--line-2)] p-3.5">
-        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-clr)]">
+      <div className="mt-3 rounded-xl border border-(--line) bg-(--line-2) p-3.5">
+        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-(--muted-clr)">
           {t("roleDescriptions")}
         </p>
         <div className="space-y-1.5">
           {(["admin", "member"] as const).map((role) => (
             <div key={role} className="flex items-baseline gap-2">
-              <span className="w-16 flex-shrink-0 text-[11px] font-semibold text-[var(--ink-2)]">
+              <span className="w-16 flex-shrink-0 text-[11px] font-semibold text-(--ink-2)">
                 {t(`roles.${role}`)}
               </span>
-              <span className="text-[11px] text-[var(--muted-clr)]">
+              <span className="text-[11px] text-(--muted-clr)">
                 {t(`roleHelp.${role}`)}
               </span>
             </div>
           ))}
         </div>
-        <p className="mt-2 text-[11px] text-[var(--faint)]">{t("inviteExistingOnly")}</p>
+        <p className="mt-2 text-[11px] text-(--faint)">{t("inviteExistingOnly")}</p>
       </div>
 
       <div className="mt-7 flex items-center justify-between">
         <button
           type="button"
           onClick={() => router.push("/onboarding/workspace")}
-          className="flex items-center gap-1.5 text-[13px] text-[var(--muted-clr)] transition-colors hover:text-[var(--ink-2)]"
+          className="flex items-center gap-1.5 text-[13px] text-(--muted-clr) transition-colors hover:text-(--ink-2)"
         >
           <ChevronLeft size={14} />
           {t("back")}
@@ -181,7 +181,7 @@ export function InviteOnboardingForm() {
           <button
             type="button"
             onClick={handleSkip}
-            className="h-9 rounded-lg px-4 text-[13px] font-medium text-[var(--ink-2)] transition-colors hover:bg-[var(--line-2)] hover:text-[var(--ink)]"
+            className="h-9 rounded-lg px-4 text-[13px] font-medium text-(--ink-2) transition-colors hover:bg-(--line-2) hover:text-(--ink)"
           >
             {t("skip")}
           </button>

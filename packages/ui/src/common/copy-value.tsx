@@ -35,11 +35,11 @@ export function CopyValue({
   return (
     <div
       className={cn(
-        "flex items-center gap-2 rounded-md border border-[var(--line)] bg-[var(--line-2)] px-2.5 py-1.5",
+        "flex items-center gap-2 rounded-md border border-(--line) bg-(--line-2) px-2.5 py-1.5",
         className,
       )}
     >
-      <code className="flex-1 truncate font-mono text-xs text-[var(--ink-2)]">
+      <code className="flex-1 truncate font-mono text-xs text-(--ink-2)">
         {display}
       </code>
       <Button

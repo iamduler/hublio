@@ -110,18 +110,18 @@ export function LoginForm() {
   return (
     <AuthCard>
       <div className="mb-7 flex flex-col items-center">
-        <Logo size="lg" />
+        <Logo size="lg" priority />
         <div className="mt-5 text-center">
-          <h1 className="text-[17px] font-semibold tracking-tight text-[var(--ink)]">
+          <h1 className="text-[17px] font-semibold tracking-tight text-(--ink)">
             {t("title")}
           </h1>
-          <p className="mt-1.5 text-[13px] text-[var(--muted-clr)]">{t("subtitle")}</p>
+          <p className="mt-1.5 text-[13px] text-(--muted-clr)">{t("subtitle")}</p>
         </div>
       </div>
 
       {showDemoLogin && (
         <div className="mb-4 space-y-2">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--faint)]">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-(--faint)">
             {t("quickLogin")}
           </p>
           <div className="flex flex-wrap gap-2">
@@ -130,7 +130,7 @@ export function LoginForm() {
                 key={account.id}
                 type="button"
                 onClick={() => fillDemo(account)}
-                className="rounded-md border border-[var(--line)] bg-[var(--line-2)] px-2.5 py-1 text-[12px] font-medium text-[var(--ink-2)] hover:border-[var(--line-3)] hover:bg-[var(--white)]"
+                className="rounded-md border border-(--line) bg-(--line-2) px-2.5 py-1 text-[12px] font-medium text-(--ink-2) hover:border-(--line-3) hover:bg-(--white)"
               >
                 {t(`demo.${account.id}`)}
               </button>
@@ -181,7 +181,7 @@ export function LoginForm() {
               inputBase,
               form.formState.errors.email
                 ? "border-red-300 bg-red-50/40"
-                : "border-[var(--line)] hover:border-[var(--line-3)]",
+                : "border-(--line) hover:border-(--line-3)",
             )}
             {...form.register("email")}
           />
@@ -196,7 +196,7 @@ export function LoginForm() {
           <div className="mb-1.5 flex items-center justify-between">
             <label
               htmlFor="password"
-              className="text-[13px] font-medium text-[var(--ink-2)]"
+              className="text-[13px] font-medium text-(--ink-2)"
             >
               {t("password")} <span className="text-red-500">*</span>
             </label>
@@ -224,7 +224,7 @@ export function LoginForm() {
         </button>
       </form>
 
-      <p className="mt-5 text-center text-[13px] text-[var(--muted-clr)]">
+      <p className="mt-5 text-center text-[13px] text-(--muted-clr)">
         {t("noAccount")}{" "}
         <Link
           href="/register"

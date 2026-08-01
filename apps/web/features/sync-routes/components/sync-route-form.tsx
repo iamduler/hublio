@@ -177,8 +177,8 @@ export function SyncRouteForm({
             />
           </div>
 
-          <div className="space-y-4 rounded-md border border-[var(--line)] bg-[var(--line-2)] p-4">
-            <p className="text-sm font-medium text-[var(--ink)]">
+          <div className="space-y-4 rounded-md border border-(--line) bg-(--line-2) p-4">
+            <p className="text-sm font-medium text-(--ink)">
               {t("form.destinationStep")}
             </p>
             <div className="grid gap-5 sm:grid-cols-2">

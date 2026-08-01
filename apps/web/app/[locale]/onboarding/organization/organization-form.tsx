@@ -86,7 +86,7 @@ export function OrganizationOnboardingForm() {
   if (loadingPreview) {
     return (
       <OnboardingShell step={0}>
-        <div className="flex min-h-[160px] items-center justify-center text-[var(--muted-clr)]">
+        <div className="flex min-h-[160px] items-center justify-center text-(--muted-clr)">
           <Loader2 className="animate-spin" size={18} />
         </div>
       </OnboardingShell>
@@ -96,29 +96,29 @@ export function OrganizationOnboardingForm() {
   return (
     <OnboardingShell step={0}>
       <div className="mb-6">
-        <h2 className="text-[18px] font-semibold tracking-tight text-[var(--ink)]">
+        <h2 className="text-[18px] font-semibold tracking-tight text-(--ink)">
           {t("title")}
         </h2>
-        <p className="mt-1.5 text-[13px] text-[var(--muted-clr)]">{t("subtitle")}</p>
+        <p className="mt-1.5 text-[13px] text-(--muted-clr)">{t("subtitle")}</p>
       </div>
 
       <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)} noValidate>
         <div>
-          <label className="mb-1.5 block text-[13px] font-medium text-[var(--ink-2)]">
+          <label className="mb-1.5 block text-[13px] font-medium text-(--ink-2)">
             {t("email")}
           </label>
           <input
             type="email"
             value={email}
             readOnly
-            className="h-9 w-full rounded-lg border border-[var(--line)] bg-[var(--line-2)] px-3 text-sm text-[var(--ink-2)]"
+            className="h-9 w-full rounded-lg border border-(--line) bg-(--line-2) px-3 text-sm text-(--ink-2)"
           />
         </div>
 
         <div>
           <label
             htmlFor="organizationName"
-            className="mb-1.5 block text-[13px] font-medium text-[var(--ink-2)]"
+            className="mb-1.5 block text-[13px] font-medium text-(--ink-2)"
           >
             {t("organizationName")} <span className="text-red-500">*</span>
           </label>
@@ -127,10 +127,10 @@ export function OrganizationOnboardingForm() {
             autoFocus
             placeholder={t("organizationPlaceholder")}
             className={cx(
-              "h-9 w-full rounded-lg border bg-[var(--white)] px-3 text-sm text-[var(--ink)] placeholder:text-[var(--faint)] transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-600/20",
+              "h-9 w-full rounded-lg border bg-(--white) px-3 text-sm text-(--ink) placeholder:text-(--faint) transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-600/20",
               form.formState.errors.organizationName
                 ? "border-red-300 bg-red-50/40"
-                : "border-[var(--line)] hover:border-[var(--line-3)]",
+                : "border-(--line) hover:border-(--line-3)",
             )}
             {...form.register("organizationName")}
           />

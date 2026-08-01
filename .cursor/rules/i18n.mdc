@@ -1,0 +1,22 @@
+---
+description: Always support i18n for frontend user-facing copy (next-intl)
+alwaysApply: true
+---
+
+# i18n (Hublio frontend)
+
+Every user-facing string in `apps/web` and `apps/admin` must go through **next-intl**.
+
+## Rules
+
+* Do **not** hard-code UI copy in JSX/TSX (labels, buttons, empty states, errors shown to users, `aria-label` for controls users hear).
+* Use `useTranslations` / `getTranslations` with existing message namespaces.
+* When adding or changing a string, update **all supported locales** in the same change (`en` + `vi`).
+* Prefer existing namespaces (`auth`, `common`, `shell`, feature names) — do not invent a second i18n system.
+* Locale routing follows web’s pattern: `[locale]` + `i18n/routing.ts` / `NEXT_LOCALE` cookie. Admin matches this.
+* Shared locale/theme chrome: presentational switchers live in `@hublio/ui`; apps keep thin connected wrappers.
+
+## Exceptions
+
+* Dev-only constants (e.g. seed demo emails in `NODE_ENV === "development"`) may stay literal.
+* Log messages, OpenAPI, and Go backend strings are out of scope for this rule.

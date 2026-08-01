@@ -67,7 +67,7 @@ export default function VerifyEmailPage() {
     <AuthCard>
       <Link
         href="/register"
-        className="mb-7 -ml-0.5 flex items-center gap-1.5 text-[13px] text-[var(--muted-clr)] transition-colors hover:text-[var(--ink-2)]"
+        className="mb-7 -ml-0.5 flex items-center gap-1.5 text-[13px] text-(--muted-clr) transition-colors hover:text-(--ink-2)"
       >
         <ChevronLeft size={14} />
         {t("back")}
@@ -77,10 +77,10 @@ export default function VerifyEmailPage() {
         <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl border border-blue-100 bg-blue-50">
           <Mail size={18} className="text-blue-600" />
         </div>
-        <h1 className="text-[17px] font-semibold tracking-tight text-[var(--ink)]">
+        <h1 className="text-[17px] font-semibold tracking-tight text-(--ink)">
           {t("title")}
         </h1>
-        <p className="mt-2 text-[13px] leading-relaxed text-[var(--muted-clr)]">
+        <p className="mt-2 text-[13px] leading-relaxed text-(--muted-clr)">
           {t("subtitle", { email: email || "—" })}
         </p>
       </div>
@@ -104,7 +104,7 @@ export default function VerifyEmailPage() {
             <span>{t("resent")}</span>
           </div>
         ) : (
-          <p className="text-[13px] text-[var(--muted-clr)]">
+          <p className="text-[13px] text-(--muted-clr)">
             {t("didntReceive")}{" "}
             <button
               type="button"
@@ -118,7 +118,7 @@ export default function VerifyEmailPage() {
         )}
         <Link
           href="/register"
-          className="block w-full text-center text-[12px] text-[var(--faint)] transition-colors hover:text-[var(--ink-2)]"
+          className="block w-full text-center text-[12px] text-(--faint) transition-colors hover:text-(--ink-2)"
         >
           {t("changeEmail")}
         </Link>

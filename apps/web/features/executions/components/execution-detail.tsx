@@ -93,7 +93,7 @@ export function ExecutionDetail({ executionId }: { executionId: string }) {
       />
 
       {data.failure_reason ? (
-        <div className="rounded-md border border-[var(--danger)] bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)]">
+        <div className="rounded-md border border-border-(--danger) bg-border-(--danger-soft) px-4 py-3 text-sm text-border-(--danger)">
           {data.failure_reason}
         </div>
       ) : null}
@@ -104,23 +104,23 @@ export function ExecutionDetail({ executionId }: { executionId: string }) {
         </CardHeader>
         <CardContent className="space-y-2">
           {steps.length === 0 ? (
-            <p className="text-sm text-[var(--muted-clr)]">{t("noSteps")}</p>
+            <p className="text-sm text-(--muted-clr)">{t("noSteps")}</p>
           ) : (
             steps.map((step) => (
               <div
                 key={step.id}
-                className="flex items-center justify-between rounded-md border border-[var(--line)] px-3 py-2"
+                className="flex items-center justify-between rounded-md border border-(--line) px-3 py-2"
               >
                 <div className="flex items-center gap-3">
-                  <span className="grid h-6 w-6 place-items-center rounded-md bg-[var(--line-2)] font-mono text-xs text-[var(--ink-2)]">
+                  <span className="grid h-6 w-6 place-items-center rounded-md bg-(--line-2) font-mono text-xs text-(--ink-2)">
                     {step.step_no}
                   </span>
                   <div>
-                    <p className="text-sm font-medium text-[var(--ink)]">
+                    <p className="text-sm font-medium text-(--ink)">
                       {step.step_type}
                     </p>
                     {step.error_message ? (
-                      <p className="text-xs text-[var(--danger)]">
+                      <p className="text-xs text-border-(--danger)">
                         {step.error_message}
                       </p>
                     ) : null}
@@ -128,7 +128,7 @@ export function ExecutionDetail({ executionId }: { executionId: string }) {
                 </div>
                 <div className="flex items-center gap-3">
                   {step.duration_ms != null ? (
-                    <span className="font-mono text-xs text-[var(--muted-clr)]">
+                    <span className="font-mono text-xs text-(--muted-clr)">
                       {step.duration_ms}ms
                     </span>
                   ) : null}
@@ -146,21 +146,21 @@ export function ExecutionDetail({ executionId }: { executionId: string }) {
         </CardHeader>
         <CardContent>
           {timeline.length === 0 ? (
-            <p className="text-sm text-[var(--muted-clr)]">{t("noTimeline")}</p>
+            <p className="text-sm text-(--muted-clr)">{t("noTimeline")}</p>
           ) : (
-            <ol className="space-y-3 border-l border-[var(--line)] pl-4">
+            <ol className="space-y-3 border-l border-(--line) pl-4">
               {timeline.map((entry, index) => (
                 <li key={entry.id ?? index} className="relative">
-                  <span className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-primary" />
-                  <p className="text-sm font-medium text-[var(--ink)]">
+                  <span className="absolute -left-5.25 top-1 h-2.5 w-2.5 rounded-full bg-primary" />
+                  <p className="text-sm font-medium text-(--ink)">
                     {entry.event}
                   </p>
                   {entry.message ? (
-                    <p className="text-xs text-[var(--ink-2)]">
+                    <p className="text-xs text-(--ink-2)">
                       {entry.message}
                     </p>
                   ) : null}
-                  <p className="text-xs text-[var(--muted-clr)]">
+                  <p className="text-xs text-(--muted-clr)">
                     <FormattedDate value={entry.created_at} relative />
                   </p>
                 </li>

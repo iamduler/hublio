@@ -16,4 +16,4 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   timezone: "UTC",
 };
 
-export const THEME_OPTIONS: UserTheme[] = ["system", "light", "dark"];
+export { THEME_OPTIONS } from "@hublio/ui/lib/theme";

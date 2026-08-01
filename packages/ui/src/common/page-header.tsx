@@ -20,11 +20,11 @@ export function PageHeader({
       )}
     >
       <div className="space-y-1">
-        <h1 className="font-display text-xl font-semibold text-[var(--ink)]">
+        <h1 className="font-display text-xl font-semibold text-(--ink)">
           {title}
         </h1>
         {description ? (
-          <p className="text-sm text-[var(--muted-clr)]">{description}</p>
+          <p className="text-sm text-(--muted-clr)">{description}</p>
         ) : null}
       </div>
       {actions ? (

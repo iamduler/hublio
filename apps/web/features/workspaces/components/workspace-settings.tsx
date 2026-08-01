@@ -60,7 +60,7 @@ export function WorkspaceSettings() {
       </CardHeader>
       <CardContent className="space-y-4">
         <Row label={t("settings.name")}>
-          <span className="font-medium text-[var(--ink)]">
+          <span className="font-medium text-(--ink)">
             {activeWorkspace.name}
           </span>
         </Row>
@@ -70,7 +70,7 @@ export function WorkspaceSettings() {
         <Row label={t("settings.status")}>
           <StatusBadge status={activeWorkspace.status} />
         </Row>
-        <div className="border-t border-[var(--line)] pt-4">
+        <div className="border-t border-(--line) pt-4">
           <ConfirmDialog
             trigger={
               <Button variant={isDisabled ? "default" : "danger-soft"} size="sm">
@@ -109,7 +109,7 @@ function Row({
 }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-sm text-[var(--muted-clr)]">{label}</span>
+      <span className="text-sm text-(--muted-clr)">{label}</span>
       {children}
     </div>
   );

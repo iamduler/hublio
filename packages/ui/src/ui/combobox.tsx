@@ -81,7 +81,7 @@ export function Combobox({
           aria-expanded={open}
           disabled={disabled}
           className={cn(
-            "flex h-10 w-full items-center justify-between rounded-md border border-border bg-card px-3 py-2 text-sm outline-none hover:border-[var(--line-3)] focus:border-primary disabled:cursor-not-allowed disabled:opacity-50",
+            "flex h-10 w-full items-center justify-between rounded-md border border-border bg-card px-3 py-2 text-sm outline-none hover:border-(--line-3) focus:border-primary disabled:cursor-not-allowed disabled:opacity-50",
             triggerClassName,
             className,
           )}
@@ -101,7 +101,7 @@ export function Combobox({
       <PopoverContent
         align="start"
         className={cn(
-          "w-[var(--radix-popover-trigger-width)] border-border bg-[var(--white)] p-0 shadow-[var(--shadow-pop)]",
+          "w-[var(--radix-popover-trigger-width)] border-border bg-(--white) p-0 shadow-[var(--shadow-pop)]",
           contentClassName,
         )}
         onWheel={(event) => event.stopPropagation()}

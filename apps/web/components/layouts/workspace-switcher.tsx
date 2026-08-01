@@ -23,28 +23,28 @@ export function WorkspaceSwitcher() {
 
   if (isLoading) {
     return (
-      <div className="h-9 w-40 animate-pulse rounded-md bg-[var(--line-2)]" />
+      <div className="h-9 w-40 animate-pulse rounded-md bg-(--line-2)" />
     );
   }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className="flex h-9 items-center gap-2 rounded-md border border-[var(--line)] bg-[var(--white)] px-3 text-sm outline-none hover:border-[var(--line-3)] focus:border-primary"
+        className="flex h-9 items-center gap-2 rounded-md border border-(--line) bg-(--white) px-3 text-sm outline-none hover:border-(--line-3) focus:border-primary"
         aria-label={t("switcher.label")}
       >
-        <span className="max-w-[10rem] truncate font-medium text-[var(--ink)]">
+        <span className="max-w-[10rem] truncate font-medium text-(--ink)">
           {activeWorkspace?.name ?? t("switcher.none")}
         </span>
         {activeWorkspace ? (
           <EnvBadge environment={activeWorkspace.environment} />
         ) : null}
-        <ChevronsUpDown size={14} className="text-[var(--muted-clr)]" />
+        <ChevronsUpDown size={14} className="text-(--muted-clr)" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="min-w-[16rem]">
         <DropdownMenuLabel>{t("switcher.label")}</DropdownMenuLabel>
         {workspaces.length === 0 ? (
-          <div className="px-3 py-2 text-sm text-[var(--muted-clr)]">
+          <div className="px-3 py-2 text-sm text-(--muted-clr)">
             {t("switcher.empty")}
           </div>
         ) : (

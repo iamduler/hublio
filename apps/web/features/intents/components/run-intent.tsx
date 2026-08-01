@@ -102,7 +102,7 @@ export function RunIntent() {
                 onChange={(e) => setPayload(e.target.value)}
               />
               {payloadError ? (
-                <p className="text-xs font-medium text-[var(--danger)]">
+                <p className="text-xs font-medium text-border-(--danger)">
                   {payloadError}
                 </p>
               ) : null}
@@ -128,7 +128,7 @@ export function RunIntent() {
           {result ? (
             <div className="space-y-4 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-[var(--muted-clr)]">
+                <span className="text-(--muted-clr)">
                   {t("result.intent")}
                 </span>
                 <Link
@@ -139,13 +139,13 @@ export function RunIntent() {
                 </Link>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[var(--muted-clr)]">
+                <span className="text-(--muted-clr)">
                   {t("result.status")}
                 </span>
                 <StatusBadge status={result.intent.status} />
               </div>
               <div className="space-y-2">
-                <span className="text-[var(--muted-clr)]">
+                <span className="text-(--muted-clr)">
                   {t("result.executions")}
                 </span>
                 <ul className="space-y-1.5">
@@ -153,9 +153,9 @@ export function RunIntent() {
                     <li key={exec.id}>
                       <Link
                         href={`/dashboard/executions/${exec.id}`}
-                        className="flex items-center justify-between rounded-md border border-[var(--line)] px-3 py-2 no-underline hover:border-primary"
+                        className="flex items-center justify-between rounded-md border border-(--line) px-3 py-2 no-underline hover:border-primary"
                       >
-                        <span className="font-mono text-xs text-[var(--ink-2)]">
+                        <span className="font-mono text-xs text-(--ink-2)">
                           {exec.id}
                         </span>
                         <StatusBadge status={exec.status} />
@@ -166,7 +166,7 @@ export function RunIntent() {
               </div>
             </div>
           ) : (
-            <p className="text-sm text-[var(--muted-clr)]">{t("noResult")}</p>
+            <p className="text-sm text-(--muted-clr)">{t("noResult")}</p>
           )}
         </CardContent>
       </Card>

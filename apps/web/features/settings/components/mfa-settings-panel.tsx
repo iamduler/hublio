@@ -140,18 +140,18 @@ export function MFASettingsPanel() {
             <Shield size={16} className="text-blue-600" />
             {t("enrollTitle")}
           </CardTitle>
-          <p className="text-sm text-[var(--muted-clr)]">{t("enrollSubtitle")}</p>
+          <p className="text-sm text-(--muted-clr)">{t("enrollSubtitle")}</p>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex flex-col items-start gap-4 sm:flex-row">
             <QRCodeImage data={setup.otpauth_url} label={t("scanQr")} />
             <div className="min-w-0 flex-1 space-y-3">
               <div>
-                <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-wider text-[var(--muted-clr)]">
+                <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-wider text-(--muted-clr)">
                   {t("manualSecret")}
                 </p>
                 <div className="flex items-center gap-2">
-                  <code className="block flex-1 truncate rounded-lg border border-[var(--line)] bg-[var(--line-2)] px-3 py-2 font-mono text-[12px] text-[var(--ink)]">
+                  <code className="block flex-1 truncate rounded-lg border border-(--line) bg-(--line-2) px-3 py-2 font-mono text-[12px] text-(--ink)">
                     {setup.secret}
                   </code>
                   <Button
@@ -164,13 +164,13 @@ export function MFASettingsPanel() {
                   </Button>
                 </div>
               </div>
-              <p className="text-[12px] text-[var(--faint)]">{t("manualHint")}</p>
+              <p className="text-[12px] text-(--faint)">{t("manualHint")}</p>
             </div>
           </div>
 
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-[13px] font-semibold text-[var(--ink-2)]">
+              <p className="text-[13px] font-semibold text-(--ink-2)">
                 {t("recoveryTitle")}
               </p>
               <Button
@@ -185,14 +185,14 @@ export function MFASettingsPanel() {
                 {t("copyCodes")}
               </Button>
             </div>
-            <p className="mb-2 text-[12px] text-[var(--muted-clr)]">
+            <p className="mb-2 text-[12px] text-(--muted-clr)">
               {t("recoveryWarning")}
             </p>
             <div className="grid grid-cols-2 gap-1.5 rounded-xl border border-amber-100 bg-amber-50/60 p-3 sm:grid-cols-2">
               {setup.recovery_codes.map((c) => (
                 <code
                   key={c}
-                  className="font-mono text-[12px] text-[var(--ink-2)]"
+                  className="font-mono text-[12px] text-(--ink-2)"
                 >
                   {c}
                 </code>
@@ -201,13 +201,13 @@ export function MFASettingsPanel() {
           </div>
 
           <div>
-            <p className="mb-3 text-[13px] font-semibold text-[var(--ink-2)]">
+            <p className="mb-3 text-[13px] font-semibold text-(--ink-2)">
               {t("confirmCode")}
             </p>
             <OTPInput value={code} onChange={setCode} />
           </div>
 
-          <div className="flex flex-wrap items-center justify-end gap-2 border-t border-[var(--line)] pt-4">
+          <div className="flex flex-wrap items-center justify-end gap-2 border-t border-(--line) pt-4">
             <Button
               type="button"
               variant="outline"
@@ -246,7 +246,7 @@ export function MFASettingsPanel() {
             <ShieldOff size={16} className="text-red-600" />
             {t("disableTitle")}
           </CardTitle>
-          <p className="text-sm text-[var(--muted-clr)]">{t("disableSubtitle")}</p>
+          <p className="text-sm text-(--muted-clr)">{t("disableSubtitle")}</p>
         </CardHeader>
         <CardContent className="space-y-4">
           <PasswordField
@@ -290,33 +290,33 @@ export function MFASettingsPanel() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Lock size={16} className="text-[var(--ink-2)]" />
+          <Lock size={16} className="text-(--ink-2)" />
           {t("title")}
         </CardTitle>
-        <p className="text-sm text-[var(--muted-clr)]">{t("subtitle")}</p>
+        <p className="text-sm text-(--muted-clr)">{t("subtitle")}</p>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-start justify-between gap-4 rounded-xl border border-[var(--line)] bg-[var(--line-2)] p-4">
+        <div className="flex items-start justify-between gap-4 rounded-xl border border-(--line) bg-(--line-2) p-4">
           <div className="flex items-start gap-3">
             <div
               className={cx(
                 "mt-0.5 flex h-9 w-9 items-center justify-center rounded-xl border",
                 status.enabled
                   ? "border-green-100 bg-green-50 text-green-700"
-                  : "border-[var(--line)] bg-[var(--white)] text-[var(--muted-clr)]",
+                  : "border-(--line) bg-(--white) text-(--muted-clr)",
               )}
             >
               {status.enabled ? <ShieldCheck size={16} /> : <KeyRound size={16} />}
             </div>
             <div>
-              <p className="text-[13px] font-semibold text-[var(--ink)]">
+              <p className="text-[13px] font-semibold text-(--ink)">
                 {status.enabled ? t("statusOn") : t("statusOff")}
               </p>
-              <p className="mt-0.5 text-[12px] text-[var(--muted-clr)]">
+              <p className="mt-0.5 text-[12px] text-(--muted-clr)">
                 {status.enabled
                   ? t("statusOnHint", {
-                      count: status.remaining_recovery_codes,
-                    })
+                    count: status.remaining_recovery_codes,
+                  })
                   : status.pending_enrollment
                     ? t("statusPending")
                     : t("statusOffHint")}
@@ -328,7 +328,7 @@ export function MFASettingsPanel() {
               "rounded-md border px-2 py-0.5 text-[11px] font-semibold",
               status.enabled
                 ? "border-green-100 bg-green-50 text-green-700"
-                : "border-[var(--line)] bg-[var(--white)] text-[var(--muted-clr)]",
+                : "border-(--line) bg-(--white) text-(--muted-clr)",
             )}
           >
             {status.enabled ? t("badgeOn") : t("badgeOff")}
@@ -336,7 +336,7 @@ export function MFASettingsPanel() {
         </div>
 
         {!status.can_enroll ? (
-          <p className="text-[13px] text-[var(--muted-clr)]">{t("oauthOnly")}</p>
+          <p className="text-[13px] text-(--muted-clr)">{t("oauthOnly")}</p>
         ) : status.enabled ? (
           <div className="flex justify-end">
             <Button
@@ -351,7 +351,7 @@ export function MFASettingsPanel() {
           </div>
         ) : (
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-[12px] text-[var(--faint)]">{t("enrollHint")}</p>
+            <p className="text-[12px] text-(--faint)">{t("enrollHint")}</p>
             <ConfirmDialog
               trigger={
                 <Button
@@ -387,11 +387,11 @@ function QRCodeImage({ data, label }: { data: string; label: string }) {
 
   return (
     <div className="flex flex-col items-center gap-2">
-      <div className="rounded-xl border border-[var(--line)] bg-white p-2 shadow-sm">
+      <div className="rounded-xl border border-(--line) bg-white p-2 shadow-sm">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={src} alt={label} width={180} height={180} />
       </div>
-      <p className="text-[11px] text-[var(--muted-clr)]">{label}</p>
+      <p className="text-[11px] text-(--muted-clr)">{label}</p>
     </div>
   );
 }

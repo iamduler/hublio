@@ -43,28 +43,28 @@ export function CompleteOnboardingForm() {
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 shadow-lg shadow-blue-600/25">
           <Rocket size={24} className="text-white" />
         </div>
-        <h2 className="text-[20px] font-semibold tracking-tight text-[var(--ink)]">
+        <h2 className="text-[20px] font-semibold tracking-tight text-(--ink)">
           {t("completeTitle")}
         </h2>
-        <p className="mt-2 text-[13px] leading-relaxed text-[var(--muted-clr)]">
+        <p className="mt-2 text-[13px] leading-relaxed text-(--muted-clr)">
           {t("completeSubtitle")}
         </p>
       </div>
 
       <div className="mb-6 space-y-2.5">
         <div>
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-clr)]">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-(--muted-clr)">
             {t("summaryOrg")}
           </p>
-          <div className="flex items-center gap-3 rounded-xl border border-[var(--line)] bg-[var(--white)] p-3.5">
+          <div className="flex items-center gap-3 rounded-xl border border-(--line) bg-(--white) p-3.5">
             <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-blue-100 bg-blue-50">
               <Building2 size={16} className="text-blue-600" />
             </div>
             <div>
-              <p className="text-[13px] font-semibold text-[var(--ink)]">
+              <p className="text-[13px] font-semibold text-(--ink)">
                 {draft.organizationName || t("summaryOrgFallback")}
               </p>
-              <p className="text-[11px] text-[var(--muted-clr)]">{t("summaryOrgHint")}</p>
+              <p className="text-[11px] text-(--muted-clr)">{t("summaryOrgHint")}</p>
             </div>
             <div className="ml-auto">
               <span className="rounded-md border border-green-100 bg-green-50 px-2 py-0.5 text-[11px] font-semibold text-green-700">
@@ -75,18 +75,18 @@ export function CompleteOnboardingForm() {
         </div>
 
         <div>
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-clr)]">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-(--muted-clr)">
             {t("summaryWorkspace")}
           </p>
-          <div className="flex items-center gap-3 rounded-xl border border-[var(--line)] bg-[var(--white)] p-3.5">
+          <div className="flex items-center gap-3 rounded-xl border border-(--line) bg-(--white) p-3.5">
             <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-violet-100 bg-violet-50">
               <Globe2 size={16} className="text-violet-600" />
             </div>
             <div>
-              <p className="text-[13px] font-semibold text-[var(--ink)]">
+              <p className="text-[13px] font-semibold text-(--ink)">
                 {draft.workspace?.name || t("summaryWorkspaceFallback")}
               </p>
-              <p className="font-mono text-[11px] text-[var(--muted-clr)]">
+              <p className="font-mono text-[11px] text-(--muted-clr)">
                 {draft.workspace
                   ? `${draft.workspace.id.slice(0, 8)}… · ${draft.workspace.environment}`
                   : t("summaryWorkspaceHint")}
@@ -103,18 +103,18 @@ export function CompleteOnboardingForm() {
         </div>
 
         <div>
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-clr)]">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-(--muted-clr)">
             {t("summaryTeam")}
           </p>
-          <div className="flex items-center gap-3 rounded-xl border border-[var(--line)] bg-[var(--white)] p-3.5">
+          <div className="flex items-center gap-3 rounded-xl border border-(--line) bg-(--white) p-3.5">
             <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-green-100 bg-green-50">
               <Users size={16} className="text-green-600" />
             </div>
             <div>
-              <p className="text-[13px] font-semibold text-[var(--ink)]">
+              <p className="text-[13px] font-semibold text-(--ink)">
                 {t("memberCount", { count: memberCount })}
               </p>
-              <p className="text-[11px] text-[var(--muted-clr)]">
+              <p className="text-[11px] text-(--muted-clr)">
                 {pending > 0
                   ? t("pendingInvites", { count: pending })
                   : t("noPendingInvites")}
@@ -155,9 +155,9 @@ export function CompleteOnboardingForm() {
           href="https://docs.hublio.dev"
           target="_blank"
           rel="noreferrer"
-          className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-[var(--line)] bg-[var(--white)] text-[13px] font-medium text-[var(--ink-2)] transition-colors hover:border-[var(--line-3)] hover:bg-[var(--line-2)]"
+          className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-(--line) bg-(--white) text-[13px] font-medium text-(--ink-2) transition-colors hover:border-(--line-3) hover:bg-(--line-2)"
         >
-          <BookOpen size={14} className="text-[var(--muted-clr)]" />
+          <BookOpen size={14} className="text-(--muted-clr)" />
           {t("viewDocs")}
         </a>
       </div>

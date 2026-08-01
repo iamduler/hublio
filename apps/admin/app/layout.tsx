@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
-import { NextIntlClientProvider } from "next-intl";
-import messages from "../messages/en.json";
 import "./globals.css";
 
 const inter = Inter({
@@ -19,7 +17,25 @@ const jetBrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Hublio Admin",
+  icons: {
+    icon: [
+      { url: "/favicons/favicon.ico", sizes: "48x48" },
+      { url: "/favicons/favicon.svg", type: "image/svg+xml" },
+      {
+        url: "/favicons/favicon-96x96.png",
+        sizes: "96x96",
+        type: "image/png",
+      },
+    ],
+    apple: [
+      {
+        url: "/favicons/apple-touch-icon.png",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
+  },
+  manifest: "/favicons/site.webmanifest",
 };
 
 export default function RootLayout({
@@ -29,14 +45,11 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
       className={`${inter.variable} ${jetBrainsMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="min-h-full" suppressHydrationWarning>
-        <NextIntlClientProvider locale="en" messages={messages}>
-          {children}
-        </NextIntlClientProvider>
+        {children}
       </body>
     </html>
   );

@@ -198,8 +198,8 @@ export function ConnectionForm() {
               />
             </div>
 
-            <div className="space-y-3 rounded-md border border-[var(--line)] bg-[var(--line-2)] p-4">
-              <p className="text-sm font-medium text-[var(--ink)]">
+            <div className="space-y-3 rounded-md border border-(--line) bg-(--line-2) p-4">
+              <p className="text-sm font-medium text-(--ink)">
                 {t("form.secret")}
               </p>
               {secretFields.map((secretField) => (
@@ -211,9 +211,9 @@ export function ConnectionForm() {
                     id={`secret-${secretField}`}
                     type={
                       secretField.includes("password") ||
-                      secretField.includes("secret") ||
-                      secretField.includes("key") ||
-                      secretField.includes("token")
+                        secretField.includes("secret") ||
+                        secretField.includes("key") ||
+                        secretField.includes("token")
                         ? "password"
                         : "text"
                     }

@@ -89,7 +89,7 @@ export function ConnectionDetail({ connectionId }: { connectionId: string }) {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted-clr)]">
+            <p className="text-xs font-medium uppercase tracking-wide text-(--muted-clr)">
               {t("columns.environment")}
             </p>
             <div className="mt-1">
@@ -99,20 +99,20 @@ export function ConnectionDetail({ connectionId }: { connectionId: string }) {
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted-clr)]">
+            <p className="text-xs font-medium uppercase tracking-wide text-(--muted-clr)">
               {t("detail.timeout")}
             </p>
-            <p className="mt-1 text-sm text-[var(--ink)]">
+            <p className="mt-1 text-sm text-(--ink)">
               {data.timeout_seconds ?? 30}s
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted-clr)]">
+            <p className="text-xs font-medium uppercase tracking-wide text-(--muted-clr)">
               {t("detail.updated")}
             </p>
-            <p className="mt-1 text-sm text-[var(--ink)]">
+            <p className="mt-1 text-sm text-(--ink)">
               <FormattedDate value={data.updated_at} relative />
             </p>
           </CardContent>

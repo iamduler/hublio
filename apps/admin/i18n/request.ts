@@ -1,9 +1,18 @@
+import { hasLocale } from "next-intl";
 import { getRequestConfig } from "next-intl/server";
-import messages from "../messages/en.json";
+import type { Locale } from "@/lib/i18n/config";
+import { routing } from "./routing";
 
-// Admin is single-locale (en) for now. This satisfies next-intl's server
-// config requirement; locale routing can be added later if needed.
-export default getRequestConfig(async () => ({
-  locale: "en",
-  messages,
-}));
+export default getRequestConfig(async ({ requestLocale }) => {
+  const requested = await requestLocale;
+  const locale = hasLocale(routing.locales, requested)
+    ? (requested as Locale)
+    : routing.defaultLocale;
+
+  const messages = (await import(`../messages/${locale}.json`)).default;
+
+  return {
+    locale,
+    messages,
+  };
+});

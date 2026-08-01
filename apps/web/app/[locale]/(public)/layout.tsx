@@ -1,4 +1,5 @@
-import { AppTopBar } from "@/components/layouts/app-top-bar";
+import { LocaleSwitcher } from "@/components/locale-switcher";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 
 export default function PublicLayout({
   children,
@@ -6,9 +7,14 @@ export default function PublicLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-full flex-col">
-      <AppTopBar />
-      <main className="flex-1">{children}</main>
+    <div className="flex min-h-full flex-col bg-(--bg)">
+      <div className="flex justify-end gap-2 p-4">
+        <ThemeSwitcher variant="auth" />
+        <LocaleSwitcher variant="auth" />
+      </div>
+      <main className="flex flex-1 items-center justify-center px-4 pb-8">
+        {children}
+      </main>
     </div>
   );
 }

@@ -64,7 +64,7 @@ export function ConfirmDialog({
             onClick={(e) => void handleConfirm(e)}
             className={cn(
               destructive &&
-                "bg-[var(--danger)] text-white hover:opacity-90",
+              "bg-border-(--danger) text-white hover:opacity-90",
             )}
           >
             {confirmLabel}

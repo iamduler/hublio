@@ -60,18 +60,18 @@ export function IntentsList() {
               <TableCell>
                 <Link
                   href={`/dashboard/intents/${intent.id}`}
-                  className="font-medium text-[var(--ink)] no-underline hover:text-primary"
+                  className="font-medium text-(--ink) no-underline hover:text-primary"
                 >
                   {intent.capability}
                 </Link>
-                <div className="font-mono text-xs text-[var(--muted-clr)]">
+                <div className="font-mono text-xs text-(--muted-clr)">
                   {intent.id}
                 </div>
               </TableCell>
               <TableCell>
                 <StatusBadge status={intent.status} />
               </TableCell>
-              <TableCell className="text-[var(--muted-clr)]">
+              <TableCell className="text-(--muted-clr)">
                 {intent.created_at
                   ? new Date(intent.created_at).toLocaleString()
                   : "—"}

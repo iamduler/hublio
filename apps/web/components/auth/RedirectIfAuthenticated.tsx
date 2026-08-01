@@ -20,7 +20,7 @@ export function RedirectIfAuthenticated({
 
   if (isLoading || isAuthenticated) {
     return (
-      <div className="flex min-h-[40vh] items-center justify-center text-sm text-[var(--muted-clr)]">
+      <div className="flex min-h-[40vh] items-center justify-center text-sm text-(--muted-clr)">
         …
       </div>
     );

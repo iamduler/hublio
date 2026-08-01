@@ -1,0 +1,22 @@
+---
+description: Mobile-first layouts and components across web and admin
+alwaysApply: true
+---
+
+# Mobile-first (Hublio frontend)
+
+All layouts and UI components in `apps/web`, `apps/admin`, and `packages/ui` are **mobile-first**.
+
+## Rules
+
+* Write base styles for the smallest viewport; enhance with `sm:` / `md:` / `lg:` — never the reverse as the default.
+* App shells: do **not** show a permanent sidebar on small screens. Use overlay/Sheet; desktop rail from `md:` upward.
+* Prefer `min-h-dvh` / `h-dvh` for full-viewport chrome; keep touch targets usable; avoid horizontal overflow.
+* Progressive disclosure for chrome (hamburger, collapse, truncated labels) before packing dense desktop toolbars onto mobile.
+* Reuse `@hublio/ui` shell primitives (`AppSidebar*`, Sheet, shared headers patterns) — do not invent a second layout system per app.
+* When adding or changing a layout/component, verify it on a narrow viewport first, then desktop.
+
+## Exceptions
+
+* Purely desktop-only admin tooling may start at `md:` only when there is no mobile route to that surface — still avoid fixed widths that break below `md`.
+* Marketing/landing full-bleed heroes may use intentional large-first media; controls and copy still stack for mobile.

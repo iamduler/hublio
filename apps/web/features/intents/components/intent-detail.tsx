@@ -48,10 +48,10 @@ export function IntentDetail({ intentId }: { intentId: string }) {
         />
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted-clr)]">
+            <p className="text-xs font-medium uppercase tracking-wide text-(--muted-clr)">
               {t("detail.submitted")}
             </p>
-            <p className="mt-1 text-sm text-[var(--ink)]">
+            <p className="mt-1 text-sm text-(--ink)">
               <FormattedDate value={data.submitted_at ?? data.created_at} />
             </p>
           </CardContent>
@@ -63,7 +63,7 @@ export function IntentDetail({ intentId }: { intentId: string }) {
           <CardTitle>{t("detail.payload")}</CardTitle>
         </CardHeader>
         <CardContent>
-          <pre className="overflow-x-auto rounded-md bg-[var(--line-2)] p-4 font-mono text-xs text-[var(--ink-2)]">
+          <pre className="overflow-x-auto rounded-md bg-(--line-2) p-4 font-mono text-xs text-(--ink-2)">
             {JSON.stringify(data.payload ?? {}, null, 2)}
           </pre>
         </CardContent>
@@ -84,14 +84,14 @@ function Info({
   return (
     <Card>
       <CardContent className="p-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted-clr)]">
+        <p className="text-xs font-medium uppercase tracking-wide text-(--muted-clr)">
           {label}
         </p>
         <p
           className={
             mono
-              ? "mt-1 truncate font-mono text-xs text-[var(--ink)]"
-              : "mt-1 text-sm text-[var(--ink)]"
+              ? "mt-1 truncate font-mono text-xs text-(--ink)"
+              : "mt-1 text-sm text-(--ink)"
           }
         >
           {value}

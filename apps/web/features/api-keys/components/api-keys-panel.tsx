@@ -105,7 +105,7 @@ export function ApiKeysPanel() {
             <DialogBody className="space-y-4">
               {plaintext ? (
                 <div className="space-y-2">
-                  <p className="text-sm text-[var(--ink-2)]">{t("copyOnce")}</p>
+                  <p className="text-sm text-(--ink-2)">{t("copyOnce")}</p>
                   <CopyValue value={plaintext} />
                 </div>
               ) : (
@@ -163,13 +163,13 @@ export function ApiKeysPanel() {
             <TableBody>
               {data.map((key) => (
                 <TableRow key={key.id}>
-                  <TableCell className="font-medium text-[var(--ink)]">
+                  <TableCell className="font-medium text-(--ink)">
                     {key.name}
                   </TableCell>
-                  <TableCell className="font-mono text-xs text-[var(--ink-2)]">
+                  <TableCell className="font-mono text-xs text-(--ink-2)">
                     {key.prefix ?? "—"}
                   </TableCell>
-                  <TableCell className="text-[var(--ink-2)]">
+                  <TableCell className="text-(--ink-2)">
                     <FormattedDate value={key.last_used_at} relative />
                   </TableCell>
                   <TableCell>

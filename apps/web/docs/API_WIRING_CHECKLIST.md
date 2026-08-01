@@ -5,7 +5,7 @@
 | # | File | Phạm vi | Status (2026-07-29) |
 | --- | --- | --- | --- |
 | 00 | [api-wiring/00-foundation.md](./api-wiring/00-foundation.md) | httpOnly JWT proxy, quy trình wire, shared pkgs, DoD | **DONE** (còn manual smoke) |
-| 01 | [api-wiring/01-admin-workspace.md](./api-wiring/01-admin-workspace.md) | `apps/admin` — org ops, connector registry | Scaffold only |
+| 01 | [api-wiring/01-admin-workspace.md](./api-wiring/01-admin-workspace.md) | `apps/admin` — org ops, connector registry | **§1 scaffold DONE** (auth gate + shell; screens pending) |
 | 02 | [api-wiring/02-user-workspace.md](./api-wiring/02-user-workspace.md) | `apps/web` — ma trận endpoint, gaps | **DONE** core + lists (2026-07-30) |
 
 Thứ tự làm việc: **00 → 02** (user workspace) → **01** (admin phase).
@@ -38,6 +38,6 @@ Thứ tự làm việc: **00 → 02** (user workspace) → **01** (admin phase).
 - [x] Token refresh (`POST /auth/refresh` + BFF + silent proxy rotate)
 - [x] `GET /auth/me` session bootstrap (user + organization)
 - [x] Dọn legacy `lib/api/bff.ts` / `bff-client.ts`
-- Admin phase (`01`) khi product sẵn sàng
+- Admin phase (`01`): §1 scaffold done — next org suspend/activate + connector registry
 - Backend blockers: (none for user-workspace core)
 - Note: demo MFA đang `pending_enrollment=true` (enrol dở) — disable/re-setup từ Settings → Security nếu cần

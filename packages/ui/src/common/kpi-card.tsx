@@ -26,14 +26,14 @@ export function KpiCard({
           </div>
         ) : null}
         <div className="min-w-0">
-          <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted-clr)]">
+          <p className="text-xs font-medium uppercase tracking-wide text-(--muted-clr)">
             {label}
           </p>
-          <p className="font-display text-2xl font-semibold text-[var(--ink)]">
+          <p className="font-display text-2xl font-semibold text-(--ink)">
             {value}
           </p>
           {hint ? (
-            <p className="text-xs text-[var(--muted-clr)]">{hint}</p>
+            <p className="text-xs text-(--muted-clr)">{hint}</p>
           ) : null}
         </div>
       </CardContent>

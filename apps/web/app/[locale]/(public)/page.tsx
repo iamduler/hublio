@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { buttonVariants } from "@hublio/ui/ui/button-variants";
+import { Logo } from "@/features/auth/auth-ui";
 
 export default async function LandingPage({
   params,
@@ -12,27 +13,34 @@ export default async function LandingPage({
   const t = await getTranslations("common");
 
   return (
-    <section className="landing-hero">
-      <div className="relative z-10 mx-auto max-w-3xl text-center">
-        <p className="eyebrow mb-4">{t("meta.brand")}</p>
-        <h1 className="mb-4 text-4xl font-semibold tracking-tight text-[var(--ink)] md:text-5xl">
-          {t("meta.brand")}
-        </h1>
-        <p className="mx-auto mb-8 max-w-xl text-base text-[var(--ink-2)] md:text-lg">
+    <div className="w-full max-w-150">
+      <div className="mb-7 flex flex-col items-center text-center">
+        <Logo size="xxl" priority />
+        <p className="mt-1.5 text-2xl leading-relaxed text-(--muted-clr)">
           {t("meta.description")}
         </p>
-        <div className="flex flex-wrap items-center justify-center gap-3">
-          <Link href="/login" className={buttonVariants({ size: "lg" })}>
-            {t("nav.signIn")}
-          </Link>
-          <Link
-            href="/register"
-            className={buttonVariants({ size: "lg", variant: "outline" })}
-          >
-            {t("nav.getStarted")}
-          </Link>
-        </div>
       </div>
-    </section>
+      <div className="flex flex-col gap-2.5">
+        <Link
+          href="/login"
+          className={buttonVariants({ size: "default", className: "w-full" })}
+        >
+          {t("nav.signIn")}
+        </Link>
+        <Link
+          href="/register"
+          className={buttonVariants({
+            size: "default",
+            variant: "outline",
+            className: "w-full",
+          })}
+        >
+          {t("nav.getStarted")}
+        </Link>
+      </div>
+      <p className="mt-5 text-center text-[11px] text-(--faint) tracking-wide">
+        © {new Date().getFullYear()} Hublio
+      </p>
+    </div>
   );
 }

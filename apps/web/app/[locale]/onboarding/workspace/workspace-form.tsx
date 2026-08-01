@@ -93,10 +93,10 @@ export function WorkspaceOnboardingForm() {
   return (
     <OnboardingShell step={1}>
       <div className="mb-6">
-        <h2 className="text-[18px] font-semibold tracking-tight text-[var(--ink)]">
+        <h2 className="text-[18px] font-semibold tracking-tight text-(--ink)">
           {t("workspaceTitle")}
         </h2>
-        <p className="mt-1.5 text-[13px] text-[var(--muted-clr)]">
+        <p className="mt-1.5 text-[13px] text-(--muted-clr)">
           {t("workspaceSubtitle")}
         </p>
       </div>
@@ -111,10 +111,10 @@ export function WorkspaceOnboardingForm() {
             autoFocus
             placeholder={t("workspaceNamePlaceholder")}
             className={cx(
-              "h-9 w-full rounded-lg border bg-[var(--white)] px-3 text-sm text-[var(--ink)] placeholder:text-[var(--faint)] transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-600/20",
+              "h-9 w-full rounded-lg border bg-(--white) px-3 text-sm text-(--ink) placeholder:text-(--faint) transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-600/20",
               form.formState.errors.name
                 ? "border-red-300 bg-red-50/40"
-                : "border-[var(--line)] hover:border-[var(--line-3)]",
+                : "border-(--line) hover:border-(--line-3)",
             )}
             {...form.register("name")}
           />
@@ -123,8 +123,8 @@ export function WorkspaceOnboardingForm() {
               {form.formState.errors.name.message}
             </p>
           ) : name ? (
-            <p className="mt-1 font-mono text-[11px] text-[var(--faint)]">
-              {t("slug")}: <span className="text-[var(--ink-2)]">{slug}</span>
+            <p className="mt-1 font-mono text-[11px] text-(--faint)">
+              {t("slug")}: <span className="text-(--ink-2)">{slug}</span>
             </p>
           ) : null}
         </div>
@@ -133,7 +133,7 @@ export function WorkspaceOnboardingForm() {
           <AuthFieldLabel htmlFor="ws-env">{t("environment")}</AuthFieldLabel>
           <select
             id="ws-env"
-            className="h-9 w-full rounded-lg border border-[var(--line)] bg-[var(--white)] px-3 text-sm text-[var(--ink)] transition-colors hover:border-[var(--line-3)] focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+            className="h-9 w-full rounded-lg border border-(--line) bg-(--white) px-3 text-sm text-(--ink) transition-colors hover:border-(--line-3) focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
             {...form.register("environment")}
           >
             <option value="production">{t("env.production")}</option>
@@ -143,17 +143,17 @@ export function WorkspaceOnboardingForm() {
         </div>
 
         {name ? (
-          <div className="rounded-xl border border-[var(--line)] bg-[var(--line-2)] p-4">
-            <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted-clr)]">
+          <div className="rounded-xl border border-(--line) bg-(--line-2) p-4">
+            <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-wider text-(--muted-clr)">
               {t("workspacePreview")}
             </p>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[12px] text-[var(--muted-clr)]">{t("slug")}</span>
-                <span className="font-mono text-[12px] text-[var(--ink-2)]">{slug}</span>
+                <span className="text-[12px] text-(--muted-clr)">{t("slug")}</span>
+                <span className="font-mono text-[12px] text-(--ink-2)">{slug}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[12px] text-[var(--muted-clr)]">
+                <span className="text-[12px] text-(--muted-clr)">
                   {t("environment")}
                 </span>
                 <span
@@ -167,17 +167,17 @@ export function WorkspaceOnboardingForm() {
               </div>
               {createWorkspace.data?.id ? (
                 <div className="flex items-center justify-between">
-                  <span className="text-[12px] text-[var(--muted-clr)]">
+                  <span className="text-[12px] text-(--muted-clr)">
                     {t("workspaceId")}
                   </span>
                   <div className="flex items-center gap-1.5">
-                    <span className="font-mono text-[12px] text-[var(--ink-2)]">
+                    <span className="font-mono text-[12px] text-(--ink-2)">
                       {createWorkspace.data.id.slice(0, 13)}…
                     </span>
                     <button
                       type="button"
                       onClick={() => handleCopyId(createWorkspace.data!.id)}
-                      className="text-[var(--faint)] hover:text-[var(--ink-2)]"
+                      className="text-(--faint) hover:text-(--ink-2)"
                     >
                       {copied ? (
                         <Check size={12} className="text-green-600" />
@@ -196,7 +196,7 @@ export function WorkspaceOnboardingForm() {
           <button
             type="button"
             onClick={() => router.push("/onboarding/organization")}
-            className="flex items-center gap-1.5 text-[13px] text-[var(--muted-clr)] transition-colors hover:text-[var(--ink-2)]"
+            className="flex items-center gap-1.5 text-[13px] text-(--muted-clr) transition-colors hover:text-(--ink-2)"
           >
             <ChevronLeft size={14} />
             {t("back")}

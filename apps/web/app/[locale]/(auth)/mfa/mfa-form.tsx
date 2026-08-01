@@ -86,7 +86,7 @@ export function MFAForm() {
   if (!mfaToken) {
     return (
       <AuthCard>
-        <div className="py-8 text-center text-sm text-[var(--muted-clr)]">…</div>
+        <div className="py-8 text-center text-sm text-(--muted-clr)">…</div>
       </AuthCard>
     );
   }
@@ -95,7 +95,7 @@ export function MFAForm() {
     <AuthCard>
       <Link
         href="/login"
-        className="mb-7 -ml-0.5 flex items-center gap-1.5 text-[13px] text-[var(--muted-clr)] transition-colors hover:text-[var(--ink-2)]"
+        className="mb-7 -ml-0.5 flex items-center gap-1.5 text-[13px] text-(--muted-clr) transition-colors hover:text-(--ink-2)"
       >
         <ChevronLeft size={14} />
         {t("back")}
@@ -105,10 +105,10 @@ export function MFAForm() {
         <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-xl border border-violet-100 bg-violet-50">
           <Lock size={16} className="text-violet-600" />
         </div>
-        <h1 className="text-[17px] font-semibold tracking-tight text-[var(--ink)]">
+        <h1 className="text-[17px] font-semibold tracking-tight text-(--ink)">
           {t("title")}
         </h1>
-        <p className="mt-1.5 text-[13px] leading-relaxed text-[var(--muted-clr)]">
+        <p className="mt-1.5 text-[13px] leading-relaxed text-(--muted-clr)">
           {useRecovery ? t("recoverySubtitle") : t("subtitle")}
         </p>
       </div>
@@ -130,7 +130,7 @@ export function MFAForm() {
               placeholder={t("recoveryPlaceholder")}
               className={cx(
                 inputBase,
-                "border-[var(--line)] font-mono tracking-wider hover:border-[var(--line-3)]",
+                "border-(--line) font-mono tracking-wider hover:border-(--line-3)",
               )}
             />
           </div>

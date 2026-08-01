@@ -64,7 +64,7 @@ export function ExecutionsList() {
               <TableCell>
                 <Link
                   href={`/dashboard/executions/${execution.id}`}
-                  className="font-mono text-sm font-medium text-[var(--ink)] no-underline hover:text-primary"
+                  className="font-mono text-sm font-medium text-(--ink) no-underline hover:text-primary"
                 >
                   {execution.id.slice(0, 8)}…
                 </Link>
@@ -72,7 +72,7 @@ export function ExecutionsList() {
               <TableCell>
                 <Link
                   href={`/dashboard/intents/${execution.intent_id}`}
-                  className="font-mono text-xs text-[var(--ink-2)] no-underline hover:text-primary"
+                  className="font-mono text-xs text-(--ink-2) no-underline hover:text-primary"
                 >
                   {execution.intent_id.slice(0, 8)}…
                 </Link>
@@ -80,10 +80,10 @@ export function ExecutionsList() {
               <TableCell>
                 <StatusBadge status={execution.status} />
               </TableCell>
-              <TableCell className="text-[var(--ink-2)]">
+              <TableCell className="text-(--ink-2)">
                 {execution.current_step_no ?? "—"}
               </TableCell>
-              <TableCell className="text-[var(--muted-clr)]">
+              <TableCell className="text-(--muted-clr)">
                 {execution.created_at
                   ? new Date(execution.created_at).toLocaleString()
                   : "—"}

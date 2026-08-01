@@ -70,15 +70,15 @@ export function DashboardOverview() {
               {events.data.map((event) => (
                 <li
                   key={event.id}
-                  className="flex items-center justify-between rounded-md border border-[var(--line)] px-3 py-2"
+                  className="flex items-center justify-between rounded-md border border-(--line) px-3 py-2"
                 >
                   <div className="flex items-center gap-3">
                     <Badge variant="sky">{event.category}</Badge>
-                    <span className="text-sm font-medium text-[var(--ink)]">
+                    <span className="text-sm font-medium text-(--ink)">
                       {event.event_name}
                     </span>
                   </div>
-                  <span className="text-xs text-[var(--muted-clr)]">
+                  <span className="text-xs text-(--muted-clr)">
                     <FormattedDate value={event.created_at} relative />
                   </span>
                 </li>

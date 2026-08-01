@@ -72,7 +72,7 @@ export function SyncRoutesList() {
               <TableCell>
                 <Link
                   href={`/dashboard/sync-routes/${route.id}`}
-                  className="font-medium text-[var(--ink)] no-underline hover:text-primary"
+                  className="font-medium text-(--ink) no-underline hover:text-primary"
                 >
                   {route.name}
                 </Link>
@@ -80,7 +80,7 @@ export function SyncRoutesList() {
               <TableCell>
                 <Badge variant="sky">{route.trigger_type}</Badge>
               </TableCell>
-              <TableCell className="text-[var(--ink-2)]">
+              <TableCell className="text-(--ink-2)">
                 {(route.resource_types ?? []).join(", ") || "—"}
               </TableCell>
               <TableCell>

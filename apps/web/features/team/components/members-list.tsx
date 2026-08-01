@@ -56,14 +56,14 @@ export function MembersList() {
         <TableBody>
           {data.map((member) => (
             <TableRow key={member.user_id}>
-              <TableCell className="font-medium text-[var(--ink)]">
+              <TableCell className="font-medium text-(--ink)">
                 {member.full_name || "—"}
               </TableCell>
-              <TableCell className="text-[var(--ink-2)]">{member.email}</TableCell>
-              <TableCell className="capitalize text-[var(--ink-2)]">
+              <TableCell className="text-(--ink-2)">{member.email}</TableCell>
+              <TableCell className="capitalize text-(--ink-2)">
                 {member.role}
               </TableCell>
-              <TableCell className="text-[var(--muted-clr)]">
+              <TableCell className="text-(--muted-clr)">
                 {member.created_at
                   ? new Date(member.created_at).toLocaleString()
                   : "—"}

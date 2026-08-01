@@ -7,7 +7,8 @@ import { SearchIcon } from "lucide-react"
 import { cn } from "../lib/utils"
 import {
   Dialog,
-  DialogContent} from "./dialog"
+  DialogContent
+} from "./dialog"
 
 function Command({
   className,
@@ -17,7 +18,7 @@ function Command({
     <CommandPrimitive
       data-slot="command"
       className={cn(
-        "flex h-full w-full flex-col overflow-hidden rounded-[var(--r-lg)] bg-[var(--white)] text-ink",
+        "flex h-full w-full flex-col overflow-hidden rounded-[var(--r-lg)] bg-(--white) text-ink",
         className
       )}
       {...props}
@@ -169,4 +170,5 @@ export {
   CommandGroup,
   CommandItem,
   CommandShortcut,
-  CommandSeparator}
+  CommandSeparator
+}

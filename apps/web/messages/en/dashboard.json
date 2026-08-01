@@ -10,6 +10,9 @@
     "apiKeys": "API Keys",
     "team": "Team",
     "settings": "Settings",
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar",
+    "menu": "Open navigation",
     "sections": {
       "integration": "Integration",
       "orchestration": "Orchestration",

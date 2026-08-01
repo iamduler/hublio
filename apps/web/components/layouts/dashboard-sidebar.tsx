@@ -3,7 +3,6 @@
 import { useTranslations } from "next-intl";
 import {
   Activity,
-  BarChart3,
   Blocks,
   Cable,
   GitBranch,
@@ -14,8 +13,12 @@ import {
   Settings,
   Users,
 } from "lucide-react";
+import {
+  AppSidebar,
+  type AppSidebarSection,
+} from "@hublio/ui/common/app-sidebar";
 import { Link, usePathname } from "@/i18n/navigation";
-import { cn } from "@/lib/utils";
+import { Logo } from "@/features/auth/auth-ui";
 
 type NavLink = {
   icon: React.ElementType;
@@ -83,44 +86,32 @@ export function DashboardSidebar() {
   const t = useTranslations("dashboard.nav");
   const pathname = usePathname();
 
+  const sections: AppSidebarSection[] = SECTIONS.map((section) => ({
+    label: section.labelKey ? t(section.labelKey) : undefined,
+    items: section.items.map((item) => ({
+      href: item.href,
+      label: t(item.labelKey),
+      icon: item.icon,
+      active: isActive(pathname, item.href, item.exact),
+    })),
+  }));
+
   return (
-    <aside className="flex w-[var(--side-w)] shrink-0 flex-col border-r border-[var(--line)] bg-[var(--white)]">
-      <div className="flex h-[var(--nav-h)] items-center gap-2 border-b border-[var(--line)] px-4">
-        <BarChart3 className="text-primary" size={18} />
-        <span className="font-display text-sm font-semibold text-[var(--ink)]">
-          Hublio
-        </span>
-      </div>
-      <nav className="flex flex-1 flex-col gap-4 overflow-y-auto p-3">
-        {SECTIONS.map((section, index) => (
-          <div key={section.labelKey ?? index} className="flex flex-col gap-0.5">
-            {section.labelKey ? (
-              <span className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--faint)]">
-                {t(section.labelKey)}
-              </span>
-            ) : null}
-            {section.items.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(pathname, item.href, item.exact);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm no-underline transition-colors",
-                    active
-                      ? "bg-[var(--primary-soft)] font-medium text-[var(--primary-ink)]"
-                      : "text-[var(--ink-2)] hover:bg-[var(--line-2)] hover:text-[var(--ink)]",
-                  )}
-                >
-                  <Icon size={16} />
-                  {t(item.labelKey)}
-                </Link>
-              );
-            })}
-          </div>
-        ))}
-      </nav>
-    </aside>
+    <AppSidebar
+      logo={
+        <Link href="/dashboard" className="no-underline">
+          <Logo size="sm" />
+        </Link>
+      }
+      sections={sections}
+      renderLink={({ href, className, children, onClick }) => (
+        <Link href={href} className={className} onClick={onClick}>
+          {children}
+        </Link>
+      )}
+      collapseLabel={t("collapse")}
+      expandLabel={t("expand")}
+      mobileTitle={t("menu")}
+    />
   );
 }

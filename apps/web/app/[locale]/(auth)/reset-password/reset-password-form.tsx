@@ -63,13 +63,13 @@ export default function ResetPasswordForm() {
       {!done ? (
         <>
           <div className="mb-6">
-            <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--line-2)]">
-              <Lock size={16} className="text-[var(--ink-2)]" />
+            <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-xl border border-(--line) bg-(--line-2)">
+              <Lock size={16} className="text-(--ink-2)" />
             </div>
-            <h1 className="text-[17px] font-semibold tracking-tight text-[var(--ink)]">
+            <h1 className="text-[17px] font-semibold tracking-tight text-(--ink)">
               {t("title")}
             </h1>
-            <p className="mt-1.5 text-[13px] text-[var(--muted-clr)]">{t("subtitle")}</p>
+            <p className="mt-1.5 text-[13px] text-(--muted-clr)">{t("subtitle")}</p>
             {missingToken ? (
               <p className="mt-2 text-[12px] text-red-600">{t("invalidToken")}</p>
             ) : null}
@@ -126,8 +126,8 @@ export default function ResetPasswordForm() {
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-green-100 bg-green-50">
             <CheckCircle2 size={22} className="text-green-600" />
           </div>
-          <h2 className="text-[16px] font-semibold text-[var(--ink)]">{t("doneTitle")}</h2>
-          <p className="mt-2 text-[13px] leading-relaxed text-[var(--muted-clr)]">
+          <h2 className="text-[16px] font-semibold text-(--ink)">{t("doneTitle")}</h2>
+          <p className="mt-2 text-[13px] leading-relaxed text-(--muted-clr)">
             {t("doneBody")}
           </p>
           <div className="mt-5">
@@ -141,7 +141,7 @@ export default function ResetPasswordForm() {
           </div>
           <Link
             href="/login"
-            className="mt-3 block text-[13px] text-[var(--muted-clr)] hover:text-[var(--ink-2)]"
+            className="mt-3 block text-[13px] text-(--muted-clr) hover:text-(--ink-2)"
           >
             {t("continueLogin")}
           </Link>
