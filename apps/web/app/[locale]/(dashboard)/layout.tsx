@@ -1,4 +1,5 @@
 import { AppSidebarProvider } from "@hublio/ui/common/app-sidebar";
+import { AppShell } from "@hublio/ui/common/app-shell";
 import { DashboardSidebar } from "@/components/layouts/dashboard-sidebar";
 import { WorkspaceHeader } from "@/components/layouts/workspace-header";
 
@@ -9,13 +10,9 @@ export default function DashboardLayout({
 }) {
   return (
     <AppSidebarProvider>
-      <div className="flex min-h-dvh">
-        <DashboardSidebar />
-        <div className="flex min-w-0 flex-1 flex-col">
-          <WorkspaceHeader />
-          <main className="flex-1 p-4 md:p-6">{children}</main>
-        </div>
-      </div>
+      <AppShell sidebar={<DashboardSidebar />} header={<WorkspaceHeader />}>
+        {children}
+      </AppShell>
     </AppSidebarProvider>
   );
 }

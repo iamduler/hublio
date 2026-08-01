@@ -1,4 +1,5 @@
 import { AppSidebarProvider } from "@hublio/ui/common/app-sidebar";
+import { AppShell } from "@hublio/ui/common/app-shell";
 import { PlatformAdminGate } from "@/components/platform-admin-gate";
 import { AdminHeader } from "@/components/layouts/admin-header";
 import { AdminSidebar } from "@/components/layouts/admin-sidebar";
@@ -13,13 +14,9 @@ export default function ConsoleLayout({
     <PlatformAdminGate>
       <OrgProvider>
         <AppSidebarProvider>
-          <div className="flex min-h-dvh">
-            <AdminSidebar />
-            <div className="flex min-w-0 flex-1 flex-col">
-              <AdminHeader />
-              <main className="flex-1 p-4 md:p-6">{children}</main>
-            </div>
-          </div>
+          <AppShell sidebar={<AdminSidebar />} header={<AdminHeader />}>
+            {children}
+          </AppShell>
         </AppSidebarProvider>
       </OrgProvider>
     </PlatformAdminGate>

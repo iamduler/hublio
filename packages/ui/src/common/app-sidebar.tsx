@@ -298,6 +298,8 @@ export function AppSidebar({
   );
 }
 
+export { isActivePath } from "../lib/nav";
+
 export type AppSidebarTriggerProps = {
   menuLabel: string;
   className?: string;

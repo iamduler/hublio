@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import {
   AppSidebar,
+  isActivePath,
   type AppSidebarSection,
 } from "@hublio/ui/common/app-sidebar";
 import { Link, usePathname } from "@/i18n/navigation";
@@ -77,11 +78,6 @@ const SECTIONS: NavSection[] = [
   },
 ];
 
-function isActive(pathname: string, href: string, exact?: boolean): boolean {
-  if (exact) return pathname === href;
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
-
 export function DashboardSidebar() {
   const t = useTranslations("dashboard.nav");
   const pathname = usePathname();
@@ -92,7 +88,7 @@ export function DashboardSidebar() {
       href: item.href,
       label: t(item.labelKey),
       icon: item.icon,
-      active: isActive(pathname, item.href, item.exact),
+      active: isActivePath(pathname, item.href, item.exact),
     })),
   }));
 

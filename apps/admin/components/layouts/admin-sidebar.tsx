@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { Blocks, Building2, LayoutDashboard } from "lucide-react";
 import {
   AppSidebar,
+  isActivePath,
   type AppSidebarSection,
 } from "@hublio/ui/common/app-sidebar";
 import { Link, usePathname } from "@/i18n/navigation";
@@ -22,11 +23,6 @@ const NAV: NavLink[] = [
   { icon: Blocks, labelKey: "connectors", href: "/connectors" },
 ];
 
-function isActive(pathname: string, href: string, exact?: boolean): boolean {
-  if (exact) return pathname === href;
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
-
 export function AdminSidebar() {
   const t = useTranslations("shell.nav");
   const pathname = usePathname();
@@ -37,7 +33,7 @@ export function AdminSidebar() {
         href: item.href,
         label: t(item.labelKey),
         icon: item.icon,
-        active: isActive(pathname, item.href, item.exact),
+        active: isActivePath(pathname, item.href, item.exact),
       })),
     },
   ];

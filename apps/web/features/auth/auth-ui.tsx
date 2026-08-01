@@ -1,9 +1,17 @@
 "use client";
 
-import { useRef, useState } from "react";
-import Image from "next/image";
-import { Check, Eye, EyeOff } from "lucide-react";
+import { useRef, forwardRef } from "react";
+import { Check } from "lucide-react";
 import { twMerge } from "tailwind-merge";
+import { useTranslations } from "next-intl";
+import {
+  PasswordField as PasswordFieldUI,
+  type PasswordFieldProps as PasswordFieldUIProps,
+} from "@hublio/ui/common/password-field";
+import { Logo } from "@hublio/ui/common/logo";
+
+export { Logo };
+export { AuthCard, AuthFormHeader } from "@hublio/ui/common/auth-card";
 
 export function cx(...classes: Array<string | undefined | false | null>) {
   return twMerge(classes.filter(Boolean).join(" "));
@@ -12,74 +20,25 @@ export function cx(...classes: Array<string | undefined | false | null>) {
 export const inputBase =
   "w-full h-9 px-3 rounded-lg text-sm text-(--ink) placeholder:text-(--faint) border bg-(--white) transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed";
 
-const LOGO_HEIGHT: Record<"sm" | "md" | "lg" | "xl" | "xxl", number> = {
-  sm: 28,
-  md: 36,
-  lg: 52,
-  xl: 64,
-  xxl: 105,
-};
+export type PasswordFieldProps = Omit<
+  PasswordFieldUIProps,
+  "showPasswordLabel" | "hidePasswordLabel"
+>;
 
-/** Full wordmark + tagline. Transparent PNG — always on a white plate. */
-export function Logo({
-  size = "md",
-  className,
-  priority = false,
-}: {
-  size?: "sm" | "md" | "lg" | "xl" | "xxl";
-  className?: string;
-  priority?: boolean;
-}) {
-  const height = LOGO_HEIGHT[size];
-  const width = Math.round(height * (564 / 182));
-  const paddingClass = {
-    sm: "px-2 py-1.5",
-    md: "px-4 py-3",
-    lg: "px-6 py-4",
-    xl: "px-8 py-6",
-    xxl: "px-10 py-8",
-  }
-
-  return (
-    <div
-      className={cx(
-        "inline-flex items-center justify-center rounded-sm bg-white",
-        paddingClass[size],
-        className,
-      )}
-    >
-      <Image
-        src="/logo/logo.png"
-        alt="Hublio"
-        width={width}
-        height={height}
-        className="h-auto w-auto max-w-full"
-        style={{ height, width: "auto" }}
-        priority={priority}
+/** App wrapper: wires i18n show/hide labels onto shared PasswordField. */
+export const PasswordField = forwardRef<HTMLInputElement, PasswordFieldProps>(
+  function PasswordField(props, ref) {
+    const t = useTranslations("auth.passwordField");
+    return (
+      <PasswordFieldUI
+        ref={ref}
+        showPasswordLabel={t("show")}
+        hidePasswordLabel={t("hide")}
+        {...props}
       />
-    </div>
-  );
-}
-
-/** Inner auth card only — page background comes from auth layout (theme-aware). */
-export function AuthCard({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="w-full max-w-105">
-      <div
-        className="w-full rounded-xl border border-(--line) bg-(--white) p-8"
-        style={{
-          boxShadow:
-            "0 1px 3px rgba(0,0,0,0.07), 0 4px 20px rgba(0,0,0,0.05)",
-        }}
-      >
-        {children}
-      </div>
-      <p className="mt-5 text-center text-[11px] text-(--faint)">
-        © {new Date().getFullYear()} Hublio
-      </p>
-    </div>
-  );
-}
+    );
+  },
+);
 
 export function OnboardingShell({
   children,
@@ -249,53 +208,6 @@ export function AuthFieldLabel({
       {children}
       {required ? <span className="ml-0.5 text-red-500">*</span> : null}
     </label>
-  );
-}
-
-export function PasswordField({
-  id,
-  label,
-  error,
-  autoComplete = "current-password",
-  ...props
-}: React.InputHTMLAttributes<HTMLInputElement> & {
-  label?: string;
-  error?: string;
-}) {
-  const [show, setShow] = useState(false);
-  return (
-    <div>
-      {label ? (
-        <AuthFieldLabel htmlFor={id} required>
-          {label}
-        </AuthFieldLabel>
-      ) : null}
-      <div className="relative">
-        <input
-          id={id}
-          type={show ? "text" : "password"}
-          autoComplete={autoComplete}
-          placeholder="••••••••"
-          className={cx(
-            inputBase,
-            "pr-10",
-            error
-              ? "border-red-300 bg-red-50/40"
-              : "border-(--line) hover:border-(--line-3)",
-          )}
-          {...props}
-        />
-        <button
-          type="button"
-          tabIndex={-1}
-          onClick={() => setShow((v) => !v)}
-          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--faint) hover:text-(--ink-2)"
-        >
-          {show ? <EyeOff size={14} /> : <Eye size={14} />}
-        </button>
-      </div>
-      {error ? <p className="mt-1 text-[12px] text-red-600">{error}</p> : null}
-    </div>
   );
 }
 

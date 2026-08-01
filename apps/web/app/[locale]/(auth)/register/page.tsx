@@ -13,6 +13,7 @@ import {
 } from "@/features/auth/schemas";
 import {
   AuthCard,
+  AuthFormHeader,
   AuthDivider,
   AuthFieldLabel,
   CheckboxField,
@@ -84,15 +85,11 @@ export default function RegisterPage() {
 
   return (
     <AuthCard>
-      <div className="mb-6 flex flex-col items-center">
-        <Logo size="lg" priority />
-        <div className="mt-5 text-center">
-          <h1 className="text-[17px] font-semibold tracking-tight text-(--ink)">
-            {t("title")}
-          </h1>
-          <p className="mt-1.5 text-[13px] text-(--muted-clr)">{t("subtitle")}</p>
-        </div>
-      </div>
+      <AuthFormHeader
+        logo={<Logo size="lg" priority />}
+        title={t("title")}
+        subtitle={t("subtitle")}
+      />
 
       <form
         className="mt-1 space-y-3.5"

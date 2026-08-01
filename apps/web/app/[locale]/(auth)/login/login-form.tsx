@@ -12,6 +12,7 @@ import { useApiErrorMessage } from "@/hooks/use-api-error";
 import { makeLoginSchema, type LoginValues } from "@/features/auth/schemas";
 import {
   AuthCard,
+  AuthFormHeader,
   AuthDivider,
   AuthFieldLabel,
   Logo,
@@ -109,15 +110,11 @@ export function LoginForm() {
 
   return (
     <AuthCard>
-      <div className="mb-7 flex flex-col items-center">
-        <Logo size="lg" priority />
-        <div className="mt-5 text-center">
-          <h1 className="text-[17px] font-semibold tracking-tight text-(--ink)">
-            {t("title")}
-          </h1>
-          <p className="mt-1.5 text-[13px] text-(--muted-clr)">{t("subtitle")}</p>
-        </div>
-      </div>
+      <AuthFormHeader
+        logo={<Logo size="lg" priority />}
+        title={t("title")}
+        subtitle={t("subtitle")}
+      />
 
       {showDemoLogin && (
         <div className="mb-4 space-y-2">

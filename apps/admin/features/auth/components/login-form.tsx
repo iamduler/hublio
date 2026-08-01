@@ -8,7 +8,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@hublio/ui/ui/button";
 import { Input } from "@hublio/ui/ui/input";
 import { Label } from "@hublio/ui/ui/label";
-import { Card, CardContent } from "@hublio/ui/ui/card";
+import { AuthCard, AuthFormHeader } from "@hublio/ui/common/auth-card";
+import { Logo } from "@hublio/ui/common/logo";
 import { authApi, isMFAChallenge } from "@/lib/api/auth";
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/providers/auth-provider";
@@ -18,11 +19,10 @@ import {
   type LoginValues,
 } from "@/features/auth/schemas";
 import { Link, useRouter } from "@/i18n/navigation";
-import { Logo } from "@/components/logo";
 
 const DEMO_ADMIN =
   process.env.NODE_ENV === "development" ||
-    process.env.NEXT_PUBLIC_DEMO_LOGIN === "true"
+  process.env.NEXT_PUBLIC_DEMO_LOGIN === "true"
     ? { email: "admin@hublio.local", password: "Admin123!" }
     : null;
 
@@ -68,92 +68,86 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="w-full max-w-md">
-      <CardContent className="pt-8">
-        <div className="mb-7 flex flex-col items-center text-center">
-          <Logo size="lg" priority />
-          <h1 className="mt-5 text-[17px] font-semibold tracking-tight text-(--ink)">
-            {t("title")}
-          </h1>
-          <p className="mt-1.5 text-[13px] text-muted-foreground">
-            {t("subtitle")}
-          </p>
-        </div>
+    <AuthCard>
+      <AuthFormHeader
+        logo={<Logo size="lg" priority />}
+        title={t("title")}
+        subtitle={t("subtitle")}
+      />
 
-        <form
-          className="space-y-4"
-          onSubmit={form.handleSubmit((values) => void onSubmit(values))}
-          noValidate
-        >
-          <div className="space-y-2">
-            <Label htmlFor="admin-email">
-              {t("email")}
-              <span className="ml-0.5 text-destructive">*</span>
-            </Label>
-            <Input
-              id="admin-email"
-              type="email"
-              autoComplete="username"
-              aria-invalid={Boolean(form.formState.errors.email) || undefined}
-              {...form.register("email")}
-            />
-            {form.formState.errors.email ? (
-              <p className="text-sm text-destructive" role="alert">
-                {form.formState.errors.email.message}
-              </p>
-            ) : null}
-          </div>
-
-          <PasswordField
-            id="admin-password"
-            label={t("password")}
-            autoComplete="current-password"
-            error={form.formState.errors.password?.message}
-            {...form.register("password")}
+      <form
+        className="space-y-4"
+        onSubmit={form.handleSubmit((values) => void onSubmit(values))}
+        noValidate
+      >
+        <div className="space-y-2">
+          <Label htmlFor="admin-email">
+            {t("email")}
+            <span className="ml-0.5 text-destructive">*</span>
+          </Label>
+          <Input
+            id="admin-email"
+            type="email"
+            autoComplete="username"
+            aria-invalid={Boolean(form.formState.errors.email) || undefined}
+            {...form.register("email")}
           />
-
-          <div className="flex justify-end">
-            <Link
-              href="/forgot-password"
-              className="text-sm text-primary no-underline hover:underline"
-            >
-              {t("forgotPassword")}
-            </Link>
-          </div>
-
-          {formError ? (
+          {form.formState.errors.email ? (
             <p className="text-sm text-destructive" role="alert">
-              {formError}
+              {form.formState.errors.email.message}
             </p>
           ) : null}
+        </div>
 
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={form.formState.isSubmitting}
+        <PasswordField
+          id="admin-password"
+          label={t("password")}
+          autoComplete="current-password"
+          error={form.formState.errors.password?.message}
+          {...form.register("password")}
+        />
+
+        <div className="flex justify-end">
+          <Link
+            href="/forgot-password"
+            className="text-sm text-primary no-underline hover:underline"
           >
-            {form.formState.isSubmitting ? t("submitting") : t("submit")}
-          </Button>
+            {t("forgotPassword")}
+          </Link>
+        </div>
 
-          {DEMO_ADMIN ? (
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={() => {
-                form.setValue("email", DEMO_ADMIN.email, {
-                  shouldValidate: true,
-                });
-                form.setValue("password", DEMO_ADMIN.password, {
-                  shouldValidate: true,
-                });
-              }}
-            >
-              {t("fillDemo")}
-            </Button>
-          ) : null}
-        </form>
-      </CardContent>
-    </Card>
+        {formError ? (
+          <p className="text-sm text-destructive" role="alert">
+            {formError}
+          </p>
+        ) : null}
+
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={form.formState.isSubmitting}
+        >
+          {form.formState.isSubmitting ? t("submitting") : t("submit")}
+        </Button>
+
+        {DEMO_ADMIN ? (
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() => {
+              form.setValue("email", DEMO_ADMIN.email, {
+                shouldValidate: true,
+              });
+              form.setValue("password", DEMO_ADMIN.password, {
+                shouldValidate: true,
+              });
+            }}
+          >
+            {t("fillDemo")}
+          </Button>
+        ) : null}
+      </form>
+    </AuthCard>
   );
 }
