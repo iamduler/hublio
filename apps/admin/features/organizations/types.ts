@@ -1,6 +1,7 @@
-/** Placeholder types for organizations admin screens. */
-export type OrganizationSummary = {
+export type Organization = {
   id: string;
   name: string;
-  status: string;
+  status: "active" | "suspended" | "archived" | string;
+  created_at?: string;
+  updated_at?: string;
 };

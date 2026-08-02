@@ -290,7 +290,7 @@ export function SyncRouteDetail({ syncRouteId }: { syncRouteId: string }) {
                     <span className="font-medium text-(--ink)">
                       {wm.resource_type}
                     </span>
-                    <code className="mt-1 block truncate font-mono text-xs text-(--muted-clr)">
+                    <code className="mt-1 block truncate text-xs text-(--muted-clr)">
                       {JSON.stringify(wm.cursor ?? {})}
                     </code>
                   </div>
@@ -341,7 +341,7 @@ export function SyncRouteDetail({ syncRouteId }: { syncRouteId: string }) {
               <Label>{t("watermarkCursor")}</Label>
               <Textarea
                 rows={8}
-                className="font-mono text-xs"
+                className="text-xs"
                 value={wmCursorText}
                 onChange={(e) => setWmCursorText(e.target.value)}
               />

@@ -501,10 +501,41 @@ paths:
         "409":
           $ref: "#/components/responses/Error"
 
+  /api/v1/identity/organizations:
+    get:
+      tags: [Identity]
+      summary: List organizations (platform admin)
+      description: >
+        Returns all non-deleted organizations ordered by name.
+        Requires `is_platform_admin`.
+      operationId: listOrganizations
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Organization list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/AuthOrganization"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+
   /api/v1/identity/organizations/{organizationId}:
     get:
       tags: [Identity]
       summary: Get organization
+      description: >
+        Same-organization members or platform admins may read any organization.
       operationId: getOrganization
       security:
         - bearerAuth: []
@@ -516,7 +547,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SuccessEnvelope"
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/AuthOrganization"
         "401":
           $ref: "#/components/responses/Error"
         "403":
@@ -528,6 +564,8 @@ paths:
     post:
       tags: [Identity]
       summary: Suspend organization
+      description: >
+        Suspend an active organization. Same-org members or platform admins.
       operationId: suspendOrganization
       security:
         - bearerAuth: []
@@ -536,6 +574,15 @@ paths:
       responses:
         "200":
           description: Suspended
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/AuthOrganization"
         "401":
           $ref: "#/components/responses/Error"
         "403":
@@ -545,6 +592,8 @@ paths:
     post:
       tags: [Identity]
       summary: Activate suspended organization
+      description: >
+        Activate a suspended organization. Same-org members or platform admins.
       operationId: activateOrganization
       security:
         - bearerAuth: []
@@ -553,6 +602,19 @@ paths:
       responses:
         "200":
           description: Activated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/AuthOrganization"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
 
   /api/v1/identity/organizations/{organizationId}/workspaces:
     get:

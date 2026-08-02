@@ -64,6 +64,7 @@ func (h *Handler) RegisterRoutes(api *gin.RouterGroup, jwtAuth gin.HandlerFunc) 
 	identity := api.Group("/identity")
 	identity.Use(jwtAuth)
 	{
+		identity.GET("/organizations", h.listOrganizations)
 		identity.GET("/organizations/:organizationId", h.getOrganization)
 		identity.POST("/organizations/:organizationId/suspend", h.suspendOrganization)
 		identity.POST("/organizations/:organizationId/activate", h.activateOrganization)
@@ -634,12 +635,29 @@ func (h *Handler) oauthCompleteRegistration(c *gin.Context) {
 	})
 }
 
+func (h *Handler) listOrganizations(c *gin.Context) {
+	actorID, ok := actorUserID(c)
+	if !ok {
+		return
+	}
+	list, err := h.svc.ListOrganizations(c.Request.Context(), actorID)
+	if err != nil {
+		httpx.ResponseError(c, err)
+		return
+	}
+	items := make([]gin.H, 0, len(list))
+	for _, org := range list {
+		items = append(items, organizationDTO(org))
+	}
+	httpx.ResponseSuccess(c, http.StatusOK, "organizations", items)
+}
+
 func (h *Handler) getOrganization(c *gin.Context) {
 	orgID, ok := parseUUIDParam(c, "organizationId")
 	if !ok {
 		return
 	}
-	if !actorBelongsToOrg(c, orgID) {
+	if !actorIsPlatformAdmin(c) && !actorBelongsToOrg(c, orgID) {
 		return
 	}
 	org, err := h.svc.GetOrganization(c.Request.Context(), orgID)
@@ -1022,6 +1040,12 @@ func actorBelongsToOrg(c *gin.Context, orgID uuid.UUID) bool {
 		return false
 	}
 	return true
+}
+
+func actorIsPlatformAdmin(c *gin.Context) bool {
+	raw, _ := c.Get("is_platform_admin")
+	b, _ := raw.(bool)
+	return b
 }
 
 func organizationDTO(o *domain.Organization) gin.H {

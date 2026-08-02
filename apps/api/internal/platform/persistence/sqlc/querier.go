@@ -67,6 +67,7 @@ type Querier interface {
 	ListExecutionsByWorkspaceAndStatus(ctx context.Context, arg ListExecutionsByWorkspaceAndStatusParams) ([]Execution, error)
 	ListIntentsByWorkspace(ctx context.Context, arg ListIntentsByWorkspaceParams) ([]Intent, error)
 	ListIntentsByWorkspaceAndStatus(ctx context.Context, arg ListIntentsByWorkspaceAndStatusParams) ([]Intent, error)
+	ListOrganizations(ctx context.Context) ([]Organization, error)
 	ListSyncRouteWatermarks(ctx context.Context, syncRouteID uuid.UUID) ([]SyncRouteWatermark, error)
 	ListSyncRoutesByWorkspace(ctx context.Context, workspaceID uuid.UUID) ([]SyncRoute, error)
 	ListWorkspaceMembersByWorkspace(ctx context.Context, workspaceID uuid.UUID) ([]ListWorkspaceMembersByWorkspaceRow, error)

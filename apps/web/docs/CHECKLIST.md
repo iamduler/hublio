@@ -69,10 +69,11 @@ httpOnly JWT proxy — browser never holds tokens or workspace API keys.
 - [x] Feature-module layout `features/<name>/{api,components,hooks,schemas,types}`
 - [x] TanStack Query + workspace-scoped `queryKeys` (`lib/query-keys.ts`)
 - [x] Shared primitives: `StatusBadge`, `EnvBadge`, `RoleBadge`, `ConfirmDialog`, `KpiCard`, `CopyValue`, `PageHeader`, `FormattedDate`
+- [x] List stack: `DataTable`, `Pagination` (top+bottom), `FilterSelect`, `SortIcon`, `PlanBadge`, format helpers (`formatDate` / `formatTime` / `formatDateTime` / `formatCurrency`)
 - [x] shadcn `Form` + Zod + RHF form standard
 - [x] Retrofit login / register to Zod + RHF
 - [x] Loading / empty / error states reused across features
-- [ ] Port remaining Figma primitives: `PlanBadge`, `FilterSelect`, `Pagination`, `ActionMenu`, `BulkBar`, `Sparkline` (only if a screen needs them)
+- [ ] Port remaining Figma primitives: `ActionMenu`, `BulkBar`, `Sparkline` (only if a screen needs them)
 
 ---
 
@@ -99,20 +100,20 @@ httpOnly JWT proxy — browser never holds tokens or workspace API keys.
 
 ### Connectors
 
-- [x] Connector list + detail (capabilities)
+- [x] Connector list + detail (capabilities) — `DataTable` + status filter + dual pagination
 - [x] Enable / disable connector actions in UI
 - [ ] Public marketplace catalog (Admin-phase / no backend)
 
 ### Connections
 
-- [x] List / create / detail
+- [x] List / create / detail — `DataTable` + status/env filters
 - [x] Verify / enable / disable / rotate credentials
 - [ ] Health / test connection dedicated screens
 - [ ] Advanced config editor
 
 ### Sync Routes
 
-- [x] List / create (single destination step) / detail
+- [x] List / create (single destination step) / detail — `DataTable` + status filter
 - [x] Enable / disable / delete / rotate webhook secret / watermarks GET
 - [x] PATCH edit existing route (`/sync-routes/[id]/edit`, draft|disabled only)
 - [x] Poll now button → `POST /sync-routes/:id/poll`
@@ -123,29 +124,29 @@ httpOnly JWT proxy — browser never holds tokens or workspace API keys.
 
 - [x] Run intent form (connection + capability + JSON payload)
 - [x] Intent detail
-- [x] Intent library / list (limit; no cursor yet)
+- [x] Intent library / list (limit; no cursor yet) — `DataTable` + status filter
 - [ ] Intent configuration / versions screens
 
 ### Executions
 
 - [x] Detail: steps + timeline + cancel + retry
-- [x] Execution list (workspace-scoped; slim rows → detail)
+- [x] Execution list (workspace-scoped; slim rows → detail) — `DataTable` + status filter
 
 ### Events
 
-- [x] Explorer table + payload inspector dialog
+- [x] Explorer table + payload inspector dialog — `DataTable` body + cursor “Load more” (top+bottom)
 - [x] Filter by execution ID + category (API) + Load more (cursor)
 - [ ] Replay event screen (no backend)
 
 ### API Keys / credentials
 
-- [x] List / create / rotate / disable (plaintext shown once)
+- [x] List / create / rotate / disable (plaintext shown once) — `DataTable` + status filter
 - [ ] Secrets manager / OAuth accounts screens (out of backend scope)
 
 ### Team
 
 - [x] Add member (email + role)
-- [x] Member list (roles shown; profile / roles matrix later)
+- [x] Member list (roles shown; profile / roles matrix later) — `DataTable` + `RoleBadge` + role filter
 - [ ] Pending invitations / access activity
 
 ### Workspace settings
@@ -188,8 +189,8 @@ These are **not frontend-only** — need Go work first:
 
 Most need new Go endpoints before UI:
 
-- [ ] Mission Control
-- [ ] Platform Orgs / Users / Workspaces admin
+- [x] Mission Control shell (org count wired; platform metrics unavailable until API)
+- [~] Platform Orgs admin (list/detail/suspend/activate on `DataTable`; create/export/bulk later)
 - [ ] Connector publishing / marketplace management
 - [ ] Cross-tenant executions / runtime metrics / queue monitor
 - [ ] Infrastructure / worker / scheduler screens

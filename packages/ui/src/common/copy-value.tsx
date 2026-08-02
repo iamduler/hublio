@@ -39,7 +39,7 @@ export function CopyValue({
         className,
       )}
     >
-      <code className="flex-1 truncate font-mono text-xs text-(--ink-2)">
+      <code className="flex-1 truncate text-xs text-(--ink-2)">
         {display}
       </code>
       <Button

@@ -9,16 +9,25 @@ export function KpiCard({
   value,
   icon: Icon,
   hint,
+  unavailable,
   className,
 }: {
   label: string;
   value: React.ReactNode;
   icon?: LucideIcon;
   hint?: React.ReactNode;
+  /** Muted placeholder when backend metrics are not wired yet. */
+  unavailable?: boolean;
   className?: string;
 }) {
   return (
-    <Card className={cn("shadow-sm", className)}>
+    <Card
+      className={cn(
+        "shadow-sm",
+        unavailable && "border-dashed opacity-80",
+        className,
+      )}
+    >
       <CardContent className="flex items-center gap-4 p-4">
         {Icon ? (
           <div className="grid h-10 w-10 place-items-center rounded-md bg-[var(--primary-soft)] text-[var(--primary-ink)]">
@@ -29,7 +38,12 @@ export function KpiCard({
           <p className="text-xs font-medium uppercase tracking-wide text-(--muted-clr)">
             {label}
           </p>
-          <p className="font-display text-2xl font-semibold text-(--ink)">
+          <p
+            className={cn(
+              "font-display text-2xl font-semibold",
+              unavailable ? "text-(--faint)" : "text-(--ink)",
+            )}
+          >
             {value}
           </p>
           {hint ? (

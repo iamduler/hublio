@@ -59,7 +59,7 @@ export function ExecutionDetail({ executionId }: { executionId: string }) {
         description={
           <Link
             href={`/dashboard/intents/${data.intent_id}`}
-            className="font-mono text-xs text-primary no-underline hover:underline"
+            className="text-xs text-primary no-underline hover:underline"
           >
             {t("fromIntent")}: {data.intent_id}
           </Link>
@@ -112,7 +112,7 @@ export function ExecutionDetail({ executionId }: { executionId: string }) {
                 className="flex items-center justify-between rounded-md border border-(--line) px-3 py-2"
               >
                 <div className="flex items-center gap-3">
-                  <span className="grid h-6 w-6 place-items-center rounded-md bg-(--line-2) font-mono text-xs text-(--ink-2)">
+                  <span className="grid h-6 w-6 place-items-center rounded-md bg-(--line-2) text-xs text-(--ink-2)">
                     {step.step_no}
                   </span>
                   <div>
@@ -128,7 +128,7 @@ export function ExecutionDetail({ executionId }: { executionId: string }) {
                 </div>
                 <div className="flex items-center gap-3">
                   {step.duration_ms != null ? (
-                    <span className="font-mono text-xs text-(--muted-clr)">
+                    <span className="text-xs text-(--muted-clr)">
                       {step.duration_ms}ms
                     </span>
                   ) : null}

@@ -97,7 +97,7 @@ export function RunIntent() {
               <Textarea
                 id="payload"
                 rows={8}
-                className="font-mono text-xs"
+                className="text-xs"
                 value={payload}
                 onChange={(e) => setPayload(e.target.value)}
               />
@@ -133,7 +133,7 @@ export function RunIntent() {
                 </span>
                 <Link
                   href={`/dashboard/intents/${result.intent.id}`}
-                  className="font-mono text-xs text-primary no-underline hover:underline"
+                  className="text-xs text-primary no-underline hover:underline"
                 >
                   {result.intent.id}
                 </Link>
@@ -155,7 +155,7 @@ export function RunIntent() {
                         href={`/dashboard/executions/${exec.id}`}
                         className="flex items-center justify-between rounded-md border border-(--line) px-3 py-2 no-underline hover:border-primary"
                       >
-                        <span className="font-mono text-xs text-(--ink-2)">
+                        <span className="text-xs text-(--ink-2)">
                           {exec.id}
                         </span>
                         <StatusBadge status={exec.status} />

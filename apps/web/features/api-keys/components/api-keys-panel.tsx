@@ -1,17 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { KeyRound, Plus } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@hublio/ui/ui/table";
-import { Card } from "@hublio/ui/ui/card";
+import { Plus, X } from "lucide-react";
 import { Button } from "@hublio/ui/ui/button";
 import { Input } from "@hublio/ui/ui/input";
 import { Label } from "@hublio/ui/ui/label";
@@ -28,9 +19,9 @@ import { StatusBadge } from "@hublio/ui/common/status-badge";
 import { CopyValue } from "@hublio/ui/common/copy-value";
 import { ConfirmDialog } from "@hublio/ui/common/confirm-dialog";
 import { FormattedDate } from "@hublio/ui/common/formatted-date";
-import { EmptyState } from "@hublio/ui/ui/empty-state";
+import { DataTable, type DataTableColumn } from "@hublio/ui/common/data-table";
+import { FilterSelect } from "@hublio/ui/common/filter-select";
 import { ErrorState } from "@hublio/ui/ui/error-state";
-import { LoadingState } from "@hublio/ui/ui/loading-state";
 import { toast } from "@/lib/toast";
 import { useApiErrorMessage } from "@/hooks/use-api-error";
 import {
@@ -39,9 +30,13 @@ import {
   useDisableApiKey,
   useRotateApiKey,
 } from "../hooks";
+import type { ApiKey } from "../types";
+
+const PAGE_SIZE = 10;
 
 export function ApiKeysPanel() {
   const t = useTranslations("apiKeys");
+  const tTable = useTranslations("common.table");
   const getError = useApiErrorMessage();
   const { data, isLoading, isError, error, refetch } = useApiKeys();
   const createKey = useCreateApiKey();
@@ -51,6 +46,21 @@ export function ApiKeysPanel() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [plaintext, setPlaintext] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState("");
+  const [page, setPage] = useState(1);
+
+  const filtered = useMemo(() => {
+    const list = data ?? [];
+    if (!statusFilter) return list;
+    return list.filter(
+      (k) => k.status.toLowerCase() === statusFilter.toLowerCase(),
+    );
+  }, [data, statusFilter]);
+
+  const statusOptions = useMemo(() => {
+    const set = new Set((data ?? []).map((k) => k.status));
+    return Array.from(set).sort().map((s) => ({ value: s, label: s }));
+  }, [data]);
 
   async function onCreate() {
     try {
@@ -67,6 +77,7 @@ export function ApiKeysPanel() {
     try {
       const result = await rotateKey.mutateAsync(id);
       setPlaintext(result.plaintext);
+      setOpen(true);
       toast.success(t("rotated"));
     } catch (err) {
       toast.error(getError(err));
@@ -80,6 +91,87 @@ export function ApiKeysPanel() {
     } catch (err) {
       toast.error(getError(err));
     }
+  }
+
+  const columns: DataTableColumn<ApiKey>[] = [
+    {
+      id: "name",
+      header: t("columns.name"),
+      sortable: true,
+      sortAccessor: (row) => row.name,
+      cell: (key) => (
+        <span className="font-medium text-(--ink)">{key.name}</span>
+      ),
+    },
+    {
+      id: "prefix",
+      header: t("columns.prefix"),
+      sortable: true,
+      sortAccessor: (row) => row.prefix ?? "",
+      cell: (key) => (
+        <span className="text-xs text-(--ink-2)">
+          {key.prefix ?? "—"}
+        </span>
+      ),
+    },
+    {
+      id: "lastUsed",
+      header: t("columns.lastUsed"),
+      sortable: true,
+      sortAccessor: (row) => row.last_used_at ?? "",
+      cell: (key) => <FormattedDate value={key.last_used_at} relative />,
+    },
+    {
+      id: "status",
+      header: t("columns.status"),
+      sortable: true,
+      sortAccessor: (row) => row.status,
+      cell: (key) => <StatusBadge status={key.status} />,
+    },
+    {
+      id: "actions",
+      header: t("columns.actions"),
+      className: "text-right",
+      headerClassName: "text-right",
+      cell: (key) => (
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={rotateKey.isPending}
+            onClick={() => void onRotate(key.id)}
+          >
+            {t("rotate")}
+          </Button>
+          {key.status === "active" ? (
+            <ConfirmDialog
+              trigger={
+                <Button variant="danger-soft" size="sm">
+                  {t("disable")}
+                </Button>
+              }
+              title={t("disableTitle")}
+              description={t("disableBody")}
+              confirmLabel={t("disable")}
+              cancelLabel={t("cancel")}
+              destructive
+              pending={disableKey.isPending}
+              onConfirm={() => onDisable(key.id)}
+            />
+          ) : null}
+        </div>
+      ),
+    },
+  ];
+
+  if (isError) {
+    return (
+      <ErrorState
+        title={t("loadError")}
+        description={getError(error)}
+        onRetry={() => void refetch()}
+      />
+    );
   }
 
   return (
@@ -136,79 +228,48 @@ export function ApiKeysPanel() {
         </Dialog>
       </div>
 
-      {isLoading ? (
-        <LoadingState rows={3} />
-      ) : isError ? (
-        <ErrorState
-          title={t("loadError")}
-          description={getError(error)}
-          onRetry={() => void refetch()}
-        />
-      ) : !data || data.length === 0 ? (
-        <EmptyState icon={KeyRound} title={t("empty")} />
-      ) : (
-        <Card className="overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("columns.name")}</TableHead>
-                <TableHead>{t("columns.prefix")}</TableHead>
-                <TableHead>{t("columns.lastUsed")}</TableHead>
-                <TableHead>{t("columns.status")}</TableHead>
-                <TableHead className="text-right">
-                  {t("columns.actions")}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.map((key) => (
-                <TableRow key={key.id}>
-                  <TableCell className="font-medium text-(--ink)">
-                    {key.name}
-                  </TableCell>
-                  <TableCell className="font-mono text-xs text-(--ink-2)">
-                    {key.prefix ?? "—"}
-                  </TableCell>
-                  <TableCell className="text-(--ink-2)">
-                    <FormattedDate value={key.last_used_at} relative />
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge status={key.status} />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={rotateKey.isPending}
-                        onClick={() => void onRotate(key.id)}
-                      >
-                        {t("rotate")}
-                      </Button>
-                      {key.status === "active" ? (
-                        <ConfirmDialog
-                          trigger={
-                            <Button variant="danger-soft" size="sm">
-                              {t("disable")}
-                            </Button>
-                          }
-                          title={t("disableTitle")}
-                          description={t("disableBody")}
-                          confirmLabel={t("disable")}
-                          cancelLabel={t("cancel")}
-                          destructive
-                          pending={disableKey.isPending}
-                          onConfirm={() => onDisable(key.id)}
-                        />
-                      ) : null}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Card>
-      )}
+      <DataTable
+        columns={columns}
+        rows={filtered}
+        getRowId={(row) => row.id}
+        loading={isLoading}
+        mode="client"
+        page={page}
+        pageSize={PAGE_SIZE}
+        onPageChange={setPage}
+        emptyTitle={t("empty")}
+        prevLabel={tTable("prev")}
+        nextLabel={tTable("next")}
+        paginationShowingLabel={(from, to, total) =>
+          tTable("showing", { from, to, total })
+        }
+        toolbar={
+          <>
+            <FilterSelect
+              placeholder={tTable("filterStatus")}
+              value={statusFilter}
+              onChange={(v) => {
+                setStatusFilter(v);
+                setPage(1);
+              }}
+              options={statusOptions}
+            />
+            {statusFilter ? (
+              <button
+                type="button"
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-medium text-primary hover:bg-primary/5"
+                onClick={() => {
+                  setStatusFilter("");
+                  setPage(1);
+                }}
+              >
+                <X size={11} />
+                {tTable("clearFilters")}
+              </button>
+            ) : null}
+          </>
+        }
+      />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import createIntlMiddleware from "next-intl/middleware";
-import { SESSION_COOKIE } from "@/lib/auth";
+import { REFRESH_COOKIE, SESSION_COOKIE } from "@/lib/auth";
 import { routing } from "@/i18n/routing";
 import { isLocale } from "@/lib/i18n/config";
 
@@ -24,8 +24,10 @@ export function proxy(request: NextRequest) {
     pathname === "/dashboard" || pathname.startsWith("/dashboard/");
 
   if (isDashboard) {
-    const token = request.cookies.get(SESSION_COOKIE)?.value;
-    if (!token) {
+    // Access cookie TTL ~15m; refresh (~7d) can rotate it via /api/auth/session + /api/go.
+    const access = request.cookies.get(SESSION_COOKIE)?.value;
+    const refresh = request.cookies.get(REFRESH_COOKIE)?.value;
+    if (!access && !refresh) {
       const loginUrl = new URL(`/${locale}/login`, request.url);
       const search = request.nextUrl.search;
       loginUrl.searchParams.set(

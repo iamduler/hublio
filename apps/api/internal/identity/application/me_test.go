@@ -49,6 +49,18 @@ func (m *memOrgs) FindByName(ctx context.Context, name string) (*domain.Organiza
 	return nil, domain.ErrNotFound
 }
 
+func (m *memOrgs) List(ctx context.Context) ([]*domain.Organization, error) {
+	_ = ctx
+	out := make([]*domain.Organization, 0, len(m.byID))
+	for _, org := range m.byID {
+		if org.DeletedAt() != nil {
+			continue
+		}
+		out = append(out, org)
+	}
+	return out, nil
+}
+
 var _ domain.OrganizationRepository = (*memOrgs)(nil)
 
 func TestGetCurrentUser(t *testing.T) {

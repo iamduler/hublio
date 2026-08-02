@@ -130,7 +130,7 @@ export function MFAForm() {
               placeholder={t("recoveryPlaceholder")}
               className={cx(
                 inputBase,
-                "border-(--line) font-mono tracking-wider hover:border-(--line-3)",
+                "border-(--line) tracking-wider hover:border-(--line-3)",
               )}
             />
           </div>

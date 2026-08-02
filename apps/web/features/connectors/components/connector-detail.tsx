@@ -154,7 +154,7 @@ function Detail({
         <p
           className={
             mono
-              ? "font-mono text-sm text-(--ink)"
+              ? "text-sm text-(--ink)"
               : "text-sm text-(--ink)"
           }
         >

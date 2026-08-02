@@ -123,7 +123,7 @@ export function WorkspaceOnboardingForm() {
               {form.formState.errors.name.message}
             </p>
           ) : name ? (
-            <p className="mt-1 font-mono text-[11px] text-(--faint)">
+            <p className="mt-1 text-[11px] text-(--faint)">
               {t("slug")}: <span className="text-(--ink-2)">{slug}</span>
             </p>
           ) : null}
@@ -150,7 +150,7 @@ export function WorkspaceOnboardingForm() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-[12px] text-(--muted-clr)">{t("slug")}</span>
-                <span className="font-mono text-[12px] text-(--ink-2)">{slug}</span>
+                <span className="text-[12px] text-(--ink-2)">{slug}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-[12px] text-(--muted-clr)">
@@ -171,7 +171,7 @@ export function WorkspaceOnboardingForm() {
                     {t("workspaceId")}
                   </span>
                   <div className="flex items-center gap-1.5">
-                    <span className="font-mono text-[12px] text-(--ink-2)">
+                    <span className="text-[12px] text-(--ink-2)">
                       {createWorkspace.data.id.slice(0, 13)}…
                     </span>
                     <button

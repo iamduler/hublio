@@ -65,6 +65,18 @@ func (r *OrganizationRepository) FindByName(ctx context.Context, name string) (*
 	return mapOrganization(row), nil
 }
 
+func (r *OrganizationRepository) List(ctx context.Context) ([]*domain.Organization, error) {
+	rows, err := r.q(ctx).ListOrganizations(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("identity repo: %w", err)
+	}
+	out := make([]*domain.Organization, 0, len(rows))
+	for _, row := range rows {
+		out = append(out, mapOrganization(row))
+	}
+	return out, nil
+}
+
 func mapOrganization(row sqlc.Organization) *domain.Organization {
 	return domain.ReconstituteOrganization(
 		row.ID,

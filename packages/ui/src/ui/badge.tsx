@@ -2,19 +2,23 @@ import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../lib/utils";
 
+/**
+ * shadcn-style badge chips using design tokens (soft fill + ink).
+ */
 const badgeVariants = cva(
-  "inline-flex items-center gap-1 rounded-md text-[11.5px] font-medium px-2.5 py-1 whitespace-nowrap",
+  "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-0.5 text-[11.5px] font-semibold whitespace-nowrap transition-colors",
   {
     variants: {
       variant: {
-        default: "badge-primary",
-        green: "badge-green",
-        amber: "badge-amber",
-        sky: "badge-sky",
-        violet: "badge-violet",
-        gray: "badge-gray",
-        danger: "badge-danger",
-        outline: "border border-border text-muted-foreground",
+        default: "border-transparent bg-primary text-primary-foreground",
+        green:
+          "border-transparent bg-(--success-soft) text-(--success)",
+        amber: "border-transparent bg-(--amber-soft) text-(--amber)",
+        sky: "border-transparent bg-(--sky-soft) text-(--sky)",
+        violet: "border-transparent bg-(--violet-soft) text-(--violet)",
+        gray: "border-(--line) bg-(--line-2) text-(--ink-2)",
+        danger: "border-transparent bg-(--danger-soft) text-(--danger)",
+        outline: "border-border bg-transparent text-muted-foreground",
       },
     },
     defaultVariants: { variant: "default" },
@@ -39,7 +43,12 @@ function Badge({
 }: BadgeProps) {
   return (
     <div className={cn(badgeVariants({ variant }), className)} {...props}>
-      {dot && <span className="w-1.5 h-1.5 rounded-md bg-current" />}
+      {dot ? (
+        <span
+          className="h-1.5 w-1.5 shrink-0 rounded-full bg-current"
+          aria-hidden
+        />
+      ) : null}
       {Icon ? <Icon size={13} /> : null}
       {children}
     </div>

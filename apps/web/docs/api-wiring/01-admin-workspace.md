@@ -11,7 +11,7 @@ Related: [00-foundation](./00-foundation.md) · [02-user-workspace](./02-user-wo
 ## 1. App scaffold
 
 - [x] Next.js 16 + Tailwind + next-intl + `@hublio/ui`
-- [x] Placeholder home page (console overview)
+- [x] Mission Control home (Figma layout; org count from `GET /identity/organizations`; health/KPIs muted until metrics API)
 - [x] Auth gate for platform admins (JWT + `is_platform_admin`; seed `admin@hublio.local`)
 - [x] Admin shell: top bar, nav, org context (from `/auth/me`)
 - [x] Feature-first layout `features/<name>/` (mirror web)
@@ -23,10 +23,10 @@ Related: [00-foundation](./00-foundation.md) · [02-user-workspace](./02-user-wo
 
 ### Organizations (JWT → Go)
 
-- [ ] `GET /identity/organizations/:orgId` — org detail trong admin
-- [ ] `POST /identity/organizations/:orgId/suspend`
-- [ ] `POST /identity/organizations/:orgId/activate`
-- [ ] Org list / search (cần endpoint list nếu chưa có)
+- [x] `GET /identity/organizations` — list (platform admin)
+- [x] `GET /identity/organizations/:orgId` — org detail trong admin (platform admin or same-org)
+- [x] `POST /identity/organizations/:orgId/suspend`
+- [x] `POST /identity/organizations/:orgId/activate`
 
 ### Connectors — platform catalog (JWT → Go)
 
@@ -46,11 +46,12 @@ Related: [00-foundation](./00-foundation.md) · [02-user-workspace](./02-user-wo
 
 ---
 
-## 3. Screens (chưa có)
+## 3. Screens
 
-- [ ] Organizations list / detail / suspend-activate
+- [x] Mission Control (shell + org KPI; metrics/workers blocked)
+- [x] Organizations list / detail / suspend-activate (`DataTable`: search, status filter, sort, dual pagination)
 - [ ] Connector registry (create / enable / disable / remove)
-- [ ] Platform health / usage (blocked nếu chưa có backend)
+- [ ] Platform health / usage live metrics (blocked nếu chưa có backend)
 - [ ] Billing / plans (blocked — ngoài backend hiện tại)
 
 ---
@@ -58,7 +59,7 @@ Related: [00-foundation](./00-foundation.md) · [02-user-workspace](./02-user-wo
 ## 4. Gaps ưu tiên (khi bắt đầu Admin phase)
 
 1. [x] Auth + admin shell + org context
-2. Org suspend / activate wired end-to-end
+2. [x] Org suspend / activate wired end-to-end
 3. Connector register + enable/disable/remove UI
 4. [x] i18n namespaces (`en` + `vi`) + auth locale/theme switchers (shared `@hublio/ui`)
 5. Verify theo [00-foundation §5](./00-foundation.md)

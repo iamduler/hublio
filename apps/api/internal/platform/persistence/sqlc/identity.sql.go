@@ -555,6 +555,40 @@ func (q *Queries) ListAPIKeysByWorkspace(ctx context.Context, workspaceID uuid.U
 	return items, nil
 }
 
+const listOrganizations = `-- name: ListOrganizations :many
+SELECT id, name, status, created_at, updated_at, deleted_at
+FROM organizations
+WHERE deleted_at IS NULL
+ORDER BY name ASC
+`
+
+func (q *Queries) ListOrganizations(ctx context.Context) ([]Organization, error) {
+	rows, err := q.db.Query(ctx, listOrganizations)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Organization{}
+	for rows.Next() {
+		var i Organization
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Status,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listWorkspaceMembersByWorkspace = `-- name: ListWorkspaceMembersByWorkspace :many
 SELECT wu.workspace_id, wu.user_id, wu.role, wu.created_at,
        u.email, u.full_name

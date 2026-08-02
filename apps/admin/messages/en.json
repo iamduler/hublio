@@ -27,6 +27,54 @@
       "orgContext": "Organization context:"
     }
   },
+  "missionControl": {
+    "title": "Mission Control",
+    "description": "Platform health and tenant overview for operators.",
+    "lastRefreshed": "Last refreshed",
+    "refresh": "Refresh",
+    "unavailable": "Not available yet",
+    "health": {
+      "title": "Platform health",
+      "body": "Live uptime and incident metrics require a platform metrics API."
+    },
+    "kpi": {
+      "organizations": "Organizations",
+      "workspaces": "Workspaces",
+      "activeUsers": "Active Users",
+      "connections": "Active Connections",
+      "executions": "Executions Today",
+      "failed": "Failed Executions",
+      "apiRequests": "API Requests",
+      "queueDepth": "Queue Depth",
+      "signedIn": "Signed in as {email}"
+    },
+    "runtime": {
+      "title": "Runtime Health",
+      "successRate": "Success Rate",
+      "avgTime": "Avg Execution Time",
+      "retries": "Retry Count",
+      "dlq": "Dead Letter Queue",
+      "processingRate": "Processing Rate"
+    },
+    "workers": {
+      "title": "Worker Fleet",
+      "empty": "Worker fleet metrics are not wired yet."
+    },
+    "alerts": {
+      "title": "Alerts",
+      "empty": "No active alerts"
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "orgs": "Orgs",
+      "connectors": "Connectors"
+    }
+  },
+  "table": {
+    "prev": "Prev",
+    "next": "Next",
+    "showing": "Showing {from}–{to} of {total}"
+  },
   "validation": {
     "required": "This field is required",
     "email": "Enter a valid email address",
@@ -88,7 +136,7 @@
   "shell": {
     "nav": {
       "brand": "Hublio Admin",
-      "overview": "Overview",
+      "overview": "Mission Control",
       "organizations": "Organizations",
       "connectors": "Connectors",
       "collapse": "Collapse sidebar",
@@ -102,8 +150,56 @@
     }
   },
   "organizations": {
-    "stubTitle": "Organizations",
-    "stubDescription": "List, suspend, and activate organizations will be wired next."
+    "title": "Organizations",
+    "description": "View and manage tenant organizations across the platform.",
+    "empty": "No organizations found",
+    "emptyDescription": "Organizations appear here after customers register.",
+    "emptyFiltered": "Try adjusting your search or filter criteria.",
+    "loadError": "Could not load organizations",
+    "backToList": "Back to organizations",
+    "searchPlaceholder": "Search organizations or IDs…",
+    "totalCount": "{count} total",
+    "breadcrumb": {
+      "admin": "Admin Console",
+      "organizations": "Organizations"
+    },
+    "filters": {
+      "status": "Status",
+      "active": "Active",
+      "suspended": "Suspended",
+      "clear": "Clear filters"
+    },
+    "columns": {
+      "organization": "Organization",
+      "name": "Name",
+      "id": "ID",
+      "status": "Status",
+      "created": "Created",
+      "updated": "Updated",
+      "actions": "Actions"
+    },
+    "actions": {
+      "view": "View",
+      "viewDetails": "View details",
+      "menu": "Row actions",
+      "export": "Export",
+      "create": "Create organization",
+      "unavailable": "Not available yet",
+      "suspend": "Suspend",
+      "activate": "Activate",
+      "cancel": "Cancel",
+      "suspendDone": "Organization suspended",
+      "activateDone": "Organization activated"
+    },
+    "suspendTitle": "Suspend organization?",
+    "suspendBody": "Suspend “{name}”? Members will not be able to run new intents until activated again.",
+    "activateTitle": "Activate organization?",
+    "activateBody": "Activate “{name}” and restore normal access?"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "network": "Network error. Check your connection and try again.",
+    "unauthorized": "Your session expired. Please sign in again."
   },
   "connectors": {
     "stubTitle": "Connector registry",

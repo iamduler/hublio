@@ -86,7 +86,7 @@ export function CompleteOnboardingForm() {
               <p className="text-[13px] font-semibold text-(--ink)">
                 {draft.workspace?.name || t("summaryWorkspaceFallback")}
               </p>
-              <p className="font-mono text-[11px] text-(--muted-clr)">
+              <p className="text-[11px] text-(--muted-clr)">
                 {draft.workspace
                   ? `${draft.workspace.id.slice(0, 8)}… · ${draft.workspace.environment}`
                   : t("summaryWorkspaceHint")}

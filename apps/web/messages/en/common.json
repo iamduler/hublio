@@ -18,5 +18,15 @@
         "dark": "Dark"
       }
     }
+  },
+  "table": {
+    "prev": "Prev",
+    "next": "Next",
+    "showing": "Showing {from}–{to} of {total}",
+    "clearFilters": "Clear filters",
+    "filterStatus": "Status",
+    "filterEnv": "Environment",
+    "filterRole": "Role",
+    "search": "Search…"
   }
 }

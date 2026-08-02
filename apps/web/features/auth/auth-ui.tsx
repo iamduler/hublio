@@ -348,7 +348,7 @@ export function OTPInput({
           onKeyDown={(e) => handleKeyDown(i, e)}
           onPaste={handlePaste}
           className={cx(
-            "w-12 rounded-xl border bg-(--white) text-center font-mono text-[18px] font-semibold text-(--ink) transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-600/20",
+            "w-12 rounded-xl border bg-(--white) text-center text-[18px] font-semibold text-(--ink) transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-600/20",
             value[i]
               ? "border-blue-300 bg-blue-50/60"
               : "border-(--line) hover:border-(--line-3)",

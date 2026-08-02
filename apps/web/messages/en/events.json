@@ -5,6 +5,8 @@
   "loadError": "Could not load events.",
   "loadMore": "Load more",
   "loadingMore": "Loading…",
+  "loadedCount": "{count} events loaded",
+  "endOfList": "End of results",
   "columns": {
     "event": "Event",
     "category": "Category",

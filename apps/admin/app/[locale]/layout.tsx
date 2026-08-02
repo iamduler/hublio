@@ -4,6 +4,7 @@ import { getMessages, getTranslations, setRequestLocale } from "next-intl/server
 import { hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
+import { Toaster } from "@hublio/ui/ui/toaster";
 import { QueryProvider } from "@/providers/query-provider";
 import { AuthProvider } from "@/providers/auth-provider";
 import { PreferencesProvider } from "@/providers/preferences-provider";
@@ -49,7 +50,10 @@ export default async function LocaleLayout({
     <NextIntlClientProvider locale={locale} messages={messages}>
       <QueryProvider>
         <AuthProvider>
-          <PreferencesProvider>{children}</PreferencesProvider>
+          <PreferencesProvider>
+            {children}
+            <Toaster />
+          </PreferencesProvider>
         </AuthProvider>
       </QueryProvider>
     </NextIntlClientProvider>

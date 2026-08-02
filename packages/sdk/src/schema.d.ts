@@ -372,6 +372,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/identity/organizations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List organizations (platform admin)
+         * @description Returns all non-deleted organizations ordered by name. Requires `is_platform_admin`.
+         */
+        get: operations["listOrganizations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/identity/organizations/{organizationId}": {
         parameters: {
             query?: never;
@@ -379,7 +399,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get organization */
+        /**
+         * Get organization
+         * @description Same-organization members or platform admins may read any organization.
+         */
         get: operations["getOrganization"];
         put?: never;
         post?: never;
@@ -398,7 +421,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Suspend organization */
+        /**
+         * Suspend organization
+         * @description Suspend an active organization. Same-org members or platform admins.
+         */
         post: operations["suspendOrganization"];
         delete?: never;
         options?: never;
@@ -415,7 +441,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Activate suspended organization */
+        /**
+         * Activate suspended organization
+         * @description Activate a suspended organization. Same-org members or platform admins.
+         */
         post: operations["activateOrganization"];
         delete?: never;
         options?: never;
@@ -2080,6 +2109,30 @@ export interface operations {
             409: components["responses"]["Error"];
         };
     };
+    listOrganizations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Organization list */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: components["schemas"]["AuthOrganization"][];
+                    };
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
     getOrganization: {
         parameters: {
             query?: never;
@@ -2097,7 +2150,9 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"];
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: components["schemas"]["AuthOrganization"];
+                    };
                 };
             };
             401: components["responses"]["Error"];
@@ -2121,7 +2176,11 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: components["schemas"]["AuthOrganization"];
+                    };
+                };
             };
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
@@ -2143,8 +2202,14 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: components["schemas"]["AuthOrganization"];
+                    };
+                };
             };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
         };
     };
     listWorkspaces: {

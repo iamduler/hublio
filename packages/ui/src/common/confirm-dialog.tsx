@@ -15,7 +15,8 @@ import {
 import { cn } from "../lib/utils";
 
 export type ConfirmDialogProps = {
-  trigger: React.ReactNode;
+  /** Required for uncontrolled (click-to-open) usage. */
+  trigger?: React.ReactNode;
   title: string;
   description?: string;
   confirmLabel: string;
@@ -23,11 +24,14 @@ export type ConfirmDialogProps = {
   destructive?: boolean;
   pending?: boolean;
   onConfirm: () => void | Promise<void>;
+  /** Controlled open state (e.g. opened from ActionMenu). */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 /**
  * Reusable confirmation dialog ported from the Figma `ConfirmDialog`.
- * Controlled internally; closes after `onConfirm` resolves.
+ * Supports uncontrolled (trigger) or controlled (`open` / `onOpenChange`).
  */
 export function ConfirmDialog({
   trigger,
@@ -38,8 +42,13 @@ export function ConfirmDialog({
   destructive,
   pending,
   onConfirm,
+  open: openProp,
+  onOpenChange,
 }: ConfirmDialogProps) {
-  const [open, setOpen] = React.useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(false);
+  const controlled = openProp !== undefined;
+  const open = controlled ? openProp : uncontrolledOpen;
+  const setOpen = onOpenChange ?? setUncontrolledOpen;
 
   async function handleConfirm(event: React.MouseEvent) {
     event.preventDefault();
@@ -49,7 +58,9 @@ export function ConfirmDialog({
 
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
+      {trigger ? (
+        <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
+      ) : null}
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
@@ -64,7 +75,7 @@ export function ConfirmDialog({
             onClick={(e) => void handleConfirm(e)}
             className={cn(
               destructive &&
-              "bg-border-(--danger) text-white hover:opacity-90",
+                "bg-border-(--danger) text-white hover:opacity-90",
             )}
           >
             {confirmLabel}

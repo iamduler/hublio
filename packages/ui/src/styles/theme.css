@@ -271,3 +271,7 @@ html.dark .landing-hero {
   font-size: 0.875rem;
   color: var(--muted-clr);
 }
+
+.border-b {
+  border-bottom: 1px solid var(--line);
+}

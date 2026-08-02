@@ -6,7 +6,8 @@ import {
 
 /**
  * GET /api/auth/session — presence check for httpOnly JWT.
- * If access expired but refresh is present, rotates once so soft-gate stays alive.
+ * If access is missing (cookie TTL ~15m) but refresh is present, rotate once
+ * so the soft-gate and subsequent /api/go calls keep working.
  */
 export async function GET() {
   let session = await readSessionTokens();

@@ -206,6 +206,22 @@ func (s *Services) GetOrganization(ctx context.Context, organizationID uuid.UUID
 	return org, nil
 }
 
+// ListOrganizations returns all non-deleted organizations (platform admin only).
+func (s *Services) ListOrganizations(ctx context.Context, actorUserID uuid.UUID) ([]*domain.Organization, error) {
+	user, err := s.Users.FindByID(ctx, actorUserID)
+	if err != nil {
+		return nil, mapRepoErr(err)
+	}
+	if !user.IsPlatformAdmin() {
+		return nil, apperr.New("forbidden", apperr.ErrCodeForbidden)
+	}
+	list, err := s.Orgs.List(ctx)
+	if err != nil {
+		return nil, mapRepoErr(err)
+	}
+	return list, nil
+}
+
 // GetCurrentUser loads the authenticated user and their organization for session bootstrap.
 func (s *Services) GetCurrentUser(ctx context.Context, userID uuid.UUID) (*domain.User, *domain.Organization, error) {
 	user, err := s.Users.FindByID(ctx, userID)
@@ -258,7 +274,7 @@ func (s *Services) changeOrganization(
 	if err != nil {
 		return nil, mapRepoErr(err)
 	}
-	if user.OrganizationID() != organizationID {
+	if !user.IsPlatformAdmin() && user.OrganizationID() != organizationID {
 		return nil, apperr.New("forbidden", apperr.ErrCodeForbidden)
 	}
 	org, err := s.Orgs.FindByID(ctx, organizationID)

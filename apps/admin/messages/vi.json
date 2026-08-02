@@ -27,6 +27,54 @@
       "orgContext": "Ngữ cảnh tổ chức:"
     }
   },
+  "missionControl": {
+    "title": "Mission Control",
+    "description": "Sức khỏe nền tảng và tổng quan tenant cho vận hành.",
+    "lastRefreshed": "Làm mới lần cuối",
+    "refresh": "Làm mới",
+    "unavailable": "Chưa có dữ liệu",
+    "health": {
+      "title": "Sức khỏe nền tảng",
+      "body": "Uptime và sự cố trực tiếp cần API metrics nền tảng."
+    },
+    "kpi": {
+      "organizations": "Tổ chức",
+      "workspaces": "Workspace",
+      "activeUsers": "Người dùng hoạt động",
+      "connections": "Kết nối hoạt động",
+      "executions": "Execution hôm nay",
+      "failed": "Execution thất bại",
+      "apiRequests": "Yêu cầu API",
+      "queueDepth": "Độ sâu hàng đợi",
+      "signedIn": "Đăng nhập với {email}"
+    },
+    "runtime": {
+      "title": "Runtime Health",
+      "successRate": "Tỷ lệ thành công",
+      "avgTime": "Thời gian execution TB",
+      "retries": "Số lần retry",
+      "dlq": "Dead Letter Queue",
+      "processingRate": "Tốc độ xử lý"
+    },
+    "workers": {
+      "title": "Worker Fleet",
+      "empty": "Metrics worker chưa được nối."
+    },
+    "alerts": {
+      "title": "Cảnh báo",
+      "empty": "Không có cảnh báo"
+    },
+    "quickActions": {
+      "title": "Thao tác nhanh",
+      "orgs": "Tổ chức",
+      "connectors": "Connector"
+    }
+  },
+  "table": {
+    "prev": "Trước",
+    "next": "Sau",
+    "showing": "Hiển thị {from}–{to} / {total}"
+  },
   "validation": {
     "required": "Trường này là bắt buộc",
     "email": "Nhập địa chỉ email hợp lệ",
@@ -88,7 +136,7 @@
   "shell": {
     "nav": {
       "brand": "Hublio Admin",
-      "overview": "Tổng quan",
+      "overview": "Mission Control",
       "organizations": "Tổ chức",
       "connectors": "Connector",
       "collapse": "Thu gọn thanh bên",
@@ -102,8 +150,56 @@
     }
   },
   "organizations": {
-    "stubTitle": "Tổ chức",
-    "stubDescription": "Danh sách, tạm dừng và kích hoạt tổ chức sẽ được nối tiếp theo."
+    "title": "Tổ chức",
+    "description": "Xem và quản lý tổ chức tenant trên nền tảng.",
+    "empty": "Không tìm thấy tổ chức",
+    "emptyDescription": "Tổ chức sẽ xuất hiện tại đây sau khi khách hàng đăng ký.",
+    "emptyFiltered": "Thử điều chỉnh tìm kiếm hoặc bộ lọc.",
+    "loadError": "Không tải được danh sách tổ chức",
+    "backToList": "Quay lại danh sách tổ chức",
+    "searchPlaceholder": "Tìm tổ chức hoặc ID…",
+    "totalCount": "{count} tổng",
+    "breadcrumb": {
+      "admin": "Admin Console",
+      "organizations": "Tổ chức"
+    },
+    "filters": {
+      "status": "Trạng thái",
+      "active": "Hoạt động",
+      "suspended": "Tạm dừng",
+      "clear": "Xóa bộ lọc"
+    },
+    "columns": {
+      "organization": "Tổ chức",
+      "name": "Tên",
+      "id": "ID",
+      "status": "Trạng thái",
+      "created": "Tạo lúc",
+      "updated": "Cập nhật",
+      "actions": "Thao tác"
+    },
+    "actions": {
+      "view": "Xem",
+      "viewDetails": "Xem chi tiết",
+      "menu": "Thao tác hàng",
+      "export": "Xuất",
+      "create": "Tạo tổ chức",
+      "unavailable": "Chưa khả dụng",
+      "suspend": "Tạm dừng",
+      "activate": "Kích hoạt",
+      "cancel": "Hủy",
+      "suspendDone": "Đã tạm dừng tổ chức",
+      "activateDone": "Đã kích hoạt tổ chức"
+    },
+    "suspendTitle": "Tạm dừng tổ chức?",
+    "suspendBody": "Tạm dừng “{name}”? Thành viên sẽ không thể chạy Intent mới cho đến khi kích hoạt lại.",
+    "activateTitle": "Kích hoạt tổ chức?",
+    "activateBody": "Kích hoạt “{name}” và khôi phục quyền truy cập bình thường?"
+  },
+  "errors": {
+    "generic": "Đã có lỗi. Vui lòng thử lại.",
+    "network": "Lỗi mạng. Kiểm tra kết nối và thử lại.",
+    "unauthorized": "Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại."
   },
   "connectors": {
     "stubTitle": "Registry connector",

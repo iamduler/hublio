@@ -36,7 +36,7 @@ export function IntentDetail({ intentId }: { intentId: string }) {
           </span>
         }
         description={
-          <span className="font-mono text-xs">{data.id}</span>
+          <span className="text-xs">{data.id}</span>
         }
       />
       <div className="grid gap-4 sm:grid-cols-3">
@@ -63,7 +63,7 @@ export function IntentDetail({ intentId }: { intentId: string }) {
           <CardTitle>{t("detail.payload")}</CardTitle>
         </CardHeader>
         <CardContent>
-          <pre className="overflow-x-auto rounded-md bg-(--line-2) p-4 font-mono text-xs text-(--ink-2)">
+          <pre className="overflow-x-auto rounded-md bg-(--line-2) p-4 text-xs text-(--ink-2)">
             {JSON.stringify(data.payload ?? {}, null, 2)}
           </pre>
         </CardContent>
@@ -90,7 +90,7 @@ function Info({
         <p
           className={
             mono
-              ? "mt-1 truncate font-mono text-xs text-(--ink)"
+              ? "mt-1 truncate text-xs text-(--ink)"
               : "mt-1 text-sm text-(--ink)"
           }
         >

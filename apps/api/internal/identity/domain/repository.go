@@ -18,6 +18,7 @@ type OrganizationRepository interface {
 	Update(ctx context.Context, org *Organization) error
 	FindByID(ctx context.Context, id uuid.UUID) (*Organization, error)
 	FindByName(ctx context.Context, name string) (*Organization, error)
+	List(ctx context.Context) ([]*Organization, error)
 }
 
 type WorkspaceRepository interface {

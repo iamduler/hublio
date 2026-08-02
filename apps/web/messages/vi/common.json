@@ -18,5 +18,15 @@
         "dark": "Tối"
       }
     }
+  },
+  "table": {
+    "prev": "Trước",
+    "next": "Sau",
+    "showing": "Hiển thị {from}–{to} / {total}",
+    "clearFilters": "Xóa bộ lọc",
+    "filterStatus": "Trạng thái",
+    "filterEnv": "Môi trường",
+    "filterRole": "Vai trò",
+    "search": "Tìm kiếm…"
   }
 }

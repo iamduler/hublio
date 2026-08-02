@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import createIntlMiddleware from "next-intl/middleware";
-import { SESSION_COOKIE } from "@/lib/auth";
+import { REFRESH_COOKIE, SESSION_COOKIE } from "@/lib/auth";
 import { routing } from "@/i18n/routing";
 import { isLocale } from "@/lib/i18n/config";
 
@@ -29,15 +29,18 @@ function isPublicPath(pathname: string): boolean {
 }
 
 /**
- * Soft-gate: console routes require httpOnly session cookie.
+ * Soft-gate: console routes require a session cookie.
+ * Accept access (`hublio_session`) OR refresh (`hublio_refresh`) — access TTL is
+ * ~15m; refresh can rotate it via `/api/auth/session` and `/api/go`.
  * Platform-admin claim is enforced client-side after /auth/me.
  */
 export function proxy(request: NextRequest) {
   const { locale, pathname } = stripLocale(request.nextUrl.pathname);
 
   if (!isPublicPath(pathname)) {
-    const token = request.cookies.get(SESSION_COOKIE)?.value;
-    if (!token) {
+    const access = request.cookies.get(SESSION_COOKIE)?.value;
+    const refresh = request.cookies.get(REFRESH_COOKIE)?.value;
+    if (!access && !refresh) {
       const loginUrl = new URL(`/${locale}/login`, request.url);
       const search = request.nextUrl.search;
       loginUrl.searchParams.set(

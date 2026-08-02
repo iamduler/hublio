@@ -151,7 +151,7 @@ export function MFASettingsPanel() {
                   {t("manualSecret")}
                 </p>
                 <div className="flex items-center gap-2">
-                  <code className="block flex-1 truncate rounded-lg border border-(--line) bg-(--line-2) px-3 py-2 font-mono text-[12px] text-(--ink)">
+                  <code className="block flex-1 truncate rounded-lg border border-(--line) bg-(--line-2) px-3 py-2 text-[12px] text-(--ink)">
                     {setup.secret}
                   </code>
                   <Button
@@ -192,7 +192,7 @@ export function MFASettingsPanel() {
               {setup.recovery_codes.map((c) => (
                 <code
                   key={c}
-                  className="font-mono text-[12px] text-(--ink-2)"
+                  className="text-[12px] text-(--ink-2)"
                 >
                   {c}
                 </code>
