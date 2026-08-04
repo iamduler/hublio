@@ -108,20 +108,16 @@ type CreateWorkspaceInput struct {
 }
 
 func (s *Services) CreateWorkspace(ctx context.Context, in CreateWorkspaceInput) (*domain.Workspace, error) {
+	user, err := s.assertOrgAccess(ctx, in.OrganizationID, in.ActorUserID)
+	if err != nil {
+		return nil, err
+	}
 	org, err := s.Orgs.FindByID(ctx, in.OrganizationID)
 	if err != nil {
 		return nil, mapRepoErr(err)
 	}
 	if !org.CanSubmitIntents() {
 		return nil, apperr.New("organization is not active", apperr.ErrCodeForbidden)
-	}
-
-	user, err := s.Users.FindByID(ctx, in.ActorUserID)
-	if err != nil {
-		return nil, mapRepoErr(err)
-	}
-	if user.OrganizationID() != org.ID() {
-		return nil, apperr.New("user does not belong to organization", apperr.ErrCodeForbidden)
 	}
 
 	now := s.clock().Now()
@@ -133,18 +129,84 @@ func (s *Services) CreateWorkspace(ctx context.Context, in CreateWorkspaceInput)
 	if err != nil {
 		return nil, mapDomainErr(err)
 	}
-	mem, err := domain.NewMembership(wsID, user.ID(), domain.WorkspaceRoleOwner, now)
-	if err != nil {
-		return nil, mapDomainErr(err)
-	}
 
 	if err := s.Workspaces.Save(ctx, ws); err != nil {
 		return nil, mapRepoErr(err)
 	}
-	if err := s.Memberships.Save(ctx, mem); err != nil {
-		return nil, mapRepoErr(err)
+
+	// Same-org actors become workspace owners. Platform admins creating for
+	// another tenant do not join as members (invite later via members API).
+	if user.OrganizationID() == org.ID() {
+		mem, memErr := domain.NewMembership(wsID, user.ID(), domain.WorkspaceRoleOwner, now)
+		if memErr != nil {
+			return nil, mapDomainErr(memErr)
+		}
+		if err := s.Memberships.Save(ctx, mem); err != nil {
+			return nil, mapRepoErr(err)
+		}
 	}
 	return ws, nil
+}
+
+type CreateOrganizationInput struct {
+	ActorUserID     uuid.UUID
+	Name            string
+	WorkspaceName   string
+	Environment     string
+}
+
+type CreateOrganizationResult struct {
+	Organization *domain.Organization
+	Workspace    *domain.Workspace
+}
+
+// CreateOrganization creates a tenant org + default workspace (platform admin only).
+// No owner user is created — ops invite members later.
+func (s *Services) CreateOrganization(ctx context.Context, in CreateOrganizationInput) (*CreateOrganizationResult, error) {
+	user, err := s.Users.FindByID(ctx, in.ActorUserID)
+	if err != nil {
+		return nil, mapRepoErr(err)
+	}
+	if !user.IsPlatformAdmin() {
+		return nil, apperr.New("forbidden", apperr.ErrCodeForbidden)
+	}
+
+	wsName := strings.TrimSpace(in.WorkspaceName)
+	if wsName == "" {
+		wsName = "default"
+	}
+	env := strings.TrimSpace(in.Environment)
+	if env == "" {
+		env = "production"
+	}
+
+	now := s.clock().Now()
+	orgID, err := id.NewV7()
+	if err != nil {
+		return nil, apperr.Wrap(err, "failed to generate organization id", apperr.ErrCodeInternal)
+	}
+	wsID, err := id.NewV7()
+	if err != nil {
+		return nil, apperr.Wrap(err, "failed to generate workspace id", apperr.ErrCodeInternal)
+	}
+
+	org, err := domain.NewOrganization(orgID, in.Name, now)
+	if err != nil {
+		return nil, mapDomainErr(err)
+	}
+	ws, err := domain.NewWorkspace(wsID, orgID, wsName, env, now)
+	if err != nil {
+		return nil, mapDomainErr(err)
+	}
+
+	if err := s.Orgs.Save(ctx, org); err != nil {
+		return nil, mapRepoErr(err)
+	}
+	if err := s.Workspaces.Save(ctx, ws); err != nil {
+		return nil, mapRepoErr(err)
+	}
+
+	return &CreateOrganizationResult{Organization: org, Workspace: ws}, nil
 }
 
 type AddMemberInput struct {

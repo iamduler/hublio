@@ -33,6 +33,7 @@ type UserRepository interface {
 	Update(ctx context.Context, user *User) error
 	FindByID(ctx context.Context, id uuid.UUID) (*User, error)
 	FindByEmail(ctx context.Context, email string) (*User, error)
+	ListByOrganization(ctx context.Context, organizationID uuid.UUID) ([]*User, error)
 }
 
 type MembershipRepository interface {

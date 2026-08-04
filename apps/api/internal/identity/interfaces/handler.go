@@ -65,12 +65,16 @@ func (h *Handler) RegisterRoutes(api *gin.RouterGroup, jwtAuth gin.HandlerFunc) 
 	identity.Use(jwtAuth)
 	{
 		identity.GET("/organizations", h.listOrganizations)
+		identity.POST("/organizations", h.createOrganization)
 		identity.GET("/organizations/:organizationId", h.getOrganization)
+		identity.PATCH("/organizations/:organizationId", h.updateOrganization)
 		identity.POST("/organizations/:organizationId/suspend", h.suspendOrganization)
 		identity.POST("/organizations/:organizationId/activate", h.activateOrganization)
+		identity.POST("/organizations/:organizationId/archive", h.archiveOrganization)
 
 		identity.GET("/organizations/:organizationId/workspaces", h.listWorkspaces)
 		identity.POST("/organizations/:organizationId/workspaces", h.createWorkspace)
+		identity.GET("/organizations/:organizationId/users", h.listOrganizationUsers)
 
 		identity.POST("/workspaces/:workspaceId/enable", h.enableWorkspace)
 		identity.POST("/workspaces/:workspaceId/disable", h.disableWorkspace)
@@ -652,6 +656,45 @@ func (h *Handler) listOrganizations(c *gin.Context) {
 	httpx.ResponseSuccess(c, http.StatusOK, "organizations", items)
 }
 
+type createOrganizationRequest struct {
+	Name          string `json:"name" binding:"required"`
+	WorkspaceName string `json:"workspace_name"`
+	Environment   string `json:"environment"`
+}
+
+func (h *Handler) createOrganization(c *gin.Context) {
+	actorID, ok := actorUserID(c)
+	if !ok {
+		return
+	}
+	var req createOrganizationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		httpx.ResponseError(c, apperr.New(err.Error(), apperr.ErrCodeBadRequest))
+		return
+	}
+	var result *application.CreateOrganizationResult
+	err := persistence.WithinTransaction(c.Request.Context(), h.pool, func(ctx context.Context) error {
+		var innerErr error
+		result, innerErr = h.svc.CreateOrganization(ctx, application.CreateOrganizationInput{
+			ActorUserID:   actorID,
+			Name:          req.Name,
+			WorkspaceName: req.WorkspaceName,
+			Environment:   req.Environment,
+		})
+		return innerErr
+	})
+	if err != nil {
+		httpx.ResponseError(c, err)
+		return
+	}
+	events := append(result.Organization.PullEvents(), result.Workspace.PullEvents()...)
+	h.svc.PublishAfterCommit(c.Request.Context(), events...)
+	httpx.ResponseSuccess(c, http.StatusCreated, "organization created", gin.H{
+		"organization": organizationDTO(result.Organization),
+		"workspace":    workspaceDTO(result.Workspace),
+	})
+}
+
 func (h *Handler) getOrganization(c *gin.Context) {
 	orgID, ok := parseUUIDParam(c, "organizationId")
 	if !ok {
@@ -668,12 +711,48 @@ func (h *Handler) getOrganization(c *gin.Context) {
 	httpx.ResponseSuccess(c, http.StatusOK, "organization", organizationDTO(org))
 }
 
+type updateOrganizationRequest struct {
+	Name string `json:"name" binding:"required"`
+}
+
+func (h *Handler) updateOrganization(c *gin.Context) {
+	orgID, ok := parseUUIDParam(c, "organizationId")
+	if !ok {
+		return
+	}
+	actorID, ok := actorUserID(c)
+	if !ok {
+		return
+	}
+	var req updateOrganizationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		httpx.ResponseError(c, apperr.New(err.Error(), apperr.ErrCodeBadRequest))
+		return
+	}
+	var org *domain.Organization
+	err := persistence.WithinTransaction(c.Request.Context(), h.pool, func(ctx context.Context) error {
+		var innerErr error
+		org, innerErr = h.svc.UpdateOrganization(ctx, orgID, actorID, req.Name)
+		return innerErr
+	})
+	if err != nil {
+		httpx.ResponseError(c, err)
+		return
+	}
+	h.svc.PublishAfterCommit(c.Request.Context(), org.PullEvents()...)
+	httpx.ResponseSuccess(c, http.StatusOK, "organization updated", organizationDTO(org))
+}
+
 func (h *Handler) suspendOrganization(c *gin.Context) {
 	h.orgLifecycle(c, h.svc.SuspendOrganization)
 }
 
 func (h *Handler) activateOrganization(c *gin.Context) {
 	h.orgLifecycle(c, h.svc.ActivateOrganization)
+}
+
+func (h *Handler) archiveOrganization(c *gin.Context) {
+	h.orgLifecycle(c, h.svc.ArchiveOrganization)
 }
 
 func (h *Handler) orgLifecycle(c *gin.Context, fn func(context.Context, uuid.UUID, uuid.UUID) (*domain.Organization, error)) {
@@ -756,6 +835,27 @@ func (h *Handler) listWorkspaces(c *gin.Context) {
 		out = append(out, workspaceDTO(ws))
 	}
 	httpx.ResponseSuccess(c, http.StatusOK, "workspaces", out)
+}
+
+func (h *Handler) listOrganizationUsers(c *gin.Context) {
+	orgID, ok := parseUUIDParam(c, "organizationId")
+	if !ok {
+		return
+	}
+	actorID, ok := actorUserID(c)
+	if !ok {
+		return
+	}
+	list, err := h.svc.ListOrganizationUsers(c.Request.Context(), orgID, actorID)
+	if err != nil {
+		httpx.ResponseError(c, err)
+		return
+	}
+	out := make([]gin.H, 0, len(list))
+	for _, u := range list {
+		out = append(out, organizationUserDTO(u))
+	}
+	httpx.ResponseSuccess(c, http.StatusOK, "users", out)
 }
 
 func (h *Handler) enableWorkspace(c *gin.Context) {
@@ -1088,6 +1188,14 @@ func userDTO(u *domain.User) gin.H {
 		"status":            string(u.Status()),
 		"is_platform_admin": u.IsPlatformAdmin(),
 	}
+}
+
+func organizationUserDTO(u *domain.User) gin.H {
+	dto := userDTO(u)
+	dto["created_at"] = u.CreatedAt()
+	dto["updated_at"] = u.UpdatedAt()
+	dto["last_login_at"] = u.LastLoginAt()
+	return dto
 }
 
 func apiKeyDTO(k *domain.APIKey) gin.H {

@@ -239,14 +239,21 @@ func (s *Services) GetCurrentUser(ctx context.Context, userID uuid.UUID) (*domai
 }
 
 func (s *Services) ListWorkspaces(ctx context.Context, organizationID, actorUserID uuid.UUID) ([]*domain.Workspace, error) {
-	user, err := s.Users.FindByID(ctx, actorUserID)
+	if _, err := s.assertOrgAccess(ctx, organizationID, actorUserID); err != nil {
+		return nil, err
+	}
+	list, err := s.Workspaces.ListByOrganization(ctx, organizationID)
 	if err != nil {
 		return nil, mapRepoErr(err)
 	}
-	if user.OrganizationID() != organizationID {
-		return nil, apperr.New("forbidden", apperr.ErrCodeForbidden)
+	return list, nil
+}
+
+func (s *Services) ListOrganizationUsers(ctx context.Context, organizationID, actorUserID uuid.UUID) ([]*domain.User, error) {
+	if _, err := s.assertOrgAccess(ctx, organizationID, actorUserID); err != nil {
+		return nil, err
 	}
-	list, err := s.Workspaces.ListByOrganization(ctx, organizationID)
+	list, err := s.Users.ListByOrganization(ctx, organizationID)
 	if err != nil {
 		return nil, mapRepoErr(err)
 	}
@@ -265,17 +272,25 @@ func (s *Services) ActivateOrganization(ctx context.Context, organizationID, act
 	})
 }
 
+func (s *Services) UpdateOrganization(ctx context.Context, organizationID, actorUserID uuid.UUID, name string) (*domain.Organization, error) {
+	return s.changeOrganization(ctx, organizationID, actorUserID, func(o *domain.Organization, now time.Time) error {
+		return o.Update(name, now)
+	})
+}
+
+func (s *Services) ArchiveOrganization(ctx context.Context, organizationID, actorUserID uuid.UUID) (*domain.Organization, error) {
+	return s.changeOrganization(ctx, organizationID, actorUserID, func(o *domain.Organization, now time.Time) error {
+		return o.Archive(now)
+	})
+}
+
 func (s *Services) changeOrganization(
 	ctx context.Context,
 	organizationID, actorUserID uuid.UUID,
 	fn func(*domain.Organization, time.Time) error,
 ) (*domain.Organization, error) {
-	user, err := s.Users.FindByID(ctx, actorUserID)
-	if err != nil {
-		return nil, mapRepoErr(err)
-	}
-	if !user.IsPlatformAdmin() && user.OrganizationID() != organizationID {
-		return nil, apperr.New("forbidden", apperr.ErrCodeForbidden)
+	if _, err := s.assertOrgAccess(ctx, organizationID, actorUserID); err != nil {
+		return nil, err
 	}
 	org, err := s.Orgs.FindByID(ctx, organizationID)
 	if err != nil {
@@ -292,12 +307,18 @@ func (s *Services) changeOrganization(
 }
 
 func (s *Services) SetWorkspaceStatus(ctx context.Context, workspaceID, actorUserID uuid.UUID, enable bool) (*domain.Workspace, error) {
-	if err := s.assertWorkspaceMember(ctx, workspaceID, actorUserID); err != nil {
-		return nil, err
+	user, err := s.Users.FindByID(ctx, actorUserID)
+	if err != nil {
+		return nil, mapRepoErr(err)
 	}
 	ws, err := s.Workspaces.FindByID(ctx, workspaceID)
 	if err != nil {
 		return nil, mapRepoErr(err)
+	}
+	if !user.IsPlatformAdmin() {
+		if err := s.assertWorkspaceMember(ctx, workspaceID, actorUserID); err != nil {
+			return nil, err
+		}
 	}
 	now := s.clock().Now()
 	if enable {
@@ -312,6 +333,18 @@ func (s *Services) SetWorkspaceStatus(ctx context.Context, workspaceID, actorUse
 		return nil, mapRepoErr(err)
 	}
 	return ws, nil
+}
+
+// assertOrgAccess allows platform admins or members of the target organization.
+func (s *Services) assertOrgAccess(ctx context.Context, organizationID, actorUserID uuid.UUID) (*domain.User, error) {
+	user, err := s.Users.FindByID(ctx, actorUserID)
+	if err != nil {
+		return nil, mapRepoErr(err)
+	}
+	if !user.IsPlatformAdmin() && user.OrganizationID() != organizationID {
+		return nil, apperr.New("forbidden", apperr.ErrCodeForbidden)
+	}
+	return user, nil
 }
 
 func (s *Services) assertWorkspaceMember(ctx context.Context, workspaceID, userID uuid.UUID) error {

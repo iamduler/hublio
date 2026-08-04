@@ -190,7 +190,7 @@ These are **not frontend-only** — need Go work first:
 Most need new Go endpoints before UI:
 
 - [x] Mission Control shell (org count wired; platform metrics unavailable until API)
-- [~] Platform Orgs admin (list/detail/suspend/activate on `DataTable`; create/export/bulk later)
+- [x] Platform Orgs admin ops core (list/detail/create/rename/suspend/activate/archive + Workspaces tab; export/bulk/Figma tabs deferred — see [01-admin-workspace §2.1](./api-wiring/01-admin-workspace.md))
 - [ ] Connector publishing / marketplace management
 - [ ] Cross-tenant executions / runtime metrics / queue monitor
 - [ ] Infrastructure / worker / scheduler screens

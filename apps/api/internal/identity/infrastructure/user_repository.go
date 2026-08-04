@@ -119,6 +119,33 @@ func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*domain
 	), nil
 }
 
+func (r *UserRepository) ListByOrganization(ctx context.Context, organizationID uuid.UUID) ([]*domain.User, error) {
+	rows, err := r.q(ctx).ListUsersByOrganization(ctx, organizationID)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]*domain.User, 0, len(rows))
+	for _, row := range rows {
+		out = append(out, reconstituteUser(
+			row.ID,
+			row.OrganizationID,
+			row.Email,
+			row.FullName,
+			row.PasswordHash,
+			row.IsActive,
+			row.IsPlatformAdmin,
+			row.Status,
+			row.CreatedAt,
+			row.UpdatedAt,
+			row.LastLoginAt,
+			row.DeletedAt,
+			row.EmailVerifiedAt,
+			row.PasswordChangedAt,
+		))
+	}
+	return out, nil
+}
+
 func reconstituteUser(
 	id, organizationID uuid.UUID,
 	email, fullName string,

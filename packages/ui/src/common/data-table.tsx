@@ -204,14 +204,14 @@ export function DataTable<T>({
                   <TableHead
                     key={col.id}
                     className={cn(
-                      "h-9 bg-(--surface) px-4 text-[11px] font-semibold uppercase tracking-wider text-(--muted-clr)",
+                      "h-9 bg-(--surface) px-4 text-[11px] font-semibold tracking-wider text-(--muted-clr)",
                       col.headerClassName,
                     )}
                   >
                     {col.sortable ? (
                       <button
                         type="button"
-                        className="inline-flex items-center gap-1 transition-colors hover:text-(--ink)"
+                        className="uppercase inline-flex items-center gap-1 transition-colors hover:text-(--ink)"
                         onClick={() => setSort(toggleSort(sort, col.id))}
                       >
                         {col.header}

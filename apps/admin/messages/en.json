@@ -163,6 +163,11 @@
       "admin": "Admin Console",
       "organizations": "Organizations"
     },
+    "tabs": {
+      "overview": "Overview",
+      "workspaces": "Workspaces",
+      "users": "Users"
+    },
     "filters": {
       "status": "Status",
       "active": "Active",
@@ -185,16 +190,83 @@
       "export": "Export",
       "create": "Create organization",
       "unavailable": "Not available yet",
+      "rename": "Rename",
+      "save": "Save",
       "suspend": "Suspend",
       "activate": "Activate",
+      "archive": "Archive",
       "cancel": "Cancel",
       "suspendDone": "Organization suspended",
-      "activateDone": "Organization activated"
+      "activateDone": "Organization activated",
+      "archiveDone": "Organization archived",
+      "renameDone": "Organization renamed"
     },
     "suspendTitle": "Suspend organization?",
     "suspendBody": "Suspend “{name}”? Members will not be able to run new intents until activated again.",
     "activateTitle": "Activate organization?",
-    "activateBody": "Activate “{name}” and restore normal access?"
+    "activateBody": "Activate “{name}” and restore normal access?",
+    "archiveTitle": "Archive organization?",
+    "archiveBody": "Archive “{name}”? It will disappear from the active list. This is a soft archive.",
+    "renameTitle": "Rename organization",
+    "create": {
+      "title": "Create organization",
+      "description": "Creates a tenant organization with a default production workspace. Invite members later from the workspace.",
+      "form": {
+        "name": "Organization name",
+        "namePlaceholder": "Acme Corp"
+      },
+      "hint": "A default workspace named “default” is created automatically.",
+      "submit": "Create",
+      "done": "Organization created"
+    },
+    "workspaces": {
+      "description": "Workspaces belonging to this organization.",
+      "create": "Create workspace",
+      "submit": "Create",
+      "created": "Workspace created",
+      "empty": "No workspaces",
+      "emptyDescription": "Create a workspace to start integrating systems for this tenant.",
+      "loadError": "Could not load workspaces",
+      "enable": "Enable",
+      "disable": "Disable",
+      "enableDone": "Workspace enabled",
+      "disableDone": "Workspace disabled",
+      "enableTitle": "Enable workspace?",
+      "enableBody": "Enable “{name}”?",
+      "disableTitle": "Disable workspace?",
+      "disableBody": "Disable “{name}”? API keys and intents for this workspace will stop until enabled again.",
+      "form": {
+        "name": "Name",
+        "environment": "Environment"
+      },
+      "env": {
+        "production": "Production",
+        "staging": "Staging",
+        "development": "Development"
+      },
+      "columns": {
+        "name": "Workspace",
+        "environment": "Environment",
+        "status": "Status",
+        "created": "Created"
+      }
+    },
+    "users": {
+      "description": "Users registered under this organization (read-only).",
+      "empty": "No users",
+      "emptyDescription": "Users appear after registration or invite to a workspace.",
+      "loadError": "Could not load users",
+      "platformAdminYes": "Platform admin",
+      "platformAdminNo": "—",
+      "columns": {
+        "name": "Name",
+        "email": "Email",
+        "status": "Status",
+        "platformAdmin": "Platform",
+        "created": "Created",
+        "lastLogin": "Last login"
+      }
+    }
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",

@@ -381,11 +381,15 @@ export interface paths {
         };
         /**
          * List organizations (platform admin)
-         * @description Returns all non-deleted organizations ordered by name. Requires `is_platform_admin`.
+         * @description Returns all non-deleted organizations ordered by name. Requires `is_platform_admin`. Archived orgs (soft-deleted) are omitted.
          */
         get: operations["listOrganizations"];
         put?: never;
-        post?: never;
+        /**
+         * Create organization (platform admin)
+         * @description Creates an organization and a default workspace. No owner user is created. Requires `is_platform_admin`.
+         */
+        post: operations["createOrganization"];
         delete?: never;
         options?: never;
         head?: never;
@@ -409,7 +413,11 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Update organization name
+         * @description Rename an organization. Same-org members or platform admins.
+         */
+        patch: operations["updateOrganization"];
         trace?: never;
     };
     "/api/v1/identity/organizations/{organizationId}/suspend": {
@@ -452,6 +460,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/identity/organizations/{organizationId}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Archive organization
+         * @description Soft-archives an organization (`archived` + deleted_at). Same-org members or platform admins. Archived orgs are omitted from list.
+         */
+        post: operations["archiveOrganization"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/identity/organizations/{organizationId}/workspaces": {
         parameters: {
             query?: never;
@@ -459,11 +487,37 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List workspaces */
+        /**
+         * List workspaces
+         * @description Same-organization members or platform admins may list workspaces for any org.
+         */
         get: operations["listWorkspaces"];
         put?: never;
-        /** Create workspace */
+        /**
+         * Create workspace
+         * @description Same-organization members or platform admins. Platform admins creating for another tenant do not receive workspace membership.
+         */
         post: operations["createWorkspace"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/identity/organizations/{organizationId}/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List organization users
+         * @description Same-organization members or platform admins may list users belonging to the organization. Read-only; does not include workspace roles.
+         */
+        get: operations["listOrganizationUsers"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -479,7 +533,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Enable workspace */
+        /**
+         * Enable workspace
+         * @description Workspace members or platform admins may enable a disabled workspace.
+         */
         post: operations["enableWorkspace"];
         delete?: never;
         options?: never;
@@ -496,7 +553,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Disable workspace */
+        /**
+         * Disable workspace
+         * @description Workspace members or platform admins may disable an active workspace.
+         */
         post: operations["disableWorkspace"];
         delete?: never;
         options?: never;
@@ -1274,6 +1334,14 @@ export interface components {
             status: string;
             is_platform_admin?: boolean;
         };
+        OrganizationUser: components["schemas"]["AuthUser"] & {
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: date-time */
+            updated_at?: string;
+            /** Format: date-time */
+            last_login_at?: string | null;
+        };
         AuthOrganization: {
             /** Format: uuid */
             id: string;
@@ -1283,6 +1351,28 @@ export interface components {
             created_at?: string;
             /** Format: date-time */
             updated_at?: string;
+        };
+        CreateOrganizationRequest: {
+            name: string;
+            /** @description Defaults to "default" */
+            workspace_name?: string;
+            /**
+             * @description Defaults to "production"
+             * @example production
+             */
+            environment?: string;
+        };
+        CreateOrganizationResponse: {
+            organization: components["schemas"]["AuthOrganization"];
+            workspace: {
+                /** Format: uuid */
+                id?: string;
+                /** Format: uuid */
+                organization_id?: string;
+                name?: string;
+                environment?: string;
+                status?: string;
+            };
         };
         MFAChallengeEnvelope: components["schemas"]["SuccessEnvelope"] & {
             data?: {
@@ -2133,6 +2223,35 @@ export interface operations {
             403: components["responses"]["Error"];
         };
     };
+    createOrganization: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateOrganizationRequest"];
+            };
+        };
+        responses: {
+            /** @description Organization created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: components["schemas"]["CreateOrganizationResponse"];
+                    };
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
     getOrganization: {
         parameters: {
             query?: never;
@@ -2158,6 +2277,39 @@ export interface operations {
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
             404: components["responses"]["Error"];
+        };
+    };
+    updateOrganization: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: components["parameters"]["organizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: components["schemas"]["AuthOrganization"];
+                    };
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
         };
     };
     suspendOrganization: {
@@ -2212,6 +2364,32 @@ export interface operations {
             403: components["responses"]["Error"];
         };
     };
+    archiveOrganization: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: components["parameters"]["organizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Archived */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: components["schemas"]["AuthOrganization"];
+                    };
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
     listWorkspaces: {
         parameters: {
             query?: never;
@@ -2230,6 +2408,8 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
         };
     };
     createWorkspace: {
@@ -2258,6 +2438,34 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    listOrganizationUsers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: components["parameters"]["organizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Organization user list */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: components["schemas"]["OrganizationUser"][];
+                    };
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
         };
     };
     enableWorkspace: {

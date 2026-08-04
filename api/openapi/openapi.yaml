@@ -507,7 +507,7 @@ paths:
       summary: List organizations (platform admin)
       description: >
         Returns all non-deleted organizations ordered by name.
-        Requires `is_platform_admin`.
+        Requires `is_platform_admin`. Archived orgs (soft-deleted) are omitted.
       operationId: listOrganizations
       security:
         - bearerAuth: []
@@ -525,6 +525,39 @@ paths:
                         type: array
                         items:
                           $ref: "#/components/schemas/AuthOrganization"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+    post:
+      tags: [Identity]
+      summary: Create organization (platform admin)
+      description: >
+        Creates an organization and a default workspace. No owner user is created.
+        Requires `is_platform_admin`.
+      operationId: createOrganization
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrganizationRequest"
+      responses:
+        "201":
+          description: Organization created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/CreateOrganizationResponse"
+        "400":
+          $ref: "#/components/responses/Error"
         "401":
           $ref: "#/components/responses/Error"
         "403":
@@ -558,6 +591,44 @@ paths:
         "403":
           $ref: "#/components/responses/Error"
         "404":
+          $ref: "#/components/responses/Error"
+    patch:
+      tags: [Identity]
+      summary: Update organization name
+      description: >
+        Rename an organization. Same-org members or platform admins.
+      operationId: updateOrganization
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/AuthOrganization"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
           $ref: "#/components/responses/Error"
 
   /api/v1/identity/organizations/{organizationId}/suspend:
@@ -616,10 +687,41 @@ paths:
         "403":
           $ref: "#/components/responses/Error"
 
+  /api/v1/identity/organizations/{organizationId}/archive:
+    post:
+      tags: [Identity]
+      summary: Archive organization
+      description: >
+        Soft-archives an organization (`archived` + deleted_at). Same-org members or platform admins.
+        Archived orgs are omitted from list.
+      operationId: archiveOrganization
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+      responses:
+        "200":
+          description: Archived
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/AuthOrganization"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+
   /api/v1/identity/organizations/{organizationId}/workspaces:
     get:
       tags: [Identity]
       summary: List workspaces
+      description: >
+        Same-organization members or platform admins may list workspaces for any org.
       operationId: listWorkspaces
       security:
         - bearerAuth: []
@@ -628,9 +730,16 @@ paths:
       responses:
         "200":
           description: Workspace list
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
     post:
       tags: [Identity]
       summary: Create workspace
+      description: >
+        Same-organization members or platform admins. Platform admins creating for
+        another tenant do not receive workspace membership.
       operationId: createWorkspace
       security:
         - bearerAuth: []
@@ -652,11 +761,48 @@ paths:
       responses:
         "201":
           description: Workspace created
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/identity/organizations/{organizationId}/users:
+    get:
+      tags: [Identity]
+      summary: List organization users
+      description: >
+        Same-organization members or platform admins may list users belonging to the organization.
+        Read-only; does not include workspace roles.
+      operationId: listOrganizationUsers
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/organizationId"
+      responses:
+        "200":
+          description: Organization user list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/OrganizationUser"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
 
   /api/v1/identity/workspaces/{workspaceId}/enable:
     post:
       tags: [Identity]
       summary: Enable workspace
+      description: >
+        Workspace members or platform admins may enable a disabled workspace.
       operationId: enableWorkspace
       security:
         - bearerAuth: []
@@ -670,6 +816,8 @@ paths:
     post:
       tags: [Identity]
       summary: Disable workspace
+      description: >
+        Workspace members or platform admins may disable an active workspace.
       operationId: disableWorkspace
       security:
         - bearerAuth: []
@@ -1862,6 +2010,22 @@ components:
         is_platform_admin:
           type: boolean
 
+    OrganizationUser:
+      allOf:
+        - $ref: "#/components/schemas/AuthUser"
+        - type: object
+          properties:
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+            last_login_at:
+              type: string
+              format: date-time
+              nullable: true
+
     AuthOrganization:
       type: object
       required: [id, name, status]
@@ -1879,6 +2043,42 @@ components:
         updated_at:
           type: string
           format: date-time
+
+    CreateOrganizationRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        workspace_name:
+          type: string
+          description: Defaults to "default"
+        environment:
+          type: string
+          description: Defaults to "production"
+          example: production
+
+    CreateOrganizationResponse:
+      type: object
+      required: [organization, workspace]
+      properties:
+        organization:
+          $ref: "#/components/schemas/AuthOrganization"
+        workspace:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            organization_id:
+              type: string
+              format: uuid
+            name:
+              type: string
+            environment:
+              type: string
+            status:
+              type: string
 
     MFAChallengeEnvelope:
       allOf:

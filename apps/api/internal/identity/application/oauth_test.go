@@ -105,6 +105,17 @@ func (m *memUsers) FindByEmail(ctx context.Context, email string) (*domain.User,
 	return u, nil
 }
 
+func (m *memUsers) ListByOrganization(ctx context.Context, organizationID uuid.UUID) ([]*domain.User, error) {
+	_ = ctx
+	out := make([]*domain.User, 0)
+	for _, u := range m.byID {
+		if u.OrganizationID() == organizationID && u.DeletedAt() == nil {
+			out = append(out, u)
+		}
+	}
+	return out, nil
+}
+
 type memOAuthIdentities struct {
 	byKey map[string]*domain.OAuthIdentity
 }

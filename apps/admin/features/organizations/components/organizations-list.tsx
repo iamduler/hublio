@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import {
+  Archive,
   Download,
   ExternalLink,
   Plus,
@@ -26,6 +27,7 @@ import { toast } from "@/lib/toast";
 import { useApiErrorMessage } from "@/hooks/use-api-error";
 import {
   useActivateOrganization,
+  useArchiveOrganization,
   useOrganizations,
   useSuspendOrganization,
 } from "../hooks";
@@ -36,6 +38,7 @@ const PAGE_SIZE = 10;
 type PendingAction =
   | { type: "suspend"; org: Organization }
   | { type: "activate"; org: Organization }
+  | { type: "archive"; org: Organization }
   | null;
 
 export function OrganizationsList() {
@@ -47,6 +50,7 @@ export function OrganizationsList() {
   const { data, isLoading, isError, error, refetch } = useOrganizations();
   const suspend = useSuspendOrganization();
   const activate = useActivateOrganization();
+  const archive = useArchiveOrganization();
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -74,9 +78,12 @@ export function OrganizationsList() {
       if (pending.type === "suspend") {
         await suspend.mutateAsync(pending.org.id);
         toast.success(t("actions.suspendDone"));
-      } else {
+      } else if (pending.type === "activate") {
         await activate.mutateAsync(pending.org.id);
         toast.success(t("actions.activateDone"));
+      } else {
+        await archive.mutateAsync(pending.org.id);
+        toast.success(t("actions.archiveDone"));
       }
       setPending(null);
     } catch (err) {
@@ -149,6 +156,8 @@ export function OrganizationsList() {
       className: "text-right",
       headerClassName: "text-right",
       cell: (org) => {
+        const canArchive =
+          org.status === "active" || org.status === "suspended";
         const menuItems = [
           {
             label: t("actions.viewDetails"),
@@ -157,23 +166,33 @@ export function OrganizationsList() {
           },
           ...(org.status === "active"
             ? [
-              {
-                label: t("actions.suspend"),
-                icon: <UserX size={13} />,
-                separator: true as const,
-                onSelect: () => setPending({ type: "suspend", org }),
-              },
-            ]
+                {
+                  label: t("actions.suspend"),
+                  icon: <UserX size={13} />,
+                  separator: true as const,
+                  onSelect: () => setPending({ type: "suspend", org }),
+                },
+              ]
             : []),
           ...(org.status === "suspended"
             ? [
-              {
-                label: t("actions.activate"),
-                icon: <UserCheck size={13} />,
-                separator: true as const,
-                onSelect: () => setPending({ type: "activate", org }),
-              },
-            ]
+                {
+                  label: t("actions.activate"),
+                  icon: <UserCheck size={13} />,
+                  separator: true as const,
+                  onSelect: () => setPending({ type: "activate", org }),
+                },
+              ]
+            : []),
+          ...(canArchive
+            ? [
+                {
+                  label: t("actions.archive"),
+                  icon: <Archive size={13} />,
+                  separator: true as const,
+                  onSelect: () => setPending({ type: "archive", org }),
+                },
+              ]
             : []),
         ];
 
@@ -233,13 +252,11 @@ export function OrganizationsList() {
           <Download size={13} />
           {t("actions.export")}
         </Button>
-        <Button
-          type="button"
-          size="sm"
-          onClick={() => toast.info(t("actions.unavailable"))}
-        >
-          <Plus size={13} />
-          {t("actions.create")}
+        <Button type="button" size="sm" asChild>
+          <Link href="/organizations/new">
+            <Plus size={13} />
+            {t("actions.create")}
+          </Link>
         </Button>
       </div>
     </div>
@@ -257,6 +274,27 @@ export function OrganizationsList() {
       </div>
     );
   }
+
+  const pendingTitle =
+    pending?.type === "suspend"
+      ? t("suspendTitle")
+      : pending?.type === "activate"
+        ? t("activateTitle")
+        : t("archiveTitle");
+  const pendingBody =
+    pending?.type === "suspend"
+      ? t("suspendBody", { name: pending.org.name })
+      : pending?.type === "activate"
+        ? t("activateBody", { name: pending.org.name })
+        : pending
+          ? t("archiveBody", { name: pending.org.name })
+          : "";
+  const pendingConfirm =
+    pending?.type === "suspend"
+      ? t("actions.suspend")
+      : pending?.type === "activate"
+        ? t("actions.activate")
+        : t("actions.archive");
 
   return (
     <div className="space-y-4">
@@ -329,24 +367,14 @@ export function OrganizationsList() {
           onOpenChange={(next) => {
             if (!next) setPending(null);
           }}
-          title={
-            pending.type === "suspend"
-              ? t("suspendTitle")
-              : t("activateTitle")
-          }
-          description={
-            pending.type === "suspend"
-              ? t("suspendBody", { name: pending.org.name })
-              : t("activateBody", { name: pending.org.name })
-          }
-          confirmLabel={
-            pending.type === "suspend"
-              ? t("actions.suspend")
-              : t("actions.activate")
-          }
+          title={pendingTitle}
+          description={pendingBody}
+          confirmLabel={pendingConfirm}
           cancelLabel={t("actions.cancel")}
-          destructive={pending.type === "suspend"}
-          pending={suspend.isPending || activate.isPending}
+          destructive={pending.type !== "activate"}
+          pending={
+            suspend.isPending || activate.isPending || archive.isPending
+          }
           onConfirm={() => confirmPending()}
         />
       ) : null}

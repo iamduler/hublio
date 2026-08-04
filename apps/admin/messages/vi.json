@@ -163,6 +163,11 @@
       "admin": "Admin Console",
       "organizations": "Tổ chức"
     },
+    "tabs": {
+      "overview": "Tổng quan",
+      "workspaces": "Workspace",
+      "users": "Người dùng"
+    },
     "filters": {
       "status": "Trạng thái",
       "active": "Hoạt động",
@@ -185,16 +190,83 @@
       "export": "Xuất",
       "create": "Tạo tổ chức",
       "unavailable": "Chưa khả dụng",
+      "rename": "Đổi tên",
+      "save": "Lưu",
       "suspend": "Tạm dừng",
       "activate": "Kích hoạt",
+      "archive": "Lưu trữ",
       "cancel": "Hủy",
       "suspendDone": "Đã tạm dừng tổ chức",
-      "activateDone": "Đã kích hoạt tổ chức"
+      "activateDone": "Đã kích hoạt tổ chức",
+      "archiveDone": "Đã lưu trữ tổ chức",
+      "renameDone": "Đã đổi tên tổ chức"
     },
     "suspendTitle": "Tạm dừng tổ chức?",
     "suspendBody": "Tạm dừng “{name}”? Thành viên sẽ không thể chạy Intent mới cho đến khi kích hoạt lại.",
     "activateTitle": "Kích hoạt tổ chức?",
-    "activateBody": "Kích hoạt “{name}” và khôi phục quyền truy cập bình thường?"
+    "activateBody": "Kích hoạt “{name}” và khôi phục quyền truy cập bình thường?",
+    "archiveTitle": "Lưu trữ tổ chức?",
+    "archiveBody": "Lưu trữ “{name}”? Tổ chức sẽ biến mất khỏi danh sách đang hoạt động. Đây là lưu trữ mềm.",
+    "renameTitle": "Đổi tên tổ chức",
+    "create": {
+      "title": "Tạo tổ chức",
+      "description": "Tạo tổ chức tenant kèm workspace production mặc định. Mời thành viên sau từ workspace.",
+      "form": {
+        "name": "Tên tổ chức",
+        "namePlaceholder": "Acme Corp"
+      },
+      "hint": "Workspace mặc định tên “default” được tạo tự động.",
+      "submit": "Tạo",
+      "done": "Đã tạo tổ chức"
+    },
+    "workspaces": {
+      "description": "Các workspace thuộc tổ chức này.",
+      "create": "Tạo workspace",
+      "submit": "Tạo",
+      "created": "Đã tạo workspace",
+      "empty": "Chưa có workspace",
+      "emptyDescription": "Tạo workspace để bắt đầu tích hợp hệ thống cho tenant này.",
+      "loadError": "Không tải được workspace",
+      "enable": "Bật",
+      "disable": "Tắt",
+      "enableDone": "Đã bật workspace",
+      "disableDone": "Đã tắt workspace",
+      "enableTitle": "Bật workspace?",
+      "enableBody": "Bật “{name}”?",
+      "disableTitle": "Tắt workspace?",
+      "disableBody": "Tắt “{name}”? API key và Intent của workspace sẽ dừng cho đến khi bật lại.",
+      "form": {
+        "name": "Tên",
+        "environment": "Môi trường"
+      },
+      "env": {
+        "production": "Production",
+        "staging": "Staging",
+        "development": "Development"
+      },
+      "columns": {
+        "name": "Workspace",
+        "environment": "Môi trường",
+        "status": "Trạng thái",
+        "created": "Tạo lúc"
+      }
+    },
+    "users": {
+      "description": "Người dùng thuộc tổ chức này (chỉ xem).",
+      "empty": "Chưa có người dùng",
+      "emptyDescription": "Người dùng xuất hiện sau khi đăng ký hoặc được mời vào workspace.",
+      "loadError": "Không tải được người dùng",
+      "platformAdminYes": "Platform admin",
+      "platformAdminNo": "—",
+      "columns": {
+        "name": "Tên",
+        "email": "Email",
+        "status": "Trạng thái",
+        "platformAdmin": "Platform",
+        "created": "Tạo lúc",
+        "lastLogin": "Đăng nhập gần nhất"
+      }
+    }
   },
   "errors": {
     "generic": "Đã có lỗi. Vui lòng thử lại.",

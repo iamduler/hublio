@@ -70,6 +70,7 @@ type Querier interface {
 	ListOrganizations(ctx context.Context) ([]Organization, error)
 	ListSyncRouteWatermarks(ctx context.Context, syncRouteID uuid.UUID) ([]SyncRouteWatermark, error)
 	ListSyncRoutesByWorkspace(ctx context.Context, workspaceID uuid.UUID) ([]SyncRoute, error)
+	ListUsersByOrganization(ctx context.Context, organizationID uuid.UUID) ([]ListUsersByOrganizationRow, error)
 	ListWorkspaceMembersByWorkspace(ctx context.Context, workspaceID uuid.UUID) ([]ListWorkspaceMembersByWorkspaceRow, error)
 	ListWorkspaceUsersByUser(ctx context.Context, userID uuid.UUID) ([]WorkspaceUser, error)
 	ListWorkspaceUsersByWorkspace(ctx context.Context, workspaceID uuid.UUID) ([]WorkspaceUser, error)

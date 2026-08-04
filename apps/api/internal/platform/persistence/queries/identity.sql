@@ -64,6 +64,14 @@ SELECT id, organization_id, email, full_name, is_active, is_platform_admin, pass
 FROM users
 WHERE email = $1 AND deleted_at IS NULL;
 
+-- name: ListUsersByOrganization :many
+SELECT id, organization_id, email, full_name, is_active, is_platform_admin, password_hash,
+       email_verified_at, password_changed_at, last_login_at, status,
+       created_at, updated_at, deleted_at
+FROM users
+WHERE organization_id = $1 AND deleted_at IS NULL
+ORDER BY email ASC;
+
 -- name: InsertUser :exec
 INSERT INTO users (
   id, organization_id, email, full_name, is_active, is_platform_admin, password_hash,

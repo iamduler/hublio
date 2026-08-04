@@ -589,6 +589,67 @@ func (q *Queries) ListOrganizations(ctx context.Context) ([]Organization, error)
 	return items, nil
 }
 
+const listUsersByOrganization = `-- name: ListUsersByOrganization :many
+SELECT id, organization_id, email, full_name, is_active, is_platform_admin, password_hash,
+       email_verified_at, password_changed_at, last_login_at, status,
+       created_at, updated_at, deleted_at
+FROM users
+WHERE organization_id = $1 AND deleted_at IS NULL
+ORDER BY email ASC
+`
+
+type ListUsersByOrganizationRow struct {
+	ID                uuid.UUID          `json:"id"`
+	OrganizationID    uuid.UUID          `json:"organization_id"`
+	Email             string             `json:"email"`
+	FullName          string             `json:"full_name"`
+	IsActive          bool               `json:"is_active"`
+	IsPlatformAdmin   bool               `json:"is_platform_admin"`
+	PasswordHash      *string            `json:"password_hash"`
+	EmailVerifiedAt   pgtype.Timestamptz `json:"email_verified_at"`
+	PasswordChangedAt pgtype.Timestamptz `json:"password_changed_at"`
+	LastLoginAt       pgtype.Timestamptz `json:"last_login_at"`
+	Status            string             `json:"status"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt         pgtype.Timestamptz `json:"deleted_at"`
+}
+
+func (q *Queries) ListUsersByOrganization(ctx context.Context, organizationID uuid.UUID) ([]ListUsersByOrganizationRow, error) {
+	rows, err := q.db.Query(ctx, listUsersByOrganization, organizationID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListUsersByOrganizationRow{}
+	for rows.Next() {
+		var i ListUsersByOrganizationRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.OrganizationID,
+			&i.Email,
+			&i.FullName,
+			&i.IsActive,
+			&i.IsPlatformAdmin,
+			&i.PasswordHash,
+			&i.EmailVerifiedAt,
+			&i.PasswordChangedAt,
+			&i.LastLoginAt,
+			&i.Status,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listWorkspaceMembersByWorkspace = `-- name: ListWorkspaceMembersByWorkspace :many
 SELECT wu.workspace_id, wu.user_id, wu.role, wu.created_at,
        u.email, u.full_name
